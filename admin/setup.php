@@ -88,6 +88,7 @@ $modules = array(
 	'ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
+	'ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
 );
 
 /*
@@ -249,10 +250,10 @@ $client = getGoogleApiClient($user);
 //$client->setAccessToken($token->getToken());
 //$client->setCache($cache);
 
-// $service = new Google_Service_Calendar($client);
+// $service = new Google\Service\Calendar($client);
 // $channelId = '2a99bfdb-e883-44b1-a0fd-4c4e8f09a6c8';
 // $resourceId = 'FRAjW44r35gCeoSyUNoR1gNmamM';
-// $channel = new Google_Service_Calendar_Channel($client);
+// $channel = new Google\Service\Calendar\Channel($client);
 // $channel->setId($channelId);
 // $channel->setResourceId($resourceId);
 // $channel->setType('web_hook');

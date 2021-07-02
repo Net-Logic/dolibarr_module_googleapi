@@ -288,9 +288,10 @@ $provider = new Google([
 ]);
 
 $owner = $provider->getResourceOwner($token);
-$ownerId = $owner->getId());
-if (empty($user->array_options['options_googleapi_Id'])) {
-	$user->array_options['options_googleapi_Id'] = $ownerId;
+//var_dump($owner->toArray());
+if (!empty($owner)) {
+	$user->array_options['options_googleapi_Id'] = $owner->getId();
+	$user->array_options['options_googleapi_email'] = $owner->toArray()['email'];
 	$user->update($user, 1);
 }
 

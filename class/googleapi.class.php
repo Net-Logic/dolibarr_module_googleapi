@@ -130,7 +130,7 @@ class GoogleApi
 		dol_include_once('/googleapi/lib/googleapi.lib.php');
 		dol_include_once('/prune/vendor/autoload.php');
 		$client = getGoogleApiClient($user);
-		$service = new Google_Service_Calendar($client);
+		$service = new Google\Service\Calendar($client);
 
 		$sql = "SELECT rowid, userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber FROM " . MAIN_DB_PREFIX . "googleapi_watchs";
 		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="'.$this->db->escape($type).'"';
@@ -152,7 +152,7 @@ class GoogleApi
 
 				try {
 					$channelId = $uuid;
-					$channel = new Google_Service_Calendar_Channel($client);
+					$channel = new Google\Service\Calendar\Channel($client);
 					$channel->setId($channelId);
 					$channel->setType('web_hook');
 					$channel->setAddress($urlfornotification);
@@ -191,7 +191,7 @@ class GoogleApi
 
 			try {
 				$channelId = $uuid;
-				$channel = new Google_Service_Calendar_Channel($client);
+				$channel = new Google\Service\Calendar\Channel($client);
 				$channel->setId($channelId);
 				$channel->setType('web_hook');
 				$channel->setAddress($urlfornotification);

@@ -116,13 +116,13 @@ class modGoogleApi extends DolibarrModules
 			'hooks' => [
 				'data' => [
 					//'mainloginpage',
-					//'toprightmenu',
-					//'usercard',
-					//'mail',
-					//'globalcard',
+					'toprightmenu',
+					'usercard',
+					'mail',
+					'globalcard',
 					//'invoicecard',
-					//'actioncard',
-					//'fileslib',
+					'actioncard',
+					'fileslib',
 				],
 				'entity' => '0',
 			],
@@ -227,10 +227,11 @@ class modGoogleApi extends DolibarrModules
 		$extrafields = new ExtraFields($this->db);
 
 		// actioncomm
-		$result = $extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', 0, 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$result = $extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
 		// user
-		$result = $extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', 0, 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
-		$result = $extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', 0, 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$result = $extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$result = $extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$result = $extrafields->addExtraField('googleapi_email', "GoogleApiLOwnerEmail", 'varchar', $this->numero + 2, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
 
 		$sql = [];
 

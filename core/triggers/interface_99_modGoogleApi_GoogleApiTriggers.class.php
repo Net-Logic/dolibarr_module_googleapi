@@ -377,7 +377,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		//'TimeZone' => 'Pacific Standard Time',
 		$dateend = $object->fulldayevent ? dol_print_date($dateend + 60, '%Y-%m-%dT00:00:00') : dol_print_date($dateend, '%Y-%m-%dT%H:%M:%S');
 
-		$event = new Google_Service_Calendar_Event(array(
+		$event = new \Google\Service\Calendar\Event(array(
 			'summary' => $object->label,
 			'location' => $object->location,
 			'description' => $object->note,
@@ -406,7 +406,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		));
 
 		$calendarId = 'primary';
-		$service = new Google_Service_Calendar($client);
+		$service = new \Google\Service\Calendar($client);
 		$event = $service->events->insert($calendarId, $event);
 
 		// enregistrer l'id googleapi dans dolibarr (extrafield)
@@ -451,7 +451,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		$dateend = $object->fulldayevent ? dol_print_date($dateend + 60, '%Y-%m-%dT00:00:00') : dol_print_date($dateend, '%Y-%m-%dT%H:%M:%S');
 
 		dol_syslog('Sending new dates to googleapi ' . $object->datep, LOG_NOTICE);
-		$event = new Google_Service_Calendar_Event([
+		$event = new \Google\Service\Calendar\Event([
 			'summary' => $object->label,
 			'location' => $object->location,
 			'description' => $object->note,
@@ -480,7 +480,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		]);
 
 		$calendarId = 'primary';
-		$service = new Google_Service_Calendar($client);
+		$service = new \Google\Service\Calendar($client);
 		if (empty($object->array_options['options_googleapi_EventId'])) {
 			$event = $service->events->insert($calendarId, $event);
 			// // enregistrer l'id googleapi dans dolibarr (extrafield)
@@ -515,7 +515,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			$client = getGoogleApiClient($staticuser);
 
 			$calendarId = 'primary';
-			$service = new Google_Service_Calendar($client);
+			$service = new \Google\Service\Calendar($client);
 			try {
 				$event = $service->events->delete($calendarId, $object->oldcopy->array_options['options_googleapi_EventId']);
 			} catch (Exception $e) {

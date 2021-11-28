@@ -101,7 +101,7 @@ if ($row) {
 	$fuser->fetch($row->userid);
 	//dol_syslog(print_r($fuser->array_options, true), LOG_NOTICE);
 	$client = getGoogleApiClient($fuser);
-	$service = new Google_Service_Calendar($client);
+	$service = new Google\Service\Calendar($client);
 	$opts = [];
 	if (!empty($fuser->array_options['options_googleapi_lastevent_sync'])) {
 		$opts = [
@@ -119,9 +119,9 @@ if ($row) {
 	//dol_syslog(print_r($opts, true), LOG_NOTICE);
 	try {
 		$events = $service->events->listEvents('primary', $opts);
-		dol_syslog("Events : ".print_r($events, true), LOG_NOTICE);
+		dol_syslog("Events : " . print_r($events, true), LOG_NOTICE);
 		$main_tz = $events->getTimeZone();
-		dol_syslog("Main Timezone : ".print_r($main_tz, true), LOG_NOTICE);
+		dol_syslog("Main Timezone : " . print_r($main_tz, true), LOG_NOTICE);
 		//dol_syslog(print_r($events, true), LOG_NOTICE);
 		$items = $events->getItems();
 		foreach ($items as $item) {

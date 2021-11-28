@@ -27,11 +27,13 @@
 include_once DOL_DOCUMENT_ROOT . '/core/modules/DolibarrModules.class.php';
 
 
+// phpcs:disable Squiz.Classes.ValidClassName.NotCamelCaps
 /**
  *  Description and activation class for module GoogleApi
  */
 class modGoogleApi extends DolibarrModules
 {
+	// phpcs:enable
 	/**
 	 * Constructor. Define names, constants, directories, boxes, permissions
 	 *
@@ -109,7 +111,7 @@ class modGoogleApi extends DolibarrModules
 			],
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => [
-				// '/googleapi/js/googleapi.js.php',
+				'/googleapi/js/googleapi.js.php',
 			],
 			// Set here all hooks context managed by module. To find available hook context,
 			// make a "grep -r '>initHooks(' *" on source code. You can also set hook context 'all'
@@ -144,7 +146,7 @@ class modGoogleApi extends DolibarrModules
 		$this->hidden = false;
 		// List of module class names as string that must be enabled if this module is enabled.
 		// Example: ['always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR1'=>'modModuleToEnableFR'...]
-		$this->depends = [];
+		$this->depends = ['always1' => 'modPrune'];
 		// List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->requiredby = [];
 		// List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)

@@ -89,6 +89,7 @@ $modules = array(
 	'ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
 	'ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
+	'ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
 );
 
 /*
@@ -218,11 +219,11 @@ if ($action == 'edit') {
 		$constante = 'GOOGLEAPI_' . $const;
 		$value = (isset($conf->global->$constante) ? $conf->global->$constante : 0);
 		if ($value == 0) {
-			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=activate_' . strtolower($const) . '&amp;token='.$_SESSION['newtoken'].'">';
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=activate_' . strtolower($const) . '&amp;token=' . $_SESSION['newtoken'] . '">';
 			print img_picto($langs->trans("Disabled"), 'switch_off');
 			print '</a>';
 		} elseif ($value == 1) {
-			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=disable_' . strtolower($const) . '&amp;token='.$_SESSION['newtoken'].'">';
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=disable_' . strtolower($const) . '&amp;token=' . $_SESSION['newtoken'] . '">';
 			print img_picto($langs->trans("Enabled"), 'switch_on');
 			print '</a>';
 		}

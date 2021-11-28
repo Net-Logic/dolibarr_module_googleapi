@@ -30,8 +30,8 @@ require_once '../../../lib/googleapi.lib.php';
 use League\OAuth2\Client\Provider\Google;
 
 // Define $urlwithroot
-$urlwithouturlroot = preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
-$urlwithroot = $urlwithouturlroot.DOL_URL_ROOT; // This is to use external domain name found into config file
+$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
+$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT; // This is to use external domain name found into config file
 //$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
 
 
@@ -48,7 +48,7 @@ if (GETPOSTISSET('error') && !empty($user->id)) {
 	setEventMessages(GETPOST('error', 'restricthtml'), null, 'errors');
 	setEventMessages(GETPOST('error_description', 'restricthtml'), null, 'errors');
 
-	header('Location: '.dol_buildpath('/microsoftgraph/tabs/usertoken.php', 2).'?id='.$user->id);
+	header('Location: ' . dol_buildpath('/microsoftgraph/tabs/usertoken.php', 2) . '?id=' . $user->id);
 	exit();
 }
 if ($action == 'delete' && !empty($user->id)) {
@@ -56,7 +56,7 @@ if ($action == 'delete' && !empty($user->id)) {
 
 	setEventMessages($langs->trans('TokenDeleted'), null, 'mesgs');
 
-	header('Location: '.$backtourl);
+	header('Location: ' . $backtourl);
 	exit();
 }
 
@@ -74,9 +74,11 @@ if (!empty($_GET['error'])) {
 } elseif (empty($_GET['code'])) {
 	$_SESSION["backtourlsavedbeforeoauthjump"] = $backtourl;
 	// If we don't have an authorization code then get one
+	// https://developers.google.com/identity/protocols/oauth2/scopes
 	$authUrl = $provider->getAuthorizationUrl([
 		'scope' => [
-			'https://www.googleapis.com/auth/calendar'
+			'https://www.googleapis.com/auth/calendar',
+			'https://mail.google.com/',
 		],
 	]);
 	$_SESSION['oauth2state'] = $provider->getState();
@@ -112,7 +114,7 @@ if (!empty($_GET['error'])) {
 	$backtourl = $_SESSION["backtourlsavedbeforeoauthjump"];
 	unset($_SESSION["backtourlsavedbeforeoauthjump"]);
 
-	header('Location: '.$backtourl);
+	header('Location: ' . $backtourl);
 	exit();
 }
 

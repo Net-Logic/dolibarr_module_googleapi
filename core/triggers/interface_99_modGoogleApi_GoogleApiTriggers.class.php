@@ -416,7 +416,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 	}
 
 	/**
-	 * Trigger ACTION_UPDATE
+	 * Trigger ACTION_MODIFY
 	 * @param string        $action     Event action code
 	 * @param ActionComm  $object     Object
 	 * @param User          $user       Object user
@@ -507,7 +507,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		$error = 0;
 		// si on a un id dans l'ancienne copie de l'évènement
 		if (!empty($object->oldcopy->array_options['options_googleapi_EventId'])) {
-
 			// il faut rechercher le token du propriétaire de l'evt
 			$staticuser = new User($this->db);
 			$staticuser->fetch($object->userownerid);
@@ -523,5 +522,122 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			}
 		}
 		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * Trigger FICHINTER_SENTBYMAIL
+	 * @param string        $action     Event action code
+	 * @param Fichinter      $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function fichinterSentbymail($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		global $googleapiMessageId;
+
+		if (!empty($googleapiMessageId)) {
+			$this->addEmailSent($user->id, $object->id, $object->socid, "fichinter", $googleapiMessageId);
+		}
+		return 0;
+	}
+
+	/**
+	 * Trigger ORDER_SENTBYMAIL
+	 * @param string        $action     Event action code
+	 * @param Commande      $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function orderSentbymail($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		global $googleapiMessageId;
+
+		if (!empty($googleapiMessageId)) {
+			$this->addEmailSent($user->id, $object->id, $object->socid, "commande", $googleapiMessageId);
+		}
+		return 0;
+	}
+
+	/**
+	 * Trigger PROJECT_SENTBYMAIL
+	 * @param string        $action     Event action code
+	 * @param Project      $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function projectSentbymail($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		global $googleapiMessageId;
+
+		if (!empty($googleapiMessageId)) {
+			$this->addEmailSent($user->id, $object->id, $object->socid, "project", $googleapiMessageId);
+		}
+		return 0;
+	}
+
+	/**
+	 * Trigger PROPAL_SENTBYMAIL
+	 * @param string        $action     Event action code
+	 * @param Propal        $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function propalSentbymail($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		global $googleapiMessageId;
+
+		if (!empty($googleapiMessageId)) {
+			$this->addEmailSent($user->id, $object->id, $object->socid, "propal", $googleapiMessageId);
+		}
+		return 0;
+	}
+
+	/**
+	 * Trigger SHIPPING_SENTBYMAIL
+	 * @param string        $action     Event action code
+	 * @param Expedition    $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function shippingSentbymail($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		global $googleapiMessageId;
+
+		if (!empty($googleapiMessageId)) {
+			$this->addEmailSent($user->id, $object->id, $object->socid, "shipping", $googleapiMessageId);
+		}
+		return 0;
+	}
+
+	/**
+	 * function addEmailSent
+	 * @param   int     $userid             User Id
+	 * @param   int     $id                 Object Id
+	 * @param   int     $socid              Thirdparty Id
+	 * @param   string  $module             Module concerned
+	 * @param   string  $googleapiMessageId GoogleApi message Id
+	 * @return  void
+	 */
+	private function addEmailSent($userid, $id, $socid, $module, $googleapiMessageId)
+	{
+		$sql = 'INSERT INTO ' . MAIN_DB_PREFIX . 'googleapi_emails_sent (';
+		$sql .= 'userid, module, messageid, fk_object, fk_soc) VALUES (';
+		$sql .= (int) $userid;
+		$sql .= ', "' . $this->db->escape($module) . '"';
+		$sql .= ', "' . $this->db->escape($googleapiMessageId) . '"';
+		$sql .= ', ' . (int) $id;
+		$sql .= ', ' . (int) $socid;
+		$sql .= ')';
+		$resql = $this->db->query($sql);
 	}
 }

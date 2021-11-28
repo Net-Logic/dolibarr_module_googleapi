@@ -416,7 +416,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 	}
 
 	/**
-	 * Trigger ACTION_UPDATE
+	 * Trigger ACTION_MODIFY
 	 * @param string        $action     Event action code
 	 * @param ActionComm  $object     Object
 	 * @param User          $user       Object user
@@ -525,7 +525,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 	}
 
 	/**
-	 * Trigger ORDER_SENTBYMAIL
+	 * Trigger FICHINTER_SENTBYMAIL
 	 * @param string        $action     Event action code
 	 * @param Fichinter      $object     Object
 	 * @param User          $user       Object user
@@ -563,7 +563,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 	}
 
 	/**
-	 * Trigger ORDER_SENTBYMAIL
+	 * Trigger PROJECT_SENTBYMAIL
 	 * @param string        $action     Event action code
 	 * @param Project      $object     Object
 	 * @param User          $user       Object user

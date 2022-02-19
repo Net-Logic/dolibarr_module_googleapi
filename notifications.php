@@ -99,6 +99,11 @@ if ($row) {
 	// fetch updates for user since last sync
 	$fuser = new User($db);
 	$fuser->fetch($row->userid);
+	if (empty($fuser->array_options['options_googleapi_calendarId'])) {
+		$calendarId = 'primary';
+	} else {
+		$calendarId = $fuser->array_options['options_googleapi_calendarId'];
+	}
 	//dol_syslog(print_r($fuser->array_options, true), LOG_NOTICE);
 	$client = getGoogleApiClient($fuser);
 	$service = new Google\Service\Calendar($client);
@@ -118,7 +123,7 @@ if ($row) {
 	// );
 	//dol_syslog(print_r($opts, true), LOG_NOTICE);
 	try {
-		$events = $service->events->listEvents('primary', $opts);
+		$events = $service->events->listEvents($calendarId, $opts);
 		dol_syslog("Events : " . print_r($events, true), LOG_NOTICE);
 		$main_tz = $events->getTimeZone();
 		dol_syslog("Main Timezone : " . print_r($main_tz, true), LOG_NOTICE);
@@ -148,26 +153,25 @@ if ($row) {
 					}
 				} else {
 					$start = $item->getStart();
-					//dol_syslog("Start : ".print_r($start, true), LOG_NOTICE);
-					//$test = $item->getStart()->getTimeZone();
+					// dol_syslog("Start : ".print_r($start, true), LOG_NOTICE);
 					$tz = new \DateTimeZone($main_tz);
-					// on retire le dernier zéro sinon on n'arrive pas à créer
-					//$tstart = substr($start->getDateTime(), 0, -1);
+					$offset_start = 0;
+					$offset_end = 0;
 					if ($start->getDate()) {
 						$date_start = \DateTime::createFromFormat("Y-m-d", $start->getDate(), $tz);
 					} else {
-						$date_start = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $start->getDateTime(), $tz);
+						$date_start = \DateTime::createFromFormat(DATE_ATOM, $start->getDateTime(), $tz);
+						$offset_start = $tz->getOffset($date_start);
 					}
-					//$date_start->setTimeZone(new DateTimeZone('Europe/Paris'));
 					$end = $item->getEnd();
-					//dol_syslog("End : ".print_r($end, true), LOG_NOTICE);
-					//$tend = substr($end->getDateTime(), 0, -1);
+					// dol_syslog("End : ".print_r($end, true), LOG_NOTICE);
 					if ($start->getDate()) {
 						$date_end = \DateTime::createFromFormat("Y-m-d", $end->getDate(), $tz);
 					} else {
-						$date_end = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $end->getDateTime(), $tz);
+						$date_end = \DateTime::createFromFormat(DATE_ATOM, $end->getDateTime(), $tz);
+						$offset_end = $tz->getOffset($date_end);
 					}
-					//dol_syslog("googleapi notifications entering update actioncomm id " . $obj->fk_object, LOG_NOTICE);
+					// dol_syslog("googleapi notifications entering update actioncomm id " . $obj->fk_object, LOG_NOTICE);
 					// mise à jour
 					require_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 					$evt = new ActionComm($db);
@@ -175,15 +179,15 @@ if ($row) {
 					$evt->fetch_optionals();
 					$evt->fetch_userassigned();
 					$evt->oldcopy = clone $evt;
-					$evt->datep = $date_start->getTimeStamp();
-					$evt->datef = $date_end->getTimeStamp();
-					//$evt->fulldayevent = $item->getIsAllDay() ? 1 : 0;
+					$evt->datep = $date_start->getTimeStamp() + $offset_start;
+					$evt->datef = $date_end->getTimeStamp() + $offset_end;
+					// $evt->fulldayevent = $item->getIsAllDay() ? 1 : 0;
 					$label = $item->getSummary();
 					$evt->label = empty($label) ? 'NoSubject' : $label;
 					// note_private est prioritaire mais pour combien de temps
 					$description = $item->getDescription();
-					//$description = print_r($response, true);
-					//Replace bad character by '?' including utf8 four bytes
+					// $description = print_r($response, true);
+					// Replace bad character by '?' including utf8 four bytes
 					// $description = preg_replace('/[x00-x08x10x0Bx0Cx0E-x19x7F]|[x00-x7F][x80-xBF]+|([xC0xC1]|[xF0-xFF])[x80-xBF]*'.
 					// '|[xC2-xDF]((?![x80-xBF])|[x80-xBF]{2,})|[xE0-xEF](([x80-xBF](?![x80-xBF]))|(?![x80-xBF]{2})|[x80-xBF]{3,})/S', '?', $description);
 					// $description = preg_replace('/xE0[x80-x9F][x80-xBF]|xED[xA0-xBF][x80-xBF]/S', '?', $description);
@@ -206,33 +210,32 @@ if ($row) {
 				} else {
 					$start = $item->getStart();
 					//dol_syslog("Start : ".print_r($start, true), LOG_NOTICE);
-					//$test = $item->getStart()->getTimeZone();
 					$tz = new \DateTimeZone($main_tz);
+					$offset_start = 0;
+					$offset_end = 0;
 					//dol_syslog("Timezone : ".print_r($tz, true), LOG_NOTICE);
-					/// on retire le dernier zéro sinon on n'arrive pas à créer
-					//$tstart = substr($start->getDateTime(), 0, -1);
 					if ($start->getDate()) {
 						$date_start = \DateTime::createFromFormat("Y-m-d", $start->getDate(), $tz);
 					} else {
 						$date_start = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $start->getDateTime(), $tz);
+						$offset_start = $tz->getOffset($date_start);
 					}
 					//dol_syslog("Date Start : ".print_r($date_start, true), LOG_NOTICE);
-					//$date_start->setTimeZone(new DateTimeZone('Europe/Paris'));
 					$end = $item->getEnd();
 					//dol_syslog("End : ".print_r($end, true), LOG_NOTICE);
-					//$tend = substr($end->getDateTime(), 0, -1);
 					if ($end->getDate()) {
 						$date_end = \DateTime::createFromFormat("Y-m-d", $end->getDate(), $tz);
 					} else {
 						$date_end = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $end->getDateTime(), $tz);
+						$offset_end = $tz->getOffset($date_end);
 					}
 					googleapiCreateActioncomm(
 						// propriétaire
 						$fuser,
 						null,
 						'AC_GAPI_CAL',
-						$date_start->getTimestamp(),
-						$date_end->getTimestamp(),
+						$date_start->getTimestamp() + $offset_start,
+						$date_end->getTimestamp() + $offset_end,
 						$item->getSummary(),
 						$item->getDescription(),
 						// location

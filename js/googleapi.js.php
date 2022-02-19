@@ -39,13 +39,8 @@ include '../config.php';
 
 // Define js type
 top_httphead('text/javascript; charset=UTF-8');
-// // Important: Following code is to cache this file to avoid page request by browser at each Dolibarr page access.
-// // You can use CTRL+F5 to refresh your browser cache.
-if (empty($dolibarr_nocache)) {
-	header('Cache-Control: max-age=3600, public, must-revalidate');
-} else {
-	header('Cache-Control: no-cache');
-}
+header('Cache-Control: no-cache');
+
 if (!is_object($user) && empty($user->id)) {
 	exit;
 }
@@ -69,7 +64,8 @@ var refresh_work;
 // We set a delay before launching first test so next check will arrive after the time_auto_update compared to previous one.
 var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000;   //need milliseconds
 if (login != '') {
-	console.log("Launch GoogleApi Email check: setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
+	console.log("Launch GoogleApi Email check: ")
+	console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
 	setTimeout(first_execution, time_first_execution);
 }
 

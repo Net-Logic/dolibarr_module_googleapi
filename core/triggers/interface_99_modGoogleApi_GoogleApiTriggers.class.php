@@ -405,7 +405,11 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			),
 		));
 
-		$calendarId = 'primary';
+		if (empty($staticuser->array_options['options_googleapi_calendarId'])) {
+			$calendarId = 'primary';
+		} else {
+			$calendarId = $staticuser->array_options['options_googleapi_calendarId'];
+		}
 		$service = new \Google\Service\Calendar($client);
 		$event = $service->events->insert($calendarId, $event);
 
@@ -479,7 +483,11 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			],
 		]);
 
-		$calendarId = 'primary';
+		if (empty($staticuser->array_options['options_googleapi_calendarId'])) {
+			$calendarId = 'primary';
+		} else {
+			$calendarId = $staticuser->array_options['options_googleapi_calendarId'];
+		}
 		$service = new \Google\Service\Calendar($client);
 		if (empty($object->array_options['options_googleapi_EventId'])) {
 			$event = $service->events->insert($calendarId, $event);
@@ -513,7 +521,11 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 			$client = getGoogleApiClient($staticuser);
 
-			$calendarId = 'primary';
+			if (empty($staticuser->array_options['options_googleapi_calendarId'])) {
+				$calendarId = 'primary';
+			} else {
+				$calendarId = $staticuser->array_options['options_googleapi_calendarId'];
+			}
 			$service = new \Google\Service\Calendar($client);
 			try {
 				$event = $service->events->delete($calendarId, $object->oldcopy->array_options['options_googleapi_EventId']);

@@ -232,7 +232,6 @@ if ($row) {
 					googleapiCreateActioncomm(
 						// propriétaire
 						$fuser,
-						null,
 						'AC_GAPI_CAL',
 						$date_start->getTimestamp() + $offset_start,
 						$date_end->getTimestamp() + $offset_end,

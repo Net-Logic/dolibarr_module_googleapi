@@ -179,6 +179,13 @@ class ActionsGoogleApi
 				$parameters['head'][$counter][2] = 'googleapiemails';
 				$counter++;
 			}
+			if (in_array($element, ['user'])) {
+				require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';
+				$parameters['head'][$counter][0] = dol_buildpath('/googleapi/tabs/usertoken.php', 1) . '?id=' . $id;
+				$parameters['head'][$counter][1] = img_picto($langs->trans('GoogleApiTokenTab'), 'object_googleapi@googleapi');
+				$parameters['head'][$counter][2] = 'googleapitoken';
+				$counter++;
+			}
 			if ($counter > 0 && (int) DOL_VERSION < 14) {
 				$this->results = $parameters['head'];
 				// return 1 to replace standard code
@@ -187,6 +194,7 @@ class ActionsGoogleApi
 				// en V14 et + $parameters['head'] est modifiable par référence
 				return 0;
 			}
+			return 0;
 		}
 	}
 

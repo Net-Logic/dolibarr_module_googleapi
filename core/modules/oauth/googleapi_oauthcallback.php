@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015       Frederic France      <frederic.france@free.fr>
+ * Copyright (C) 2015-2022  Frederic France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,8 @@ if (!empty($_GET['error'])) {
 	// If we don't have an authorization code then get one
 	// https://developers.google.com/identity/protocols/oauth2/scopes
 	$authUrl = $provider->getAuthorizationUrl([
+		'prompt' => 'consent',
+		'access_type' => 'offline',
 		'scope' => [
 			'https://www.googleapis.com/auth/calendar',
 			'https://mail.google.com/',

@@ -195,7 +195,6 @@ function getGoogleApiClient($fuser)
  * Create agenda event from task
  *
  * @param   User    $owner          Owner of actioncomm
- * @param   Object  $object         Object related to task, holiday
  * @param   string  $type_code      code actioncomm
  * @param   string  $date_start     start date of evt (gmt)
  * @param   string  $date_end       end date of evt (gmt)
@@ -206,13 +205,13 @@ function getGoogleApiClient($fuser)
  * @param   int     $notrigger      0 or 1 for no trigger
  * @return  int                     <0 not ok, >0 ok
  */
-function googleapiCreateActioncomm($owner, $object, $type_code, $date_start, $date_end, $label, $description = '', $location = '', $googleapiId = '', $notrigger = 0)
+function googleapiCreateActioncomm($owner, $type_code, $date_start, $date_end, $label, $description = '', $location = '', $googleapiId = '', $notrigger = 0)
 {
 	global $db, $conf, $langs;
 
 	$langs->load('googleapi@googleapi');
 
-	dol_syslog("googleapiCreateActioncomm ".$date_start." => ".$date_end, LOG_NOTICE);
+	dol_syslog("googleapiCreateActioncomm " . $date_start . " => " . $date_end, LOG_NOTICE);
 
 	include_once DOL_DOCUMENT_ROOT . '/comm/action/class/actioncomm.class.php';
 	$actioncomm = new ActionComm($db);
@@ -266,7 +265,7 @@ function googleapiCreateActioncomm($owner, $object, $type_code, $date_start, $da
 }
 
 /**
- * Delete agenda event from task
+ * Delete agenda event from google NOT USED
  *
  * @param   Object    $object     Object related to task
  * @return  int                 <0 not ok, >0 ok
@@ -288,8 +287,6 @@ function googleapiDeleteActioncomm($object)
 	$sql = 'SELECT id FROM ' . MAIN_DB_PREFIX . 'actioncomm WHERE fk_element=' . $object->id . ' AND elementtype="' . $db->escape($object->element) . '"';
 	//var_dump($sql);exit;
 	$resql = $db->query($sql);
-	//$langs->load('googleapi@googleapi');
-	//$holiday_label = $langs->trans('googleapiHoliday');
 
 	while ($resql && $obj = $db->fetch_object($resql)) {
 		//var_dump($obj);exit;

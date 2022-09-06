@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2013-2016  Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2014-2020  Frédéric France      <frederic.france@netlogic.fr>
+ * Copyright (C) 2014-2022  Frédéric France      <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ use League\OAuth2\Client\Provider\GoogleUser;
 // Load translation files required by the page
 $langs->loadLangs(array('admin', 'oauth', 'googleapi@googleapi'));
 
-if (! $user->admin) {
+if (!$user->admin) {
 	accessforbidden();
 }
 
@@ -64,12 +64,12 @@ if ($action == 'setconst' && $user->admin) {
 	foreach ($_POST['setupdriver'] as $setupconst) {
 		//print '<pre>'.print_r($setupconst, true).'</pre>';
 		$result = dolibarr_set_const($db, $setupconst['varname'], $setupconst['value'], 'chaine', 0, '', $conf->entity);
-		if (! $result > 0) {
+		if (!$result > 0) {
 			$error++;
 		}
 	}
 
-	if (! $error) {
+	if (!$error) {
 		$db->commit();
 		setEventMessages($langs->trans("SetupSaved"), null);
 	} else {
@@ -83,11 +83,11 @@ if ($action == 'setvalue' && $user->admin) {
 	$db->begin();
 
 	$result = dolibarr_set_const($db, $varname, $value, 'chaine', 0, '', $conf->entity);
-	if (! $result > 0) {
+	if (!$result > 0) {
 		$error++;
 	}
 
-	if (! $error) {
+	if (!$error) {
 		$db->commit();
 		setEventMessages($langs->trans("SetupSaved"), null);
 	} else {
@@ -126,7 +126,7 @@ if ($user->admin) {
 
 	$OAUTH_SERVICENAME = 'GoogleApi';
 	$urltorenew = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
-	$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token='.$_SESSION['newtoken'].'&backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
+	$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token=' . $_SESSION['newtoken'] . '&backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
 	$urltocheckperms = 'https://security.google.com/settings/security/permissions';
 
 

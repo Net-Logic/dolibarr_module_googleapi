@@ -1,0 +1,14 @@
+/*
+ * Language code: it_IT
+ * Generation date 2022-09-06 12:32:53
+ */
+GoogleApiSettings=Impostazioni del PLC
+GoogleApiTokenManager=Gestione dei gettoni
+GoogleApiAbout=Di..
+GoogleApiCronNothingDone=Nessuna azione eseguita nel cron.
+GoogleApiMailUnreadItems=Email non lette
+GoogleApiMailTotalItems=E-mail in totale
+GoogleApiUnreadEmailNone=Nessuna email non letta
+GoogleApiUnreadEmailOne=C'è un'e-mail non letta
+GoogleApiUnreadEmailMany=Ci sono e-mail %s non lette
+GoogleApiMailsTab=E-mail

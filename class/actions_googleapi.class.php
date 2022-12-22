@@ -140,6 +140,7 @@ class ActionsGoogleApi
 
 		// var_dump($parameters['object']);
 		// var_dump($parameters['mode']);
+		// var_dump($parameters);
 		if (!isset($parameters['object']->element)) {
 			return 0;
 		}
@@ -147,6 +148,10 @@ class ActionsGoogleApi
 			// utilisé si on veut faire disparaitre des onglets.
 			return 0;
 		} elseif ($parameters['mode'] == 'add') {
+			if (isset($parameters['filterorigmodule']) && $parameters['filterorigmodule'] == 'core') {
+				// avoid to have two tabs when filter is active
+				return 0;
+			}
 			$langs->load('googleapi@googleapi');
 			// utilisé si on veut ajouter des onglets.
 			$counter = count($parameters['head']);

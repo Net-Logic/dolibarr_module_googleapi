@@ -295,7 +295,7 @@ if (!empty($owner)) {
 	$user->update($user, 1);
 }
 
-$client = getGoogleApiClient($user);
+// $client = getGoogleApiClient($user);
 
 // $gdocs = new Google\Service\Docs\
 // $drive = new \Google\Service\Drive($client);
@@ -303,29 +303,30 @@ $client = getGoogleApiClient($user);
 // $drivelist = $drive->files->listFiles($params);
 // var_dump($drivelist);
 
-$service = new \Google\Service\Sheets($client);
+// $service = new \Google\Service\Sheets($client);
 
-try {
-	$spreadsheetId = '1Y5dzd0kIL8B-g5okraVnV2c-2IMao3axDSguSFzOxqM';
-	$range = 'A1:E1';
-	$response = $service->spreadsheets_values->get($spreadsheetId, $range);
+// try {
+// 	$spreadsheetId = '1Y5dzd0kIL8B-g5okraVnV2c-2IMao3axDSguSFzOxqM';
+// 	$range = 'A1:E1';
+// 	$response = $service->spreadsheets_values->get($spreadsheetId, $range);
 
-	var_dump($response);
-	//$values = $response->getValues();
+// 	var_dump($response);
+// 	//$values = $response->getValues();
 
-	// if (empty($values)) {
-	// 	print "No data found.\n";
-	// } else {
-	// 	print "Name, Major:\n";
-	// 	foreach ($values as $row) {
-	// 		// Print columns A and E, which correspond to indices 0 and 4.
-	// 		printf("%s, %s\n", $row[0], $row[4]);
-	// 	}
-	// }
-} catch (Exception $e) {
-	// TODO(developer) - handle error appropriately
-	echo 'Message: ' .$e->getMessage();
-}
+// 	// if (empty($values)) {
+// 	// 	print "No data found.\n";
+// 	// } else {
+// 	// 	print "Name, Major:\n";
+// 	// 	foreach ($values as $row) {
+// 	// 		// Print columns A and E, which correspond to indices 0 and 4.
+// 	// 		printf("%s, %s\n", $row[0], $row[4]);
+// 	// 	}
+// 	// }
+// } catch (Exception $e) {
+// 	// TODO(developer) - handle error appropriately
+// 	echo 'Message: ' .$e->getMessage();
+// }
+
 // End of page
 llxFooter();
 $db->close();

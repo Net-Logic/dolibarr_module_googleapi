@@ -88,6 +88,7 @@ $modules = array(
 	'ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
+	'ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
 	'ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
 	'ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
 );

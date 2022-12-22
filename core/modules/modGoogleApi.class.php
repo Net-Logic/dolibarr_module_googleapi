@@ -66,15 +66,15 @@ class modGoogleApi extends DolibarrModules
 		// Used only if file README.md and README-LL.md not found.
 		$this->descriptionlong = "GoogleApi description (Long)";
 
-		$this->editor_name = '<strong>Net Logic</strong>';
+		$this->editor_name = 'Net Logic';
 		$this->editor_url = 'https://netlogic.fr';
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr',
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.0';
+		$this->version = '1.0.0';
 
 		// Url to the file with your last numberversion of this module
-		// $this->url_last_version = 'http://www.example.com/versionmodule.txt';
+		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';
 		// Key used in llx_const table to save module status enabled/disabled
 		// (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
@@ -126,7 +126,7 @@ class modGoogleApi extends DolibarrModules
 					'actioncard',
 					'fileslib',
 				],
-				'entity' => '0',
+				'entity' => $conf->entity,
 			],
 			// Set this to 1 if feature of module are opened to external users
 			'moduleforexternal' => 0,

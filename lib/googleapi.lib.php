@@ -157,11 +157,11 @@ function getGoogleApiClient($fuser)
 	$client = false;
 
 	$provider = new Google([
-		'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID,
-		'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
-		'redirectUri'  => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
+		'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID ?? '',
+		'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET ?? '',
+		'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
-		'accessType'   => 'offline',
+		'accessType' => 'offline',
 	]);
 
 	$token = retrieveAccessToken('GoogleApi', $fuser->id);

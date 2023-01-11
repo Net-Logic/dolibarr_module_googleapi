@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2013-2016  Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2014-2020  Frédéric France      <frederic.france@netlogic.fr>
+ * Copyright (C) 2014-2022  Frédéric France      <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ use League\OAuth2\Client\Provider\GoogleUser;
 // Load translation files required by the page
 $langs->loadLangs(array('admin', 'oauth', 'googleapi@googleapi'));
 
-if (! $user->admin) {
+if (!$user->admin) {
 	accessforbidden();
 }
 
@@ -64,12 +64,12 @@ if ($action == 'setconst' && $user->admin) {
 	foreach ($_POST['setupdriver'] as $setupconst) {
 		//print '<pre>'.print_r($setupconst, true).'</pre>';
 		$result = dolibarr_set_const($db, $setupconst['varname'], $setupconst['value'], 'chaine', 0, '', $conf->entity);
-		if (! $result > 0) {
+		if (!$result > 0) {
 			$error++;
 		}
 	}
 
-	if (! $error) {
+	if (!$error) {
 		$db->commit();
 		setEventMessages($langs->trans("SetupSaved"), null);
 	} else {
@@ -83,11 +83,11 @@ if ($action == 'setvalue' && $user->admin) {
 	$db->begin();
 
 	$result = dolibarr_set_const($db, $varname, $value, 'chaine', 0, '', $conf->entity);
-	if (! $result > 0) {
+	if (!$result > 0) {
 		$error++;
 	}
 
-	if (! $error) {
+	if (!$error) {
 		$db->commit();
 		setEventMessages($langs->trans("SetupSaved"), null);
 	} else {
@@ -126,7 +126,7 @@ if ($user->admin) {
 
 	$OAUTH_SERVICENAME = 'GoogleApi';
 	$urltorenew = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
-	$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token='.$_SESSION['newtoken'].'&backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
+	$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token=' . $_SESSION['newtoken'] . '&backtourl=' . urlencode(dol_buildpath('/googleapi/admin/oauthlogintokens.php', 1));
 	$urltocheckperms = 'https://security.google.com/settings/security/permissions';
 
 
@@ -268,7 +268,7 @@ if ($user->admin) {
 		print $langs->trans("TOKEN_EXPIRE_AT") . '</td>';
 		print '<td colspan="2">';
 		print $expiredat;
-		print '</td>';
+		print ' UTC</td>';
 		print '</tr>';
 	}
 
@@ -280,8 +280,8 @@ if ($user->admin) {
 dol_fiche_end();
 
 $provider = new Google([
-	'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID,
-	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
+	'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID ?? '',
+	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET ?? '',
 	'redirectUri'  => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 	//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 	'accessType'   => 'offline',
@@ -294,6 +294,38 @@ if (!empty($owner)) {
 	$user->array_options['options_googleapi_email'] = $owner->toArray()['email'];
 	$user->update($user, 1);
 }
+
+// $client = getGoogleApiClient($user);
+
+// $gdocs = new Google\Service\Docs\
+// $drive = new \Google\Service\Drive($client);
+// $params = [];
+// $drivelist = $drive->files->listFiles($params);
+// var_dump($drivelist);
+
+// $service = new \Google\Service\Sheets($client);
+
+// try {
+// 	$spreadsheetId = '1Y5dzd0kIL8B-g5okraVnV2c-2IMao3axDSguSFzOxqM';
+// 	$range = 'A1:E1';
+// 	$response = $service->spreadsheets_values->get($spreadsheetId, $range);
+
+// 	var_dump($response);
+// 	//$values = $response->getValues();
+
+// 	// if (empty($values)) {
+// 	// 	print "No data found.\n";
+// 	// } else {
+// 	// 	print "Name, Major:\n";
+// 	// 	foreach ($values as $row) {
+// 	// 		// Print columns A and E, which correspond to indices 0 and 4.
+// 	// 		printf("%s, %s\n", $row[0], $row[4]);
+// 	// 	}
+// 	// }
+// } catch (Exception $e) {
+// 	// TODO(developer) - handle error appropriately
+// 	echo 'Message: ' .$e->getMessage();
+// }
 
 // End of page
 llxFooter();

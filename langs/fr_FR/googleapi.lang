@@ -23,3 +23,5 @@ GoogleApiUnreadEmailNone=Aucun email non lu
 GoogleApiUnreadEmailOne=Il y a un email non lu
 GoogleApiUnreadEmailMany=Il y a %s emails non lus
 GoogleApiMailsTab=Emails
+OAUTH_GOOGLEAPI_NAME=Google APIs
+OAUTH_GOOGLEAPI_ID=ID Client

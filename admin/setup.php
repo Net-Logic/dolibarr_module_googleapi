@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2004-2017  Laurent Destailleur     <eldy@users.sourceforge.net>
- * Copyright (C) 2019-2020  Frédéric France         <frederic.france@netlogic.fr>
+ * Copyright (C) 2019-2022  Frédéric France         <frederic.france@netlogic.fr>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,6 +88,7 @@ $modules = array(
 	'ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
+	'ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
 	'ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
 	'ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
 );

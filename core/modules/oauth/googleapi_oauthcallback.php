@@ -61,9 +61,9 @@ if ($action == 'delete' && !empty($user->id)) {
 }
 
 $provider = new Google([
-	'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID,
-	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
-	'redirectUri'  => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
+	'clientId' => $conf->global->OAUTH_GOOGLEAPI_ID ?? '',
+	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET ?? '',
+	'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 	//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 	'accessType'   => 'offline',
 ]);
@@ -75,13 +75,18 @@ if (!empty($_GET['error'])) {
 	$_SESSION["backtourlsavedbeforeoauthjump"] = $backtourl;
 	// If we don't have an authorization code then get one
 	// https://developers.google.com/identity/protocols/oauth2/scopes
+	$scopes = [
+		'https://www.googleapis.com/auth/calendar',
+		'https://mail.google.com/',
+	];
+	// https://developers.google.com/identity/protocols/oauth2/scopes#docs
+	$scopes[] = 'https://www.googleapis.com/auth/documents';
+	$scopes[] = 'https://www.googleapis.com/auth/drive';
+	$scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
 	$authUrl = $provider->getAuthorizationUrl([
 		'prompt' => 'consent',
 		'access_type' => 'offline',
-		'scope' => [
-			'https://www.googleapis.com/auth/calendar',
-			'https://mail.google.com/',
-		],
+		'scope' => $scopes,
 	]);
 	$_SESSION['oauth2state'] = $provider->getState();
 	header('Location: ' . $authUrl);

@@ -1,0 +1,14 @@
+/*
+ * Language code: de_DE
+ * Generation date 2022-09-06 12:32:58
+ */
+GoogleApiSettings=SPS-Einstellungen
+GoogleApiTokenManager=Token-Verwaltung
+GoogleApiAbout=Um..
+GoogleApiCronNothingDone=Keine Aktion im Cron ausgeführt.
+GoogleApiMailUnreadItems=Ungelesene E-Mail(s)
+GoogleApiMailTotalItems=E-Mail(s) insgesamt
+GoogleApiUnreadEmailNone=Keine ungelesenen E-Mails
+GoogleApiUnreadEmailOne=Es gibt eine ungelesene E-Mail
+GoogleApiUnreadEmailMany=Es gibt ungelesene %s-E-Mails
+GoogleApiMailsTab=E-Mails

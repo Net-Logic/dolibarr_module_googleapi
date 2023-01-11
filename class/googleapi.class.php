@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2019-2020  Frédéric France         <frederic.france@netlogic.fr>
+/* Copyright (C) 2019-2022  Frédéric France         <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ class GoogleApi
 		global $conf, $db;
 		global $dolibarr_main_url_root;
 
-		if (! is_object($this->db)) {
+		if (!is_object($this->db)) {
 			$this->db = $db;
 		}
 
@@ -78,7 +78,7 @@ class GoogleApi
 
 		$pushactive = 0;
 
-		if (! empty($conf->global->OAUTH_GOOGLEAPI_ID) && ! empty($conf->global->OAUTH_GOOGLEAPI_SECRET)) {
+		if (!empty($conf->global->OAUTH_GOOGLEAPI_ID) && !empty($conf->global->OAUTH_GOOGLEAPI_SECRET)) {
 			$sql = "SELECT u.rowid as uid, u.login FROM " . MAIN_DB_PREFIX . "user AS u";
 			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "prune_oauth_token AS ot ON ot.fk_user=u.rowid";
 			$sql .= " WHERE u.statut=1 AND ot.service='GoogleApi'";
@@ -89,7 +89,7 @@ class GoogleApi
 					$staticuser = new User($this->db);
 					$staticuser->fetch($row->uid);
 					// we check for user which have a token
-					if (! empty($conf->global->GOOGLEAPI_ENABLE_PUSH_ME_EVENTS)) {
+					if (!empty($conf->global->GOOGLEAPI_ENABLE_PUSH_ME_EVENTS)) {
 						$this->chekValidPushNotificationFor($staticuser, 'events', $urlfornotification);
 						$pushactive++;
 					}
@@ -133,7 +133,7 @@ class GoogleApi
 		$service = new Google\Service\Calendar($client);
 
 		$sql = "SELECT rowid, userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber FROM " . MAIN_DB_PREFIX . "googleapi_watchs";
-		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="'.$this->db->escape($type).'"';
+		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="' . $this->db->escape($type) . '"';
 
 		$resql = $this->db->query($sql);
 		if ($resql && $this->db->num_rows($resql) > 0) {
@@ -170,7 +170,7 @@ class GoogleApi
 					$sql .= ", '" . ($this->db->idate(substr($watch->getExpiration(), 0, -3))) . "'";
 					$sql .= ", '1')";
 					$resql = $this->db->query($sql);
-					dol_syslog(get_class($this).' '.$sql, LOG_NOTICE);
+					dol_syslog(get_class($this) . ' ' . $sql, LOG_NOTICE);
 					//var_dump($this->watchResp);print $sql;exit;
 				} catch (Exception $e) {
 					dol_syslog($e->getmessage(), LOG_ERR);

@@ -202,6 +202,31 @@ class modGoogleApi extends DolibarrModules
 
 		// Permissions
 		$this->rights = [];    // Permission array used by this module
+		$r = 0;
+		// Permission id (must not be already used)
+		$this->rights[$r][0] = $this->numero + $r;
+		// Permission label
+		$this->rights[$r][1] = 'Read myobject of Googleapi';
+		// Permission by default for new user (0/1)
+		$this->rights[$r][3] = 1;
+		// In php code, permission will be checked by test if ($user->rights->googleapi->level1->level2)
+		$this->rights[$r][4] = 'read';
+		// In php code, permission will be checked by test if ($user->rights->googleapi->level1->level2)
+		$this->rights[$r][5] = '';
+
+		$r++;
+		$this->rights[$r][0] = $this->numero + $r;
+		$this->rights[$r][1] = 'Create/Update myobject of Googleapi';
+		$this->rights[$r][3] = 1;
+		$this->rights[$r][4] = 'write';
+		$this->rights[$r][5] = '';
+
+		$r++;
+		$this->rights[$r][0] = $this->numero + $r;
+		$this->rights[$r][1] = 'Delete myobject of Googleapi';
+		$this->rights[$r][3] = 1;
+		$this->rights[$r][4] = 'delete';
+		$this->rights[$r][5] = '';
 
 
 		// Main menu entries

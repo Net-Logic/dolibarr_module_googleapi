@@ -12,3 +12,5 @@ GoogleApiUnreadEmailNone=Nessuna email non letta
 GoogleApiUnreadEmailOne=C'è un'e-mail non letta
 GoogleApiUnreadEmailMany=Ci sono e-mail %s non lette
 GoogleApiMailsTab=E-mail
+OAUTH_GOOGLEAPI_NAME=API di Google
+OAUTH_GOOGLEAPI_ID=identificativo del cliente

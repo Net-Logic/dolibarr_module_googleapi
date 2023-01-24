@@ -12,3 +12,5 @@ GoogleApiUnreadEmailNone=No unread emails
 GoogleApiUnreadEmailOne=There is an unread email
 GoogleApiUnreadEmailMany=There are %s unread emails
 GoogleApiMailsTab=Emails
+OAUTH_GOOGLEAPI_NAME=Google APIs
+OAUTH_GOOGLEAPI_ID=Customer ID

@@ -40,7 +40,7 @@ jobs:
         run: echo ${{ steps.setup-php.outputs.php-version }}
       - name: Run PHPCS
         run: phpcs -q --report=checkstyle --standard=codesniffer/ruleset.xml --extensions=php --ignore=*/tx/*,*/vendor/* . | cs2pr --graceful-warnings
-      - name: Run Paralell Lint
+      - name: Run Parallel Lint
         run: parallel-lint --exclude vendor/ .
       - name: Run VarDump Check
         run: var-dump-check --extensions php --tracy --exclude vendor/ .
@@ -51,7 +51,7 @@ jobs:
           php ./.tx/autotranslator.php fr_FR es_ES ${{ secrets.GOOGLE_API_TRANSLATE }}
           php ./.tx/autotranslator.php fr_FR de_DE ${{ secrets.GOOGLE_API_TRANSLATE }}
       - name: Run changelog
-        run: npx lerna-changelog > ChangeLog.md
+        run: npx lerna-changelog --from=v0.0.0 > ChangeLog.md
         env:
           GITHUB_AUTH: ${{ secrets.GITHUB_TOKEN }}
       - name: Bump version and push tag

@@ -1,0 +1,22 @@
+/*
+ * Language code: en_US
+ * Generation date 2022-09-06 12:32:55
+ */
+GoogleApiSettings=PLC settings
+GoogleApiTokenManager=Token Management
+GoogleApiAbout=About..
+GoogleApiCronNothingDone=No action performed in the cron.
+GoogleApiMailUnreadItems=Unread email(s)
+GoogleApiMailTotalItems=Email(s) in total
+GoogleApiUnreadEmailNone=No unread emails
+GoogleApiUnreadEmailOne=There is an unread email
+GoogleApiUnreadEmailMany=There are %s unread emails
+GoogleApiMailsTab=Emails
+OAUTH_GOOGLEAPI_NAME=Google APIs
+OAUTH_GOOGLEAPI_ID=Customer ID
+TOKEN_REFRESH_BACKUP=Copy of renewal token
+GoogleApiCalendarId=Calendar ID to sync
+GoogleApiSetCalendarId=Setting the calendar to synchronize
+GoogleApiConfirmSetCalendarId=Confirm calendar choice
+GoogleApiEnableExtrafieldsDebug=Enable extrafield debugging
+GoogleApiEnableDevelopperMode=Enable developer mode

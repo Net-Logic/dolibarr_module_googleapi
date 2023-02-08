@@ -1,0 +1,33 @@
+# Copyright (C) 2019       Frédéric France         <frederic.france@netlogic.fr>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+GoogleApiSettings=Réglages API
+GoogleApiTokenManager=Gestion Token
+GoogleApiAbout=A propos..
+GoogleApiCronNothingDone=Aucune action effectuée dans le cron.
+GoogleApiMailUnreadItems=Email(s) non lu(s)
+GoogleApiMailTotalItems=Email(s) au total
+GoogleApiUnreadEmailNone=Aucun email non lu
+GoogleApiUnreadEmailOne=Il y a un email non lu
+GoogleApiUnreadEmailMany=Il y a %s emails non lus
+GoogleApiMailsTab=Emails
+OAUTH_GOOGLEAPI_NAME=Google APIs
+OAUTH_GOOGLEAPI_ID=ID Client
+TOKEN_REFRESH_BACKUP=Copie du token de renouvellement
+GoogleApiCalendarId=ID de Calendrier à synchroniser
+GoogleApiSetCalendarId=Paramétrage du calendrier à synchroniser
+GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier
+GoogleApiEnableExtrafieldsDebug=Activer le debug des extrafields
+GoogleApiEnableDevelopperMode=Activer le mode développeur

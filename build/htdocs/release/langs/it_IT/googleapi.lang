@@ -1,0 +1,22 @@
+/*
+ * Language code: it_IT
+ * Generation date 2022-09-06 12:32:53
+ */
+GoogleApiSettings=Impostazioni del PLC
+GoogleApiTokenManager=Gestione dei gettoni
+GoogleApiAbout=Di..
+GoogleApiCronNothingDone=Nessuna azione eseguita nel cron.
+GoogleApiMailUnreadItems=Email non lette
+GoogleApiMailTotalItems=E-mail in totale
+GoogleApiUnreadEmailNone=Nessuna email non letta
+GoogleApiUnreadEmailOne=C'è un'e-mail non letta
+GoogleApiUnreadEmailMany=Ci sono e-mail %s non lette
+GoogleApiMailsTab=E-mail
+OAUTH_GOOGLEAPI_NAME=API di Google
+OAUTH_GOOGLEAPI_ID=identificativo del cliente
+TOKEN_REFRESH_BACKUP=Copia del token di rinnovo
+GoogleApiCalendarId=ID calendario da sincronizzare
+GoogleApiSetCalendarId=Impostazione del calendario da sincronizzare
+GoogleApiConfirmSetCalendarId=Conferma la scelta del calendario
+GoogleApiEnableExtrafieldsDebug=Abilita il debug extrafield
+GoogleApiEnableDevelopperMode=Abilita la modalità sviluppatore

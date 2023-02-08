@@ -1,0 +1,22 @@
+/*
+ * Language code: de_DE
+ * Generation date 2022-09-06 12:32:58
+ */
+GoogleApiSettings=SPS-Einstellungen
+GoogleApiTokenManager=Token-Verwaltung
+GoogleApiAbout=Um..
+GoogleApiCronNothingDone=Keine Aktion im Cron ausgeführt.
+GoogleApiMailUnreadItems=Ungelesene E-Mail(s)
+GoogleApiMailTotalItems=E-Mail(s) insgesamt
+GoogleApiUnreadEmailNone=Keine ungelesenen E-Mails
+GoogleApiUnreadEmailOne=Es gibt eine ungelesene E-Mail
+GoogleApiUnreadEmailMany=Es gibt ungelesene %s-E-Mails
+GoogleApiMailsTab=E-Mails
+OAUTH_GOOGLEAPI_NAME=Google-APIs
+OAUTH_GOOGLEAPI_ID=Kundennummer
+TOKEN_REFRESH_BACKUP=Kopie des Verlängerungstokens
+GoogleApiCalendarId=Zu synchronisierende Kalender-ID
+GoogleApiSetCalendarId=Einstellen des zu synchronisierenden Kalenders
+GoogleApiConfirmSetCalendarId=Bestätigen Sie die Kalenderauswahl
+GoogleApiEnableExtrafieldsDebug=Aktivieren Sie Extrafield-Debugging
+GoogleApiEnableDevelopperMode=Entwicklermodus aktivieren

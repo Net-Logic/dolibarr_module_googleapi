@@ -14,3 +14,7 @@ GoogleApiUnreadEmailMany=Hay correos electrónicos %s no leídos
 GoogleApiMailsTab=Correos electrónicos
 OAUTH_GOOGLEAPI_NAME=API de Google
 OAUTH_GOOGLEAPI_ID=Identificación del cliente
+TOKEN_REFRESH_BACKUP=Copia del token de renovación
+GoogleApiCalendarId=ID de calendario para sincronizar
+GoogleApiSetCalendarId=Configuración del calendario para sincronizar
+GoogleApiConfirmSetCalendarId=Confirmar elección de calendario

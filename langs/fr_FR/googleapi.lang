@@ -32,3 +32,5 @@ GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier
 GoogleApiEnableExtrafieldsDebug=Activer le debug des extrafields
 GoogleApiEnableDevelopperMode=Activer le mode développeur
 GoogleApiEnablePushMeEvents=Recevoir des notifications push de l'API pour mettre à jour les évènements créés ou modifiés
+GoogleApiEnablePushMeMessages=Recevoir des notifications push de l'API pour mettre à jour les messages créés ou modifiés
+GoogleApiEnablePushMeContacts=Recevoir des notifications push de l'API pour mettre à jour les contacts créés ou modifiés

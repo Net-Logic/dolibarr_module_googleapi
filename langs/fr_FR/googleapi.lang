@@ -31,3 +31,4 @@ GoogleApiSetCalendarId=Paramétrage du calendrier à synchroniser
 GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier
 GoogleApiEnableExtrafieldsDebug=Activer le debug des extrafields
 GoogleApiEnableDevelopperMode=Activer le mode développeur
+GoogleApiEnablePushMeEvents=Recevoir des notifications push de l'API pour mettre à jour les évènements créés ou modifiés

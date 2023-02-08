@@ -16,7 +16,7 @@
 GoogleApiSettings=Réglages API
 GoogleApiTokenManager=Gestion Token
 GoogleApiAbout=A propos..
-GoogleApiCronNothingDone=Aucune action effectu"e dans le cron.
+GoogleApiCronNothingDone=Aucune action effectuée dans le cron.
 GoogleApiMailUnreadItems=Email(s) non lu(s)
 GoogleApiMailTotalItems=Email(s) au total
 GoogleApiUnreadEmailNone=Aucun email non lu
@@ -25,3 +25,7 @@ GoogleApiUnreadEmailMany=Il y a %s emails non lus
 GoogleApiMailsTab=Emails
 OAUTH_GOOGLEAPI_NAME=Google APIs
 OAUTH_GOOGLEAPI_ID=ID Client
+TOKEN_REFRESH_BACKUP=Copie du token de renouvellement
+GoogleApiCalendarId=ID de Calendrier à synchroniser
+GoogleApiSetCalendarId=Paramétrage du calendrier à synchroniser
+GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier

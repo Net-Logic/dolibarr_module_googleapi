@@ -29,3 +29,5 @@ TOKEN_REFRESH_BACKUP=Copie du token de renouvellement
 GoogleApiCalendarId=ID de Calendrier à synchroniser
 GoogleApiSetCalendarId=Paramétrage du calendrier à synchroniser
 GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier
+GoogleApiEnableExtrafieldsDebug=Activer le debug des extrafields
+GoogleApiEnableDevelopperMode=Activer le mode développeur

@@ -64,7 +64,7 @@ jobs:
           DEFAULT_BUMP: none
           INITIAL_VERSION: googleapi-0.1.0
       - name: Zip Folder
-        run: rsync -arv --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='.tx/' --exclude='build/' . ./build/htdocs
+        run: rsync -arv --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='.tx/' --exclude='build/' --exclude='codesniffer/' . ./build/htdocs
       - name: Switch to Release Folder
         run: |
           cd release

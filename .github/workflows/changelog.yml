@@ -68,7 +68,7 @@ jobs:
       - name: Switch to Release Folder
         run: |
           cd build
-          ls -la
+          zip -r dolibarr_module-x.x.x.zip htdocs
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Bump version #none

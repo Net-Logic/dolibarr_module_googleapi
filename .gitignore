@@ -1,0 +1,13 @@
+# Generated binaries
+/build/htdocs
+# Doxygen generated documentation
+/build/doxygen/doxygen_warnings.log
+/doc/code/doxygen
+# Composer managed dependencies
+/vendor
+# PHPdocumentor generated files
+/build/phpdoc
+/doc/code/phpdoc
+/.settings/
+/.buildpath
+/.project

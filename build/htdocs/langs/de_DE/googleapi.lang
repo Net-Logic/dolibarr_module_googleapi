@@ -20,3 +20,4 @@ GoogleApiSetCalendarId=Einstellen des zu synchronisierenden Kalenders
 GoogleApiConfirmSetCalendarId=Bestätigen Sie die Kalenderauswahl
 GoogleApiEnableExtrafieldsDebug=Aktivieren Sie Extrafield-Debugging
 GoogleApiEnableDevelopperMode=Entwicklermodus aktivieren
+GoogleApiEnablePushMeEvents=Erhalten Sie API-Push-Benachrichtigungen, um erstellte oder geänderte Ereignisse zu aktualisieren

@@ -21,7 +21,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
          fetch-depth: '0'
       - name: Setup PHP
@@ -62,13 +62,13 @@ jobs:
           CLASSNAME: GoogleApi
           RELEASE_BRANCHES: main
           DEFAULT_BUMP: none
-          INITIAL_VERSION: googleapi-0.1.0
+          INITIAL_VERSION: v0.0.0
       - name: Zip Folder
         run: rsync -arv --delete-after --exclude='.git/' --exclude='.github/' --exclude='.gitignore' --exclude='.tx/' --exclude='build/' --exclude='codesniffer/' . ./build/htdocs
       - name: Switch to Release Folder
         run: |
           cd build
-          zip -r module_googleapi-x.x.x.zip htdocs
+          zip -r module_googleapi-${{ env.module_version }}.zip htdocs
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Bump version #none

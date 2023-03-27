@@ -153,7 +153,7 @@ class modGoogleApi extends DolibarrModules
 		$this->conflictwith = [];
 		$this->langfiles = ["googleapi@googleapi"];
 		// Minimum version of PHP required by module
-		$this->phpmin = [7, 0];
+		$this->phpmin = [7, 1];
 		// Minimum version of Dolibarr required by module
 		$this->need_dolibarr_version = [10, 0];
 		// Warning to show when we activate module. array('always'='text') or array('FR'='textfr','ES'='textes'...)

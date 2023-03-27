@@ -85,23 +85,34 @@ $arrayofparameters = array(
 
 // Paramètres ON/OFF GOOGLEAPI_ est rajouté au paramètre
 $modules = array(
-	'ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
-	'ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
-	'ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
-	'ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
-	'ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
-	'ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
+	'GOOGLEAPI_ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
+	'GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
+	'GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
+	'GOOGLEAPI_ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
+	'GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
+	'GOOGLEAPI_ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
+	// tweak dolibarr
+	'CHECKLASTVERSION_EXTERNALMODULE' => 'CHECKLASTVERSION_EXTERNALMODULE',
 );
+if ((int) DOL_VERSION > 17) {
+	// tweak dolibarr
+	$modules = array_merge(
+		$modules,
+		[
+			'MAIN_ENABLE_AJAX_TOOLTIP' => 'MAIN_ENABLE_AJAX_TOOLTIP',
+		]
+	);
+}
 
 /*
  * Actions
  */
 foreach ($modules as $const => $desc) {
 	if ($action == 'activate_' . strtolower($const)) {
-		dolibarr_set_const($db, "GOOGLEAPI_" . $const, "1", 'chaine', 0, '', $conf->entity);
+		dolibarr_set_const($db, $const, "1", 'chaine', 0, '', $conf->entity);
 	}
 	if ($action == 'disable_' . strtolower($const)) {
-		dolibarr_del_const($db, "GOOGLEAPI_" . $const, $conf->entity);
+		dolibarr_del_const($db, $const, $conf->entity);
 		//header("Location: ".$_SERVER["PHP_SELF"]);
 		//exit;
 	}
@@ -139,7 +150,7 @@ print load_fiche_titre($langs->trans('ConfigOAuth'), $linkback, 'object_googleap
 
 $head = googleapiAdminPrepareHead();
 
-dol_fiche_head($head, 'settings', '', -1, 'technic');
+print dol_get_fiche_head($head, 'settings', '', -1, 'technic');
 
 if ($action == 'edit') {
 	print '<form action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
@@ -213,18 +224,17 @@ if ($action == 'edit') {
 	print '<td align="center" width="100">' . $langs->trans("Action") . '</td>';
 	print "</tr>\n";
 	// Modules
-	foreach ($modules as $const => $desc) {
+	foreach ($modules as $constant => $desc) {
 		print '<tr class="oddeven">';
 		print '<td>' . $langs->trans($desc) . '</td>';
 		print '<td align="center" width="100">';
-		$constante = 'GOOGLEAPI_' . $const;
-		$value = (isset($conf->global->$constante) ? $conf->global->$constante : 0);
+		$value = (isset($conf->global->$constant) ? $conf->global->$constant : 0);
 		if ($value == 0) {
-			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=activate_' . strtolower($const) . '&amp;token=' . $_SESSION['newtoken'] . '">';
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=activate_' . strtolower($constant) . '&amp;token=' . $_SESSION['newtoken'] . '">';
 			print img_picto($langs->trans("Disabled"), 'switch_off');
 			print '</a>';
 		} elseif ($value == 1) {
-			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=disable_' . strtolower($const) . '&amp;token=' . $_SESSION['newtoken'] . '">';
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=disable_' . strtolower($constant) . '&amp;token=' . $_SESSION['newtoken'] . '">';
 			print img_picto($langs->trans("Enabled"), 'switch_on');
 			print '</a>';
 		}

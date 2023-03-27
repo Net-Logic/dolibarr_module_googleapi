@@ -23,3 +23,5 @@ GoogleApiEnableDevelopperMode=Habilitar el modo desarrollador
 GoogleApiEnablePushMeEvents=Reciba notificaciones push de API para actualizar eventos creados o modificados
 GoogleApiEnablePushMeMessages=Reciba notificaciones push de la API para actualizar las publicaciones creadas o editadas
 GoogleApiEnablePushMeContacts=Reciba notificaciones push de la API para actualizar los contactos creados o modificados
+MAIN_ENABLE_AJAX_TOOLTIP=Habilite la información sobre herramientas de ajax (requiere la versión de Dolibar&gt; = 18)
+CHECKLASTVERSION_EXTERNALMODULE=Forzar verificación de versiones de módulos externos (no recomendado, esta opción puede haber sido activada por otro módulo)

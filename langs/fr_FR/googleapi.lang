@@ -36,3 +36,4 @@ GoogleApiEnablePushMeMessages=Recevoir des notifications push de l'API pour mett
 GoogleApiEnablePushMeContacts=Recevoir des notifications push de l'API pour mettre à jour les contacts créés ou modifiés
 MAIN_ENABLE_AJAX_TOOLTIP=Activer les tooltips ajax (nécéssite une version de Dolibar >= 18)
 CHECKLASTVERSION_EXTERNALMODULE=Forcer la vérification des versions des modules externes (déconseillé, cette option peux avoir été actvée par un autre module)
+GoogleApiLastEventSync=Timestamp dernière synchro évènements

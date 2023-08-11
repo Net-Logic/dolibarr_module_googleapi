@@ -374,8 +374,29 @@ class ActionsGoogleApi
 			$unread = (int) $obj->unread;
 		}
 		$langs->load('googleapi@googleapi');
-		// https://stackoverflow.com/questions/22735740/how-to-add-badge-on-top-of-font-awesome-symbol
-		$text = '<a href="' . dol_buildpath('/googleapi/googleapiindex.php', 1) . '?mainmenu=home&leftmenu=admintools">';
+
+		// CSS for Badge Count
+		$cssforbadge = '
+		<style type="text/css">
+			.fa-stack[data-count]:after{
+				position:absolute;
+				right:0%;
+				top:1%;
+				content: attr(data-count);
+				font-size:35%;
+				padding:.6em;
+				border-radius:999px;
+				line-height:.75em;
+				color: white;
+				background:rgba(255,0,0,.85);
+				text-align:center;
+				min-width:2em;
+				font-weight:bold;
+			}
+		</style>';
+
+		$text = $cssforbadge;
+		$text = '<a href="https://gmail.google.com" target="_blank">';
 		//$text.= img_picto(":".$langs->trans("GoogleApiEmailInbox"), 'printer_top.png', 'class="printer"');
 		$text .= '<span id="googleapicounter" class="fa-stack fa-2x has-badge atoplogin login_block_elem" data-count="' . $unread . '">';
 		$text .= '    <i class="fa fa-envelope fa-stack-1x atoplogin login_block_elem"></i>';

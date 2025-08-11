@@ -25,3 +25,8 @@ GoogleApiEnablePushMeMessages=Receive API push notifications to update created o
 GoogleApiEnablePushMeContacts=Receive API push notifications to update created or modified contacts
 MAIN_ENABLE_AJAX_TOOLTIP=Enable ajax tooltips (requires Dolibar version &gt;= 18)
 CHECKLASTVERSION_EXTERNALMODULE=Force checking of external module versions (not recommended, this option may have been activated by another module)
+OAUTH_GOOGLEAPI_URI=Callback URL that should be logged in the console
+OAUTH_GOOGLEAPI_SECRET=Oauth Google secret
+OAUTH_GOOGLEAPI_DESC=Go to <a class="notasortlink" href="https://console.developers.google.com/" target="_blank">this page</a> then &quot;Credentials&quot; to create OAuth credentials
+GoogleApiEnablePushMeDocs=Receive push notifications from the API to update created or modified documents
+GoogleApiLastEventSync=Timestamp of last event sync

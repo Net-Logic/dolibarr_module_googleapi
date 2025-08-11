@@ -25,3 +25,8 @@ GoogleApiEnablePushMeMessages=Erhalten Sie API-Push-Benachrichtigungen, um erste
 GoogleApiEnablePushMeContacts=Erhalten Sie API-Push-Benachrichtigungen, um erstellte oder geänderte Kontakte zu aktualisieren
 MAIN_ENABLE_AJAX_TOOLTIP=Ajax-Tooltips aktivieren (erfordert Dolibar-Version &gt;= 18)
 CHECKLASTVERSION_EXTERNALMODULE=Überprüfung externer Modulversionen erzwingen (nicht empfohlen, diese Option wurde möglicherweise von einem anderen Modul aktiviert)
+OAUTH_GOOGLEAPI_URI=Rückruf-URL, die in der Konsole protokolliert werden soll
+OAUTH_GOOGLEAPI_SECRET=OAuth Google-Geheimnis
+OAUTH_GOOGLEAPI_DESC=Gehen Sie auf <a class="notasortlink" href="https://console.developers.google.com/" target="_blank">diese Seite</a> und dann auf „Anmeldeinformationen“, um OAuth-Anmeldeinformationen zu erstellen
+GoogleApiEnablePushMeDocs=Erhalten Sie Push-Benachrichtigungen von der API, um erstellte oder geänderte Dokumente zu aktualisieren
+GoogleApiLastEventSync=Zeitstempel der letzten Ereignissynchronisierung

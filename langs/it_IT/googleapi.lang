@@ -25,3 +25,8 @@ GoogleApiEnablePushMeMessages=Ricevi notifiche push API per aggiornare i post cr
 GoogleApiEnablePushMeContacts=Ricevi notifiche push API per aggiornare i contatti creati o modificati
 MAIN_ENABLE_AJAX_TOOLTIP=Abilita i suggerimenti ajax (richiede la versione Dolibar &gt;= 18)
 CHECKLASTVERSION_EXTERNALMODULE=Forza il controllo delle versioni dei moduli esterni (non consigliato, questa opzione potrebbe essere stata attivata da un altro modulo)
+OAUTH_GOOGLEAPI_URI=URL di callback che dovrebbe essere registrato nella console
+OAUTH_GOOGLEAPI_SECRET=Segreto OAuth di Google
+OAUTH_GOOGLEAPI_DESC=Vai a <a class="notasortlink" href="https://console.developers.google.com/" target="_blank">questa pagina</a> , quindi &quot;Credenziali&quot; per creare le credenziali OAuth
+GoogleApiEnablePushMeDocs=Ricevi notifiche push dall'API per aggiornare i documenti creati o modificati
+GoogleApiLastEventSync=Timestamp dell'ultimo evento di sincronizzazione

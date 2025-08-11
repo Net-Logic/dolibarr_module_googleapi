@@ -313,8 +313,9 @@ class ActionsGoogleApi
 		// utiliser state pour dire checklogin
 		$urllogin .= '&amp;state=checklogin';
 		// générer "nonce" et stocker dans la session pour le vérifier au retour
-		// $_SESSION['nonce'] = ...
-		$urllogin .= '&amp;nonce=678910';
+		$nonce = random_int(100000, 999999);
+		$_SESSION['nonce'] = $nonce;
+		$urllogin .= '&amp;nonce='.$nonce;
 
 		$tpl = '<div class="nowrap center valignmiddle">';
 		$tpl .= '<a class="butAction" href="' . $urllogin . '">';

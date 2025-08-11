@@ -48,7 +48,7 @@ if (GETPOSTISSET('error') && !empty($user->id)) {
 	setEventMessages(GETPOST('error', 'restricthtml'), null, 'errors');
 	setEventMessages(GETPOST('error_description', 'restricthtml'), null, 'errors');
 
-	header('Location: ' . dol_buildpath('/microsoftgraph/tabs/usertoken.php', 2) . '?id=' . $user->id);
+	header('Location: ' . dol_buildpath('/googleapi/tabs/usertoken.php', 2) . '?id=' . $user->id);
 	exit();
 }
 if ($action == 'delete' && !empty($user->id)) {

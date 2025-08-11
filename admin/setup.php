@@ -94,15 +94,6 @@ $modules = array(
 	// tweak dolibarr
 	'CHECKLASTVERSION_EXTERNALMODULE' => 'CHECKLASTVERSION_EXTERNALMODULE',
 );
-if ((int) DOL_VERSION > 17) {
-	// tweak dolibarr
-	$modules = array_merge(
-		$modules,
-		[
-			'MAIN_ENABLE_AJAX_TOOLTIP' => 'MAIN_ENABLE_AJAX_TOOLTIP',
-		]
-	);
-}
 
 /*
  * Actions

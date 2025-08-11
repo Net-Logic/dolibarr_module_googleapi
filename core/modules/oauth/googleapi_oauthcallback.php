@@ -63,11 +63,11 @@ if ($action == 'delete' && !empty($user->id)) {
 $provider = new Google([
 	'clientId' => $conf->global->OAUTH_GOOGLEAPI_ID ?? '',
 	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET ?? '',
-	'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
+	'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 3),
 	//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 	'accessType'   => 'offline',
 ]);
-//print dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2);exit;
+
 if (!empty($_GET['error'])) {
 	// Got an error, probably user denied access
 	exit('Got error: ' . htmlspecialchars($_GET['error'], ENT_QUOTES, 'UTF-8'));

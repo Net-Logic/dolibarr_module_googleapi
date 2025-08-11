@@ -235,29 +235,7 @@ class ActionsGoogleApi
 				$addrtorecipients = $this->getArrayAddress($object->addr_to);
 				$addrccrecipients = $this->getArrayAddress($object->addr_cc);
 				$addrbccrecipients = $this->getArrayAddress($object->addr_bcc);
-				// var_dump($addrbccrecipients);
-				// $host = dol_getprefix('email');
-				// var_dump($parameters);
-				// var_dump($sender);
-				// var_dump($fromsender);
-				// var_dump($recipients);
-				// var_dump($object);exit;
-				// echo "action: " . $action;
-				// $attachments = [];
-				// $i = 0;
-				// foreach ($object->filename_list as $key => $fileattached) {
-				// 	$attachments[$i] = new Google\Service\Gmail\MessagePart();
-				// 	$attachments[$i]->setContentBytes(base64_encode(file_get_contents($fileattached)))
-				// 		->setName($object->mimefilename_list[$key])
-				// 		->setIsInline(false)
-				// 		//->setContentId() // cid if inline
-				// 		->setODataType("#Microsoft.OutlookServices.FileAttachment")
-				// 		->setContentType($object->mimetype_list[$key]);
-				// 	$i++;
-				// 	//print base64_encode(file_get_contents($fileattached));exit;
-				// }
-				// $attachement = new Model\Attachment();
-				// var_dump($attachments);//exit;
+
 				$message = new Google\Service\Gmail\Message();
 				$mime = rtrim(strtr(base64_encode($object->message), '+/', '-_'), '=');
 				$message->setRaw($mime);
@@ -324,8 +302,8 @@ class ActionsGoogleApi
 		require_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
 
 		$langs->load('googleapi@googleapi');
-		$urllogin = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
-		$urllogin .= 'client_id=' . $conf->global->OAUTH_GOOGLEAPI_ID;
+		$urllogin = 'https://login.google.com/common/oauth2/v2.0/authorize?'; // TODO fix URL
+		$urllogin .= 'client_id=' . urlencode(getDolGlobalString('OAUTH_GOOGLEAPI_ID'));
 		// id_token sous forme jwt à décoder et valider
 		$urllogin .= '&amp;response_type=id_token';
 		// TODO check http https
@@ -340,7 +318,7 @@ class ActionsGoogleApi
 
 		$tpl = '<div class="nowrap center valignmiddle">';
 		$tpl .= '<a class="butAction" href="' . $urllogin . '">';
-		$tpl .= '<img src="' . dol_buildpath('/googleapi/img/microsoft-white.png', 1) . '" style="width:140px;height:25px;border:0;">';
+		$tpl .= '<img src="' . dol_buildpath('/googleapi/img/google.png', 1) . '" style="width:140px;height:25px;border:0;">';
 		$tpl .= '</a>';
 		$tpl .= '</div>' . "\n";
 
@@ -374,8 +352,29 @@ class ActionsGoogleApi
 			$unread = (int) $obj->unread;
 		}
 		$langs->load('googleapi@googleapi');
-		// https://stackoverflow.com/questions/22735740/how-to-add-badge-on-top-of-font-awesome-symbol
-		$text = '<a href="' . dol_buildpath('/googleapi/googleapiindex.php', 1) . '?mainmenu=home&leftmenu=admintools">';
+
+		// CSS for Badge Count
+		$cssforbadge = '
+		<style type="text/css">
+			.fa-stack[data-count]:after{
+				position:absolute;
+				right:0%;
+				top:1%;
+				content: attr(data-count);
+				font-size:35%;
+				padding:.6em;
+				border-radius:999px;
+				line-height:.75em;
+				color: white;
+				background:rgba(255,0,0,.85);
+				text-align:center;
+				min-width:2em;
+				font-weight:bold;
+			}
+		</style>';
+
+		$text = $cssforbadge;
+		$text = '<a href="https://gmail.google.com" target="_blank">';
 		//$text.= img_picto(":".$langs->trans("GoogleApiEmailInbox"), 'printer_top.png', 'class="printer"');
 		$text .= '<span id="googleapicounter" class="fa-stack fa-2x has-badge atoplogin login_block_elem" data-count="' . $unread . '">';
 		$text .= '    <i class="fa fa-envelope fa-stack-1x atoplogin login_block_elem"></i>';

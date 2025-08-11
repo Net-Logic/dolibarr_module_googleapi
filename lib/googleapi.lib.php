@@ -66,7 +66,7 @@ function googleapiAdminPrepareHead()
 }
 
 /**
- * Complete $object to change ->label and ->note before pushing event to Microsoft Calendar.
+ * Complete $object to change ->label and ->note before pushing event to Google Calendar.
  *
  * @param   Object      $object     Object event to complete
  * @param   Translate   $langs      Language object
@@ -84,7 +84,7 @@ function googleapi_complete_label_and_note(&$object, $langs)
 	$urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
 	// This is to use same domain name than current
 	//$urlwithroot=DOL_MAIN_URL_ROOT;
-	if (($object->socid > 0 || (! empty($object->thirdparty->id) && $object->thirdparty->id > 0)) && empty($conf->global->MICROSOFTGRAPH_DISABLE_EVENT_LABEL_INC_SOCIETE)) {
+	if (($object->socid > 0 || (!empty($object->thirdparty->id) && $object->thirdparty->id > 0)) && empty($conf->global->GOOGLEAPI_DISABLE_EVENT_LABEL_INC_SOCIETE)) {
 		$thirdparty = new Societe($db);
 		$result = $thirdparty->fetch($object->socid ? $object->socid : $object->thirdparty->id);
 		if ($result > 0) {
@@ -93,16 +93,16 @@ function googleapi_complete_label_and_note(&$object, $langs)
 			$tmpadd = $thirdparty->getFullAddress(0);
 			// we add other info into note
 			$more = '';
-			if ($tmpadd && empty($conf->global->MICROSOFTGRAPH_DISABLE_ADD_ADDRESS_INTO_DESC)) {
+			if ($tmpadd && empty($conf->global->GOOGLEAPI_DISABLE_ADD_ADDRESS_INTO_DESC)) {
 				$more .= "<br>" . $thirdparty->name . "<br>" . $thirdparty->getFullAddress(1) . "<br>";
 			}
-			if (! empty($thirdparty->phone)) {
+			if (!empty($thirdparty->phone)) {
 				$more .= "<br>" . $langs->trans("Phone") . ': ' . $thirdparty->phone;
 			}
-			if (! empty($thirdparty->phone_pro)) {
+			if (!empty($thirdparty->phone_pro)) {
 				$more .= "<br>" . $langs->trans("Phone") . ': ' . $thirdparty->phone_pro;
 			}
-			if (! empty($thirdparty->fax)) {
+			if (!empty($thirdparty->fax)) {
 				$more .= "<br>" . $langs->trans("Fax") . ': ' . $thirdparty->fax;
 			}
 
@@ -110,7 +110,7 @@ function googleapi_complete_label_and_note(&$object, $langs)
 			$object->note .= "<br>" . $more . "<br>" . $langs->trans("GoogleApiLinkToThirdParty") . ': ' . $urltoelem;
 		}
 	}
-	if (($object->contactid > 0 || (! empty($object->contact->id) && $object->contact->id > 0)) && empty($conf->global->MICROSOFTGRAPH_DISABLE_EVENT_LABEL_INC_CONTACT)) {
+	if (($object->contactid > 0 || (!empty($object->contact->id) && $object->contact->id > 0)) && empty($conf->global->GOOGLEAPI_DISABLE_EVENT_LABEL_INC_CONTACT)) {
 		$contact = new Contact($db);
 		$result = $contact->fetch($object->contactid ? $object->contactid : $object->contact->id);
 		if ($result > 0) {
@@ -119,22 +119,22 @@ function googleapi_complete_label_and_note(&$object, $langs)
 			$tmpadd = $contact->getFullAddress(0);
 			// we add other info into note
 			$more = '';
-			if ($tmpadd && empty($conf->global->MICROSOFTGRAPH_DISABLE_ADD_ADDRESS_INTO_DESC)) {
+			if ($tmpadd && empty($conf->global->GOOGLEAPI_DISABLE_ADD_ADDRESS_INTO_DESC)) {
 				$more .= "<br>" . $contact->lastname . "<br>" . $contact->getFullAddress(1) . "<br>";
 			}
-			if (! empty($contact->phone)) {
+			if (!empty($contact->phone)) {
 				$more .= "<br>" . $langs->trans("Phone") . ': ' . $contact->phone;
 			}
-			if (! empty($contact->phone_pro)) {
+			if (!empty($contact->phone_pro)) {
 				$more .= "<br>" . $langs->trans("Phone") . ': ' . $contact->phone_pro;
 			}
-			if (! empty($contact->phone_perso)) {
+			if (!empty($contact->phone_perso)) {
 				$more .= "<br>" . $langs->trans("PhonePerso") . ': ' . $contact->phone_perso;
 			}
-			if (! empty($contact->phone_mobile)) {
+			if (!empty($contact->phone_mobile)) {
 				$more .= "<br>" . $langs->trans("PhoneMobile") . ': ' . $contact->phone_mobile;
 			}
-			if (! empty($contact->fax)) {
+			if (!empty($contact->fax)) {
 				$more .= "<br>" . $langs->trans("Fax") . ': ' . $contact->fax;
 			}
 
@@ -374,10 +374,10 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
 {
 	// use constants when possible, for HipHop support
 	switch ($algo) {
-		// case'HS256':
-		// case'HS384':
-		// case'HS512':
-		//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
+			// case'HS256':
+			// case'HS384':
+			// case'HS512':
+			//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
 
 		case 'RS256':
 			return @openssl_verify($input, $signature, $key, defined('OPENSSL_ALGO_SHA256') ? OPENSSL_ALGO_SHA256 : 'sha256')  === 1;

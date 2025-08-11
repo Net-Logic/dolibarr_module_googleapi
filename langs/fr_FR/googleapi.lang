@@ -25,7 +25,10 @@ GoogleApiUnreadEmailMany=Il y a %s emails non lus
 GoogleApiMailsTab=Emails
 OAUTH_GOOGLEAPI_NAME=Google APIs
 OAUTH_GOOGLEAPI_ID=ID Client
+OAUTH_GOOGLEAPI_URI=Url de callback qui doit être enregistrée dans la console
+OAUTH_GOOGLEAPI_SECRET=Oauth Google secret
 TOKEN_REFRESH_BACKUP=Copie du token de renouvellement
+OAUTH_GOOGLEAPI_DESC=Go to <a class="notasortlink" href="https://console.developers.google.com/" target="_blank">this page</a> then "Credentials" to create OAuth credentials
 GoogleApiCalendarId=ID de Calendrier à synchroniser
 GoogleApiSetCalendarId=Paramétrage du calendrier à synchroniser
 GoogleApiConfirmSetCalendarId=Confirmer le choix du calendrier
@@ -34,6 +37,6 @@ GoogleApiEnableDevelopperMode=Activer le mode développeur
 GoogleApiEnablePushMeEvents=Recevoir des notifications push de l'API pour mettre à jour les évènements créés ou modifiés
 GoogleApiEnablePushMeMessages=Recevoir des notifications push de l'API pour mettre à jour les messages créés ou modifiés
 GoogleApiEnablePushMeContacts=Recevoir des notifications push de l'API pour mettre à jour les contacts créés ou modifiés
-MAIN_ENABLE_AJAX_TOOLTIP=Activer les tooltips ajax (nécéssite une version de Dolibar >= 18)
+GoogleApiEnablePushMeDocs=Recevoir des notifications push de l'API pour mettre à jour les documents créés ou modifiés
 CHECKLASTVERSION_EXTERNALMODULE=Forcer la vérification des versions des modules externes (déconseillé, cette option peux avoir été actvée par un autre module)
 GoogleApiLastEventSync=Timestamp dernière synchro évènements

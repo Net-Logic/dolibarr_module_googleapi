@@ -177,7 +177,7 @@ class ActionsGoogleApi
 					dol_setcache($cachekey, $emailcount, 120);
 				}
 				$parameters['head'][$counter][0] = dol_buildpath('/googleapi/tabs/googleapi_emails.php', 1) . '?id=' . $id . '&amp;module=' . $element;
-				$parameters['head'][$counter][1] = img_picto($langs->trans('GoogleApiMailsTab'), 'object_googleapi@googleapi');//.$langs->trans('GoogleApiMailsTab');
+				$parameters['head'][$counter][1] = img_picto($langs->trans('GoogleApiMailsTab'), 'object_googleapi@googleapi'); //.$langs->trans('GoogleApiMailsTab');
 				if ($emailcount > 0) {
 					$parameters['head'][$counter][1] .= '<span class="badge marginleftonlyshort">' . $emailcount . '</span>';
 				}
@@ -313,8 +313,9 @@ class ActionsGoogleApi
 		// utiliser state pour dire checklogin
 		$urllogin .= '&amp;state=checklogin';
 		// générer "nonce" et stocker dans la session pour le vérifier au retour
-		// $_SESSION['nonce'] = ...
-		$urllogin .= '&amp;nonce=678910';
+		$nonce = random_int(100000, 999999);
+		$_SESSION['nonce'] = $nonce;
+		$urllogin .= '&amp;nonce=' . $nonce;
 
 		$tpl = '<div class="nowrap center valignmiddle">';
 		$tpl .= '<a class="butAction" href="' . $urllogin . '">';

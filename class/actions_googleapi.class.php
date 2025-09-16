@@ -70,23 +70,6 @@ class ActionsGoogleApi
 	}
 
 	/**
-	 * Execute action
-	 *
-	 * @param   array           $parameters     Array of parameters
-	 * @param   CommonObject    $object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
-	 * @param   string          $action         'add', 'update', 'view'
-	 * @return  int                             <0 if KO,
-	 *                                          =0 if OK but we want to process standard actions too,
-	 *                                          >0 if OK and we want to replace standard actions.
-	 */
-	public function getNomUrl($parameters, &$object, &$action)
-	{
-		global $db, $langs, $conf, $user;
-		$this->resprints = '';
-		return 0;
-	}
-
-	/**
 	 * Overloading the moveUploadedFile function.
 	 *
 	 * @param   array           $parameters     Hook metadatas (context, etc...)
@@ -217,6 +200,7 @@ class ActionsGoogleApi
 		global $conf, $user, $langs, $googleapiMessageId;
 
 		$error = 0; // Error counter
+		$contexts = explode(':', $parameters['context']);
 
 		// print '<pre>'.print_r($parameters, true).'</pre>';
 		// print '<pre>'.print_r($object, true).'</pre>';
@@ -224,7 +208,7 @@ class ActionsGoogleApi
 		// what TODO with context 'emailing'
 		// context notification?
 		// https://developers.google.com/resources/api-libraries/documentation/gmail/v1/php/latest/class-Google_Service_Gmail_Message.html
-		if (in_array($parameters['currentcontext'], array('mail')) && !in_array($object->sendcontext, array('emailing', 'notification'))) {
+		if (in_array('mail', $contexts) && !in_array($object->sendcontext, array('emailing', 'notification'))) {
 			dol_include_once('/googleapi/lib/googleapi.lib.php');
 			$fromsender = $this->getArrayAddress($object->addr_from);
 			if (!empty($user->array_options['options_googleapi_email']) && $fromsender[0]['address'] == $user->array_options['options_googleapi_email']) {
@@ -423,6 +407,7 @@ class ActionsGoogleApi
 				);
 			}
 		}
+
 		return $ret;
 	}
 }

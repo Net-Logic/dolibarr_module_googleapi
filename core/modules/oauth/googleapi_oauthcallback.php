@@ -80,9 +80,9 @@ if (!empty($_GET['error'])) {
 		'https://mail.google.com/',
 	];
 	// https://developers.google.com/identity/protocols/oauth2/scopes#docs
-	$scopes[] = 'https://www.googleapis.com/auth/documents';
-	$scopes[] = 'https://www.googleapis.com/auth/drive';
-	$scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
+	// $scopes[] = 'https://www.googleapis.com/auth/documents';
+	// $scopes[] = 'https://www.googleapis.com/auth/drive';
+	// $scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
 	$authUrl = $provider->getAuthorizationUrl([
 		'prompt' => 'consent',
 		'access_type' => 'offline',

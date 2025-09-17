@@ -22,11 +22,10 @@
  *  \brief      class GoogleApi
  */
 
-
+// phpcs:disable
 /**
  * GoogleApi
  */
-// phpcs:disable
 class GoogleApi
 {
 	// phpcs:enable

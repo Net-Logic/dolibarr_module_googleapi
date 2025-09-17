@@ -22,12 +22,13 @@
  *  \brief      class GoogleApi
  */
 
-
+// phpcs:disable
 /**
  * GoogleApi
  */
 class GoogleApi
 {
+	// phpcs:enable
 	/**
 	 * @var string output
 	 */

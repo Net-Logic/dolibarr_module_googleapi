@@ -118,7 +118,7 @@ print load_fiche_titre($langs->trans('GoogleApiConfigOAuth'), $linkback, 'object
 
 $head = googleapiAdminPrepareHead();
 
-dol_fiche_head($head, 'tokengeneration', '', -1, 'technic');
+print dol_get_fiche_head($head, 'tokengeneration', '', -1, 'technic');
 
 
 if ($user->admin) {
@@ -148,8 +148,8 @@ if ($user->admin) {
 		$isgoingtoexpire = (time() > ($token->getExpires() - 30));
 		if ($isgoingtoexpire) {
 			$provider = new Google([
-				'clientId'     => $conf->global->OAUTH_GOOGLEAPI_ID,
-				'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
+				'clientId'     => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
+				'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 				'redirectUri'  => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 			]);
 			$grant = new RefreshToken();
@@ -278,6 +278,8 @@ if ($user->admin) {
 }
 
 print dol_get_fiche_end();
+
+
 if (is_object($token)) {
 	$provider = new Google([
 		'clientId'     => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
@@ -286,7 +288,6 @@ if (is_object($token)) {
 		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType'   => 'offline',
 	]);
-
 	$owner = $provider->getResourceOwner($token);
 	//var_dump($owner->toArray());
 	if (!empty($owner)) {

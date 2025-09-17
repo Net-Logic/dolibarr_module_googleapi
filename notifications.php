@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2019-2021  Frédéric France      <frederic.france@netlogic.fr>
+/* Copyright (C) 2019-2025  Frédéric France      <frederic.france@netlogic.fr>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ dol_include_once('/prune/vendor/autoload.php');
 dol_include_once('/googleapi/lib/googleapi.lib.php');
 
 
-// googleapi envoie une validation de l'url à la demande de création d'une 'subscription' ? A véfier et à supprimer
+// googleapi envoie une validation de l'url à la demande de création d'une 'subscription' ? A vérifier et à supprimer
 // $validationToken = GETPOST('validationToken', 'alpha');
 // if (!empty($validationToken)) {
 // 	header("Content-Type: text/plain");
@@ -58,7 +58,7 @@ $now = dol_now();
 $error = 0;
 //$notifications = json_decode($input);
 //dol_syslog(' '.print_r($notifications, true), LOG_NOTICE);
-dol_syslog('SERVER ' . print_r($_SERVER, true), LOG_NOTICE);
+dol_syslog('SERVER ' . print_r($_SERVER, true), LOG_DEBUG);
 // dol_syslog('POST '.print_r($_POST, true), LOG_NOTICE);
 // dol_syslog('GET '.print_r($_GET, true), LOG_NOTICE);
 // $input = file_get_contents('php://input');
@@ -145,7 +145,7 @@ if ($row) {
 					$evt->fetch_userassigned();
 					$evt->oldcopy = clone $evt;
 					$evt->context['googleapi'] = $db->escape($item->getId());
-					$res = $evt->delete(0);
+					$res = $evt->delete($fuser, 0);
 					if ($res < 0) {
 						dol_syslog("googleapi notifications DELETE actioncomm " . $evt->error, LOG_ERR);
 					} else {
@@ -155,21 +155,23 @@ if ($row) {
 					$start = $item->getStart();
 					// dol_syslog("Start : ".print_r($start, true), LOG_NOTICE);
 					$tz = new \DateTimeZone($main_tz);
+					$starttz = new \DateTimeZone($start->getTimeZone());
 					$offset_start = 0;
 					$offset_end = 0;
 					if ($start->getDate()) {
 						$date_start = \DateTime::createFromFormat("Y-m-d", $start->getDate(), $tz);
 					} else {
-						$date_start = \DateTime::createFromFormat(DATE_ATOM, $start->getDateTime(), $tz);
-						$offset_start = $tz->getOffset($date_start);
+						$date_start = \DateTime::createFromFormat(DATE_ATOM, $start->getDateTime(), $starttz);
+						// $offset_start = $tz->getOffset($date_start);
 					}
 					$end = $item->getEnd();
-					// dol_syslog("End : ".print_r($end, true), LOG_NOTICE);
+					$endtz = new \DateTimeZone($end->getTimeZone());
+					// dol_syslog("End : ".print_r($end, true), LOG_DEBUG);
 					if ($start->getDate()) {
 						$date_end = \DateTime::createFromFormat("Y-m-d", $end->getDate(), $tz);
 					} else {
-						$date_end = \DateTime::createFromFormat(DATE_ATOM, $end->getDateTime(), $tz);
-						$offset_end = $tz->getOffset($date_end);
+						$date_end = \DateTime::createFromFormat(DATE_ATOM, $end->getDateTime(), $endtz);
+						// $offset_end = $tz->getOffset($date_end);
 					}
 					// dol_syslog("googleapi notifications entering update actioncomm id " . $obj->fk_object, LOG_NOTICE);
 					// mise à jour

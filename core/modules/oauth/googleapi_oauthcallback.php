@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015-2022  Frederic France      <frederic.france@free.fr>
+ * Copyright (C) 2015-2025  Frédéric France      <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,8 +61,8 @@ if ($action == 'delete' && !empty($user->id)) {
 }
 
 $provider = new Google([
-	'clientId' => $conf->global->OAUTH_GOOGLEAPI_ID ?? '',
-	'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET ?? '',
+	'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
+	'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 	'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 3),
 	//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 	'accessType'   => 'offline',
@@ -97,26 +97,30 @@ if (!empty($_GET['error'])) {
 	exit('Invalid state');
 } else {
 	// Try to get an access token (using the authorization code grant)
-	$token = $provider->getAccessToken('authorization_code', [
-		'code' => $_GET['code']
-	]);
-	// Optional: Now you have a token you can look up a users profile data
-	// try {
-	// 	// We got an access token, let's now get the owner details
-	// 	$ownerDetails = $provider->getResourceOwner($token);
-	// 	// Use these details to create a new profile
-	// 	printf('Hello %s!', $ownerDetails->getFirstName());
-	// } catch (Exception $e) {
-	// 	// Failed to get user details
-	// 	exit('Something went wrong: ' . $e->getMessage());
-	// }
-	$refreshtoken = $token->getRefreshToken();
-	$tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $user->id);
-	if (empty($refreshtoken) && !empty($tokenrefreshbackup)) {
-		$refreshtoken = $tokenrefreshbackup;
+	try {
+		$token = $provider->getAccessToken('authorization_code', [
+			'code' => $_GET['code']
+		]);
+		// Optional: Now you have a token you can look up a users profile data
+		// try {
+		// 	// We got an access token, let's now get the owner details
+		// 	$ownerDetails = $provider->getResourceOwner($token);
+		// 	// Use these details to create a new profile
+		// 	printf('Hello %s!', $ownerDetails->getFirstName());
+		// } catch (Exception $e) {
+		// 	// Failed to get user details
+		// 	exit('Something went wrong: ' . $e->getMessage());
+		// }
+		$refreshtoken = $token->getRefreshToken();
+		$tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $user->id);
+		if (empty($refreshtoken) && !empty($tokenrefreshbackup)) {
+			$refreshtoken = $tokenrefreshbackup;
+		}
+		storeAccessToken('GoogleApi', $token, $refreshtoken, $user->id);
+		setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
+	} catch (Exception $e) {
+		setEventMessage($e->getMessage(), 'errors');
 	}
-	storeAccessToken('GoogleApi', $token, $refreshtoken, $user->id);
-	setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
 
 	$backtourl = $_SESSION["backtourlsavedbeforeoauthjump"];
 	unset($_SESSION["backtourlsavedbeforeoauthjump"]);

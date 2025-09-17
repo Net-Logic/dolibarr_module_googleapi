@@ -26,8 +26,10 @@
 /**
  * GoogleApi
  */
+// phpcs:disable
 class GoogleApi
 {
+	// phpcs:enable
 	/**
 	 * @var string output
 	 */

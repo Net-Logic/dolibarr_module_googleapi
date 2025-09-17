@@ -71,7 +71,7 @@ class modGoogleApi extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr',
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.0.0';
+		$this->version = '1.0.1';
 
 		// Url to the file with your last numberversion of this module
 		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';
@@ -153,9 +153,9 @@ class modGoogleApi extends DolibarrModules
 		$this->conflictwith = [];
 		$this->langfiles = ["googleapi@googleapi"];
 		// Minimum version of PHP required by module
-		$this->phpmin = [7, 1];
+		$this->phpmin = [7, 4];
 		// Minimum version of Dolibarr required by module
-		$this->need_dolibarr_version = [10, 0];
+		$this->need_dolibarr_version = [15, 0];
 		// Warning to show when we activate module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
 		$this->warnings_activation = [];
 		// Warning to show when we activate an external module. array('always'='text') or array('FR'='textfr','ES'='textes'...)

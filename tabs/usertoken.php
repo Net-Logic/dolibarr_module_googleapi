@@ -1,6 +1,7 @@
 <?php
-/* Copyright (C) 2013-2016  Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2014-2020  Frédéric France      <frederic.france@netlogic.fr>
+/*
+ * Copyright (C) 2013-2016  Laurent Destailleur  <eldy@users.sourceforge.net>
+ * Copyright (C) 2014-2025  Frédéric France      <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -111,6 +112,11 @@ if ($action == 'setcalendar') {
 				'values' => $choices,
 				'default' => $object->array_options['options_googleapi_calendarId']
 			],
+			[
+				'type' => 'checkbox',
+				'label' => $langs->trans('GoogleApiApplyUserColorToGoogleAgenda'),
+				'name' => 'applycolor',
+			],
 		],
 		0,
 		1
@@ -125,6 +131,7 @@ if ($action == 'setcalendar') {
 		foreach ($calendarList->getItems() as $calendarListEntry) {
 			// var_dump($calendarListEntry);
 			$choices[$calendarListEntry->id] = $calendarListEntry->timeZone;
+			$entries[$calendarListEntry->id] = $calendarListEntry;
 		}
 		$pageToken = $calendarList->getNextPageToken();
 		if ($pageToken) {
@@ -138,9 +145,17 @@ if ($action == 'setcalendar') {
 	$object->array_options['options_googleapi_calendarId'] = GETPOST('calendarid', 'alpha');
 	$object->array_options['options_googleapi_calendarTZ'] = $choices[GETPOST('calendarid', 'alpha')];
 	$object->update($user);
+
+	// on met la couleur de l'utilisateur sur le calendrier google
+	// un rechargement de l'agenda google est nécessaire pour voir le changement...
+	if (GETPOST('applycolor') == 'on' && !empty($object->color)) {
+		$calendarListEntry = $entries[GETPOST('calendarid', 'alpha')];
+		$calendarListEntry->setBackgroundColor('#' . $object->color);
+		$updatedCalendarListEntry = $service->calendarList->update(GETPOST('calendarid', 'alpha'), $calendarListEntry, array("colorRgbFormat" => true));
+	}
 }
 
-dol_fiche_head($head, 'googleapitoken', $langs->trans("User"), -1, 'user');
+print dol_get_fiche_head($head, 'googleapitoken', $langs->trans("User"), -1, 'user');
 
 
 
@@ -148,7 +163,7 @@ print $langs->trans("OAuthSetupForLogin") . "<br><br>\n";
 
 $OAUTH_SERVICENAME = 'GoogleApi';
 $urltorenew = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?backtourl=' . urlencode(dol_buildpath('/googleapi/tabs/usertoken.php', 1) . '?id=' . (int) $object->id);
-$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token=' . $_SESSION['newtoken'] . '&backtourl=' . urlencode(dol_buildpath('/googleapi/tabs/usertoken.php', 1) . '?id=' . (int) $object->id);
+$urltodelete = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1) . '?action=delete&token=' . newToken() . '&backtourl=' . urlencode(dol_buildpath('/googleapi/tabs/usertoken.php', 1) . '?id=' . (int) $object->id);
 $urltocheckperms = 'https://security.google.com/settings/security/permissions';
 
 // Token
@@ -165,8 +180,8 @@ if (is_object($token)) {
 	$isgoingtoexpire = (time() > ($token->getExpires() - 30));
 	if ($isgoingtoexpire) {
 		$provider = new Google([
-			'clientId' => $conf->global->OAUTH_GOOGLEAPI_ID,
-			'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
+			'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
+			'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 			'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 		]);
 		$grant = new RefreshToken();
@@ -229,7 +244,7 @@ print $langs->trans("Token") . '</td>';
 print '<td colspan="2">';
 if (is_object($token)) {
 	//var_dump($token);
-	print $token->getToken() . '<br>';
+	print dol_trunc($token->getToken(), 40, 'middle') . '<br>';
 }
 print '</td>';
 print '</tr>' . PHP_EOL;
@@ -240,7 +255,7 @@ if (is_object($token)) {
 	print '<td>';
 	print $langs->trans("TOKEN_REFRESH") . '</td>';
 	print '<td colspan="2">';
-	print $refreshtoken;
+	print dol_trunc($refreshtoken, 30, 'middle');
 	print '</td>';
 	print '</tr>';
 
@@ -249,7 +264,7 @@ if (is_object($token)) {
 	print '<td>';
 	print $langs->trans("TOKEN_REFRESH_BACKUP") . '</td>';
 	print '<td colspan="2">';
-	print $tokenrefreshbackup;
+	print dol_trunc($tokenrefreshbackup, 30, 'middle');
 	print '</td>';
 	print '</tr>';
 
@@ -274,7 +289,7 @@ if (is_object($token)) {
 
 print '</table>';
 
-dol_fiche_end();
+print dol_get_fiche_end();
 
 if (is_object($token)) {
 	print '<div class="tabsAction">';
@@ -285,8 +300,8 @@ if (is_object($token)) {
 
 if (is_object($token)) {
 	$provider = new Google([
-		'clientId' => $conf->global->OAUTH_GOOGLEAPI_ID,
-		'clientSecret' => $conf->global->OAUTH_GOOGLEAPI_SECRET,
+		'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
+		'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 		'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType' => 'offline',

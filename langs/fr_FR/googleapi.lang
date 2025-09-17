@@ -40,3 +40,5 @@ GoogleApiEnablePushMeContacts=Recevoir des notifications push de l'API pour mett
 GoogleApiEnablePushMeDocs=Recevoir des notifications push de l'API pour mettre à jour les documents créés ou modifiés
 CHECKLASTVERSION_EXTERNALMODULE=Forcer la vérification des versions des modules externes (déconseillé, cette option peux avoir été actvée par un autre module)
 GoogleApiLastEventSync=Timestamp dernière synchro évènements
+GoogleApiApplyUserColorToGoogleAgenda=Appliquer la couleur de l'utilisateur à l'agenda Google
+GoogleApiLinkToThirdParty=Lien vers le tiers

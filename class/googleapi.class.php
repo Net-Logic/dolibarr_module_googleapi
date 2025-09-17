@@ -1,5 +1,6 @@
 <?php
-/* Copyright (C) 2019-2022  Frédéric France         <frederic.france@netlogic.fr>
+/*
+ * Copyright (C) 2019-2025  Frédéric France         <frederic.france@netlogic.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +79,7 @@ class GoogleApi
 
 		$pushactive = 0;
 
-		if (!empty($conf->global->OAUTH_GOOGLEAPI_ID) && !empty($conf->global->OAUTH_GOOGLEAPI_SECRET)) {
+		if (getDolGlobalString('OAUTH_GOOGLEAPI_SECRET')) {
 			$sql = "SELECT u.rowid as uid, u.login FROM " . MAIN_DB_PREFIX . "user AS u";
 			$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "prune_oauth_token AS ot ON ot.fk_user=u.rowid";
 			$sql .= " WHERE u.statut=1 AND ot.service='GoogleApi'";
@@ -195,7 +196,8 @@ class GoogleApi
 				$channel->setId($channelId);
 				$channel->setType('web_hook');
 				$channel->setAddress($urlfornotification);
-				$watch = $service->events->watch('primary', $channel);
+				$calendarId = $user->array_options['options_googleapi_calendarId'] ?? 'primary';
+				$watch = $service->events->watch($calendarId, $channel);
 
 				$sql = "INSERT INTO " . MAIN_DB_PREFIX . "googleapi_watchs";
 				$sql .= " (userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber) VALUES(";

@@ -293,7 +293,9 @@ print dol_get_fiche_end();
 
 if (is_object($token)) {
 	print '<div class="tabsAction">';
-	print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&amp;action=setcalendar">' . $langs->trans("GoogleApiSetCalendarId") . '</a></div>';
+	print '<div class="inline-block divButAction">';
+	print '<a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=setcalendar&token=' . newToken() . '">' . $langs->trans("GoogleApiSetCalendarId") . '</a>';
+	print '</div>';
 	print "</div>\n";
 }
 
@@ -303,7 +305,7 @@ if (is_object($token)) {
 		'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
 		'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 		'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
-		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
+		// 'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType' => 'offline',
 	]);
 

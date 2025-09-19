@@ -42,3 +42,5 @@ CHECKLASTVERSION_EXTERNALMODULE=Forcer la vérification des versions des modules
 GoogleApiLastEventSync=Timestamp dernière synchro évènements
 GoogleApiApplyUserColorToGoogleAgenda=Appliquer la couleur de l'utilisateur à l'agenda Google
 GoogleApiLinkToThirdParty=Lien vers le tiers
+GoogleApiRemindByEmail=Rappel par email Google
+GoogleApiRemindByNotification=Rappel par notification Google

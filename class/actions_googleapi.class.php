@@ -100,10 +100,47 @@ class ActionsGoogleApi
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function deleteFile($parameters, &$object, &$action, $hookmanager)
+	public function deleteFile($parameters, $object, &$action, $hookmanager)
 	{
 		global $conf, $user, $langs;
 		//setEventMessage('hook fichier googleapi effacé depuis ' . $object->element);
+		return 0;
+	}
+
+	/**
+	 * Execute action doActions
+	 *
+	 * @param   array           $parameters     Array of parameters
+	 * @param   CommonObject    $object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
+	 * @param   string          $action         'add', 'update', 'view'
+	 * @param   Hookmanager     $hookmanager    hookmanager
+	 * @return  int                             <0 if KO,
+	 *                                          =0 if OK but we want to process standard actions too,
+	 *                                          >0 if OK and we want to replace standard actions.
+	 */
+	public function doActions(&$parameters, $object, &$action, $hookmanager)
+	{
+		global $langs;
+
+		$contexts = explode(':', $parameters['context']);
+		if (in_array('actioncard', $contexts) && (int) DOL_VERSION >= 23) {
+			$langs->load('googleapi@googleapi');
+			$parameters['TRemindTypes'] = array_merge(
+				$parameters['TRemindTypes'],
+				[
+					'googleapiremindemail' => [
+						'label' => $langs->trans('GoogleApiRemindByEmail'),
+						'disabled' => 0,
+					],
+					'googleapiremindnotif' => [
+						'label' => $langs->trans('GoogleApiRemindByNotification'),
+						'disabled' => 0,
+					]
+				]
+			);
+			$parameters['enablereminders'] = true;
+		}
+
 		return 0;
 	}
 
@@ -118,7 +155,7 @@ class ActionsGoogleApi
 	 *                                          =0 if OK but we want to process standard actions too,
 	 *                                          >0 if OK and we want to replace standard actions.
 	 */
-	public function completeTabsHead(&$parameters, &$object, &$action, $hookmanager)
+	public function completeTabsHead(&$parameters, $object, &$action, $hookmanager)
 	{
 		global $langs, $conf, $user;
 
@@ -196,7 +233,7 @@ class ActionsGoogleApi
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function sendMail($parameters, &$object, &$action, $hookmanager)
+	public function sendMail($parameters, $object, &$action, $hookmanager)
 	{
 		global $conf, $user, $langs, $googleapiMessageId;
 
@@ -264,7 +301,7 @@ class ActionsGoogleApi
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function sendMailAfter($parameters, &$object, &$action, $hookmanager)
+	public function sendMailAfter($parameters, $object, &$action, $hookmanager)
 	{
 		global $conf, $user, $langs;
 
@@ -321,7 +358,7 @@ class ActionsGoogleApi
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function printTopRightMenu($parameters, &$object, &$action, $hookmanager)
+	public function printTopRightMenu($parameters, $object, &$action, $hookmanager)
 	{
 		global $langs, $conf, $form, $user;
 

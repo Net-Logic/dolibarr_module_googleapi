@@ -202,10 +202,11 @@ function getGoogleApiClient($fuser)
  * @param   string  $description    description
  * @param   string  $location       location of evt (128 chars)
  * @param   string  $googleapiId        Id of graph evt
+ * @param   int     $fulldayevent   event is full day or not
  * @param   int     $notrigger      0 or 1 for no trigger
  * @return  int                     <0 not ok, >0 ok
  */
-function googleapiCreateActioncomm($owner, $type_code, $date_start, $date_end, $label, $description = '', $location = '', $googleapiId = '', $notrigger = 0)
+function googleapiCreateActioncomm($owner, $type_code, $date_start, $date_end, $label, $description = '', $location = '', $googleapiId = '', $fulldayevent = 0, $notrigger = 0)
 {
 	global $db, $conf, $langs;
 
@@ -226,7 +227,7 @@ function googleapiCreateActioncomm($owner, $type_code, $date_start, $date_end, $
 	// ];
 	$actioncomm->transparency = $transparency;
 	$actioncomm->priority = 0;
-	$actioncomm->fulldayevent = 0;
+	$actioncomm->fulldayevent = $fulldayevent;
 	$actioncomm->label = empty($label) ? 'NoSubject' : $label;
 	$actioncomm->location = $location;
 	//$actioncomm->fk_element = $object->id;

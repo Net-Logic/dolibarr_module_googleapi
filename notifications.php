@@ -161,7 +161,7 @@ if ($row) {
 					if ($start->getDate()) {
 						// getDolGlobalString('MAIN_STORE_FULL_EVENT_IN_GMT')
 						$tz = new \DateTimeZone('UTC');
-						$date_start = \DateTime::createFromFormat("Y-m-d H:i:s", $start->getDate().' 00:00:00', $tz);
+						$date_start = \DateTime::createFromFormat("Y-m-d H:i:s", $start->getDate() . ' 00:00:00', $tz);
 					} else {
 						$date_start = \DateTime::createFromFormat(DATE_ATOM, $start->getDateTime(), $starttz);
 						// $offset_start = $tz->getOffset($date_start);
@@ -170,7 +170,7 @@ if ($row) {
 					$endtz = new \DateTimeZone($end->getTimeZone());
 					// dol_syslog("End : ".print_r($end, true), LOG_DEBUG);
 					if ($start->getDate()) {
-						$date_end = \DateTime::createFromFormat("Y-m-d H:i:s", $end->getDate().' 00:00:00', $tz);
+						$date_end = \DateTime::createFromFormat("Y-m-d H:i:s", $end->getDate() . ' 00:00:00', $tz);
 						$offset_end = -1; // dolibarr world
 					} else {
 						$date_end = \DateTime::createFromFormat(DATE_ATOM, $end->getDateTime(), $endtz);
@@ -222,7 +222,7 @@ if ($row) {
 					//dol_syslog("Timezone : ".print_r($tz, true), LOG_NOTICE);
 					if ($start->getDate()) {
 						$tz = new \DateTimeZone('UTC');
-						$date_start = \DateTime::createFromFormat("Y-m-d H:i:s", $start->getDate().' 00:00:00', $tz);
+						$date_start = \DateTime::createFromFormat("Y-m-d H:i:s", $start->getDate() . ' 00:00:00', $tz);
 						$fullday = 1;
 					} else {
 						$date_start = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $start->getDateTime(), $tz);
@@ -232,7 +232,7 @@ if ($row) {
 					$end = $item->getEnd();
 					//dol_syslog("End : ".print_r($end, true), LOG_NOTICE);
 					if ($end->getDate()) {
-						$date_end = \DateTime::createFromFormat("Y-m-d H:i:s", $end->getDate().' 00:00:00', $tz);
+						$date_end = \DateTime::createFromFormat("Y-m-d H:i:s", $end->getDate() . ' 00:00:00', $tz);
 						$offset_end = -1; // dolibarr world
 					} else {
 						$date_end = \DateTime::createFromFormat("Y-m-d\TH:i:sP", $end->getDateTime(), $tz);

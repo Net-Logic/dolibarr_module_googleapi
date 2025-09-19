@@ -137,6 +137,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 	/**
 	 * Trigger ACTION_CREATE
+	 *
 	 * @param string        $action     Event action code
 	 * @param ActionComm  $object     Object
 	 * @param User          $user       Object user
@@ -225,6 +226,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 	/**
 	 * Trigger ACTION_MODIFY
+	 *
 	 * @param string        $action     Event action code
 	 * @param ActionComm    $object     Object
 	 * @param User          $user       Object user
@@ -246,7 +248,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 		$overrides = [];
 		// quand on a actionModify les reminders ne sont pas à jour en db...
-		// il faut utiliser actioncommreminderCreate car ils sont supprimés en db et recéés
+		// il faut utiliser actioncommreminderCreate car ils sont supprimés en db et recréés
 		$object->loadReminders('', 0, false);
 		if (is_array($object->reminders) && count($object->reminders)) {
 			foreach ($object->reminders as $reminder) {
@@ -348,6 +350,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 	/**
 	 * Trigger ACTION_DELETE
+	 *
 	 * @param string        $action     Event action code
 	 * @param ActionComm  $object     Object
 	 * @param User          $user       Object user
@@ -379,6 +382,25 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			}
 		}
 		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * Trigger ACTIONCOMMREMINDER_CREATE
+	 *
+	 * @param string        		$action     Event action code
+	 * @param ActionCommReminder  	$object     Object
+	 * @param User                  $user       Object user
+	 * @param Translate             $langs      Object langs
+	 * @param Conf                  $conf       Object conf
+	 * @return int                              <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function actioncommreminderCreate($action, ActionCommReminder $object, User $user, Translate $langs, Conf $conf)
+	{
+		// var_dump($object->typeremind);
+		// var_dump($object->offsetvalue);
+		// var_dump($object->offsetunit);
+
+		return 0;
 	}
 
 	/**

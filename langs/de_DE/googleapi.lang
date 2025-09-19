@@ -34,3 +34,5 @@ GoogleApiApplyUserColorToGoogleAgenda=Benutzerfarbe auf Google Kalender anwenden
 GoogleApiLinkToThirdParty=Link zum Drittanbieter
 GoogleApiRemindByEmail=Google E-Mail-Erinnerung
 GoogleApiRemindByNotification=Google-Benachrichtigungserinnerung
+GoogleApiOwnerEmail=Google-E-Mail des verbundenen Kontos
+GoogleApiCalendarTZ=Google Kalender-Zeitzone

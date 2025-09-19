@@ -30,3 +30,7 @@ OAUTH_GOOGLEAPI_SECRET=OAuth Google-Geheimnis
 OAUTH_GOOGLEAPI_DESC=Gehen Sie auf <a class="notasortlink" href="https://console.developers.google.com/" target="_blank">diese Seite</a> und dann auf „Anmeldeinformationen“, um OAuth-Anmeldeinformationen zu erstellen
 GoogleApiEnablePushMeDocs=Erhalten Sie Push-Benachrichtigungen von der API, um erstellte oder geänderte Dokumente zu aktualisieren
 GoogleApiLastEventSync=Zeitstempel der letzten Ereignissynchronisierung
+GoogleApiApplyUserColorToGoogleAgenda=Benutzerfarbe auf Google Kalender anwenden
+GoogleApiLinkToThirdParty=Link zum Drittanbieter
+GoogleApiRemindByEmail=Google E-Mail-Erinnerung
+GoogleApiRemindByNotification=Google-Benachrichtigungserinnerung

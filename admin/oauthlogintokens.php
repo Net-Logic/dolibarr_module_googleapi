@@ -219,7 +219,7 @@ if ($user->admin) {
 	print '<td colspan="2">';
 	if (is_object($token)) {
 		//var_dump($token);
-		print $token->getToken() . '<br>';
+		print dol_trunc($token->getToken(), 30, 'middle') . '<br>';
 		//print 'Refresh: '.$token->getRefreshToken().'<br>';
 		//print 'EndOfLife: '.dol_print_date($token->getExpires(), "dayhour").'<br>';
 		//var_dump($token->getExtraParams());
@@ -237,24 +237,22 @@ if ($user->admin) {
 		//var_dump($key);
 		print $langs->trans("TOKEN_REFRESH") . '</td>';
 		print '<td colspan="2">';
-		print $refreshtoken;
+		print dol_trunc($refreshtoken, 30, 'middle');
 		print '</td>';
 		print '</tr>';
 
 		// Token refresh
 		print '<tr class="oddeven">';
 		print '<td' . (!empty($key['required']) ? ' class="required"' : '') . '>';
-		//var_dump($key);
 		print $langs->trans("TOKEN_REFRESH_BACKUP") . '</td>';
 		print '<td colspan="2">';
-		print $tokenrefreshbackup;
+		print dol_trunc($tokenrefreshbackup, 30, 'middle');
 		print '</td>';
 		print '</tr>';
 
 		// Token expired
 		print '<tr class="oddeven">';
 		print '<td' . (!empty($key['required']) ? ' class="required"' : '') . '>';
-		//var_dump($key);
 		print $langs->trans("TOKEN_EXPIRED") . '</td>';
 		print '<td colspan="2">';
 		print yn($expire);
@@ -264,7 +262,6 @@ if ($user->admin) {
 		// Token expired at
 		print '<tr class="oddeven">';
 		print '<td' . (!empty($key['required']) ? ' class="required"' : '') . '>';
-		//var_dump($key);
 		print $langs->trans("TOKEN_EXPIRE_AT") . '</td>';
 		print '<td colspan="2">';
 		print $expiredat;

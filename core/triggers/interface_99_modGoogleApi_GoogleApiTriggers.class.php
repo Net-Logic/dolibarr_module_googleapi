@@ -125,6 +125,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		// You can isolate code for each action in a separate method: this method should be named like the trigger in camelCase.
 		// For example : COMPANY_CREATE => public function companyCreate($action, $object, User $user, Translate $langs, Conf $conf)
 		$methodName = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($action)))));
+		// setEventMessage($methodName);
 		$callback = array($this, $methodName);
 		if (is_callable($callback)) {
 			dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id, LOG_INFO);
@@ -218,13 +219,14 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		// enregistrer l'id googleapi dans dolibarr (extrafield)
 		$object->array_options['options_googleapi_EventId'] = $event->getId();
 		$object->update($user, 1);
+
 		return (!$error ? 0 : -1);
 	}
 
 	/**
 	 * Trigger ACTION_MODIFY
 	 * @param string        $action     Event action code
-	 * @param ActionComm  $object     Object
+	 * @param ActionComm    $object     Object
 	 * @param User          $user       Object user
 	 * @param Translate     $langs      Object langs
 	 * @param Conf          $conf       Object conf
@@ -242,7 +244,37 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		if ($client === false) {
 			return 0;
 		}
-
+		$overrides = [];
+		// quand on a actionModify les reminders ne sont pas à jour en db...
+		// il faut utiliser actioncommreminderCreate car ils sont supprimés en db et recéés
+		$object->loadReminders('', 0, false);
+		if (is_array($object->reminders) && count($object->reminders)) {
+			foreach ($object->reminders as $reminder) {
+				$mul = 1;
+				// var_dump($reminder->offsetvalue);
+				// var_dump($reminder->offsetunit);
+				if ($reminder->offsetunit == 'h') {
+					$mul = 60;
+				} elseif ($reminder->offsetunit == 'd') {
+					$mul = 24 * 60;
+				} elseif ($reminder->offsetunit == 'w') {
+					$mul = 7 * 24 * 60;
+				}
+				$offsetInMinutes = $mul * (int) $reminder->offsetvalue;
+				if ($reminder->typeremind == 'googleapiremindemail') {
+					$overrides[] = [
+						'method' => 'email',
+						'minutes' => $offsetInMinutes,
+					];
+				}
+				if ($reminder->typeremind == 'googleapiremindnotif') {
+					$overrides[] = [
+						'method' => 'popup',
+						'minutes' => $offsetInMinutes,
+					];
+				}
+			}
+		}
 		if (empty($object->array_options['options_googleapi_EventId'])) {
 			googleapi_complete_label_and_note($object, $langs);
 		}
@@ -275,6 +307,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 				'timeZone' => 'UTC',
 			];
 		}
+		// var_dump($overrides);
 		dol_syslog('Sending new dates to googleapi ' . $object->datep, LOG_NOTICE);
 		$event = new \Google\Service\Calendar\Event([
 			'summary' => $object->label,
@@ -286,15 +319,12 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 				//'RRULE:FREQ=DAILY;COUNT=2'
 			],
 			'attendees' => [
-				// array('email' => 'lpage@example.com'),
-				// array('email' => 'sbrin@example.com'),
+				// ['email' => 'lpage@example.com'],
+				// ['email' => 'sbrin@example.com'],
 			],
 			'reminders' => [
-				// 'useDefault' => false,
-				// 'overrides' => array(
-				// 	array('method' => 'email', 'minutes' => 24 * 60),
-				// 	array('method' => 'popup', 'minutes' => 10),
-				// ),
+				'useDefault' => false,
+				'overrides' => $overrides,
 			],
 		]);
 

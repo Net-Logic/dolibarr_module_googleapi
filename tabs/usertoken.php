@@ -116,6 +116,7 @@ if ($action == 'setcalendar') {
 				'type' => 'checkbox',
 				'label' => $langs->trans('GoogleApiApplyUserColorToGoogleAgenda'),
 				'name' => 'applycolor',
+				'value' => '',
 			],
 		],
 		0,

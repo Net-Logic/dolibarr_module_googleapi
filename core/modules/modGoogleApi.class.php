@@ -53,7 +53,7 @@ class modGoogleApi extends DolibarrModules
 		// Family can be 'base' (core modules),'crm','financial','hr','projects',
 		// 'products','ecm','technic' (transverse modules),'interface' (link with external tools),'other','...'
 		// It is used to group modules by family in module setup page
-		$this->family = "Net-Logic";
+		$this->family = "projects";
 		// Module position in the family on 2 digits ('01', '10', '20', ...)
 		$this->module_position = '01';
 		// Gives the possibility for the module, to provide his own family info and position
@@ -71,7 +71,7 @@ class modGoogleApi extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr',
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.0.1';
+		$this->version = '1.0.2';
 
 		// Url to the file with your last numberversion of this module
 		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';

@@ -88,6 +88,7 @@ class ActionsGoogleApi
 		if (!empty($conf->global->GOOGLEAPI_ENABLE_DEVELOPPER_MODE)) {
 			setEventMessage('hook fichier googleapi déplacé dans ' . $object->element);
 		}
+
 		return 0;
 	}
 
@@ -104,6 +105,7 @@ class ActionsGoogleApi
 	{
 		global $conf, $user, $langs;
 		//setEventMessage('hook fichier googleapi effacé depuis ' . $object->element);
+
 		return 0;
 	}
 

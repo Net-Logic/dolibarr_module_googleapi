@@ -399,6 +399,11 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		// var_dump($object->typeremind);
 		// var_dump($object->offsetvalue);
 		// var_dump($object->offsetunit);
+		if ($object->fk_actioncomm > 0) {
+			$actioncomm = new ActionComm($this->db);
+			$actioncomm->fetch($object->fk_actioncomm);
+			$this->actionModify('', $actioncomm, $user, $langs, $conf);
+		}
 
 		return 0;
 	}
@@ -517,6 +522,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		$sql .= ', ' . (int) $id;
 		$sql .= ', ' . (int) $socid;
 		$sql .= ')';
-		$resql = $this->db->query($sql);
+		$this->db->query($sql);
 	}
 }

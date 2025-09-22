@@ -145,6 +145,32 @@ class ActionsGoogleApi
 	}
 
 	/**
+	 * Execute action updateSession
+	 *
+	 * @param   array           $parameters     Array of parameters
+	 * @param   CommonObject    $object         The object to process (an invoice if you are in invoice module, a propale in propale's module, etc...)
+	 * @param   string          $action         'add', 'update', 'view'
+	 * @param   Hookmanager     $hookmanager    hookmanager
+	 * @return  int                             <0 if KO,
+	 *                                          =0 if OK but we want to process standard actions too,
+	 *                                          >0 if OK and we want to replace standard actions.
+	 */
+	public function updateSession(&$parameters, $object, &$action, $hookmanager)
+	{
+		// Redirecting some core pages
+		if (((int) DOL_VERSION <= 23) && strpos($_SERVER['PHP_SELF'], 'comm/action/card.php') !== false) {
+			$redirUrl = dol_buildpath('/googleapi/tabs/action/card.php', 1);
+
+			if ($redirUrl !== $_SERVER["PHP_SELF"]) {
+				header("Location: {$redirUrl}?" . (!empty($_GET) ? http_build_query($_GET) : ''));
+				exit;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Execute action completeTabsHead
 	 *
 	 * @param   array           $parameters     Array of parameters
@@ -212,6 +238,13 @@ class ActionsGoogleApi
 				$parameters['head'][$counter][2] = 'googleapitoken';
 				$counter++;
 			}
+			if (((int) DOL_VERSION <= 23) && in_array($element, ['action'])) {
+				foreach ($parameters['head'] as $key => $value) {
+					if (strpos($parameters['head'][$key][0], 'comm/action/card.php?id') !== false) {
+						$parameters['head'][$key][0] = dol_buildpath('/googleapi/tabs/action/card.php', 1) . '?id=' . $id;
+					}
+				}
+			}
 			if ($counter > 0 && (int) DOL_VERSION < 14) {
 				$this->results = $parameters['head'];
 				// return 1 to replace standard code
@@ -220,8 +253,9 @@ class ActionsGoogleApi
 				// en V14 et + $parameters['head'] est modifiable par référence
 				return 0;
 			}
-			return 0;
 		}
+
+		return 0;
 	}
 
 	/**

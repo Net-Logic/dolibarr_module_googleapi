@@ -212,6 +212,13 @@ class ActionsGoogleApi
 				$parameters['head'][$counter][2] = 'googleapitoken';
 				$counter++;
 			}
+			if (((int) DOL_VERSION <= 23) && in_array($element, ['action'])) {
+				foreach ($parameters['head'] as $key => $value) {
+					if (strpos($parameters['head'][$key][0], 'comm/action/card.php?id') !== false) {
+						$parameters['head'][$key][0] = dol_buildpath('/googleapi/tabs/action/card.php', 1) . '?id=' . $id;
+					}
+				}
+			}
 			if ($counter > 0 && (int) DOL_VERSION < 14) {
 				$this->results = $parameters['head'];
 				// return 1 to replace standard code

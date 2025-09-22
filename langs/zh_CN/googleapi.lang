@@ -1,0 +1,37 @@
+/*
+ * Language code: zh_CN
+ * Generation date 2025-09-22 09:03:29
+ */
+GoogleApiSettings=API 设置
+GoogleApiTokenManager=代币管理
+GoogleApiAbout=关于..
+GoogleApiCronNothingDone=cron 中未采取任何行动。
+GoogleApiMailUnreadItems=未读电子邮件
+GoogleApiMailTotalItems=电子邮件总数
+GoogleApiUnreadEmailNone=没有未读邮件
+GoogleApiUnreadEmailOne=有一封未读邮件
+GoogleApiUnreadEmailMany=有 %s 封未读邮件
+GoogleApiMailsTab=电子邮件
+OAUTH_GOOGLEAPI_NAME=Google API
+OAUTH_GOOGLEAPI_ID=客户 ID
+OAUTH_GOOGLEAPI_URI=应记录在控制台中的回调 URL
+OAUTH_GOOGLEAPI_SECRET=Oauth Google 秘密
+TOKEN_REFRESH_BACKUP=续订令牌的副本
+OAUTH_GOOGLEAPI_DESC=转到<a class="notasortlink" href="https://console.developers.google.com/" target="_blank">此页面</a>，然后单击“凭据”以创建 OAuth 凭据
+GoogleApiCalendarId=要同步的日历 ID
+GoogleApiSetCalendarId=设置要同步的日历
+GoogleApiConfirmSetCalendarId=确认日历选择
+GoogleApiEnableExtrafieldsDebug=启用额外字段调试
+GoogleApiEnableDevelopperMode=启用开发者模式
+GoogleApiEnablePushMeEvents=从 API 接收推送通知以更新已创建或修改的事件
+GoogleApiEnablePushMeMessages=从 API 接收推送通知以更新已创建或修改的消息
+GoogleApiEnablePushMeContacts=接收来自 API 的推送通知以更新已创建或修改的联系人
+GoogleApiEnablePushMeDocs=接收来自 API 的推送通知以更新已创建或修改的文档
+CHECKLASTVERSION_EXTERNALMODULE=强制验证外部模块版本（不推荐，此选项可能已被另一个模块启用）
+GoogleApiLastEventSync=上次事件同步的时间戳
+GoogleApiApplyUserColorToGoogleAgenda=将用户颜色应用于 Google 日历
+GoogleApiLinkToThirdParty=链接到第三方
+GoogleApiRemindByEmail=Google 电子邮件提醒
+GoogleApiOwnerEmail=关联账户的 Google 电子邮件
+GoogleApiRemindByNotification=Google 通知提醒
+GoogleApiCalendarTZ=Google 日历时区

@@ -117,6 +117,7 @@ class modGoogleApi extends DolibarrModules
 			// make a "grep -r '>initHooks(' *" on source code. You can also set hook context 'all'
 			'hooks' => [
 				'data' => [
+					'main',
 					//'mainloginpage',
 					'toprightmenu',
 					'usercard',

@@ -302,8 +302,7 @@ if (empty($reshook) && (GETPOST('addassignedtoresource') || GETPOST('updateassig
 }
 
 // Link to a project
-if (empty($reshook) && $action == 'classin' && ($user->hasRight('agenda', 'allactions', 'create') ||
-	(($object->authorid == $user->id || $object->userownerid == $user->id) && $user->hasRight('agenda', 'myactions', 'create')))) {
+if (empty($reshook) && $action == 'classin' && ($user->hasRight('agenda', 'allactions', 'create') || (($object->authorid == $user->id || $object->userownerid == $user->id) && $user->hasRight('agenda', 'myactions', 'create')))) {
 	//$object->fetch($id);
 	$object->setProject(GETPOSTINT('projectid'));
 }

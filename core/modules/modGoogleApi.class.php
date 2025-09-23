@@ -255,13 +255,76 @@ class modGoogleApi extends DolibarrModules
 		$extrafields = new ExtraFields($this->db);
 
 		// actioncomm
-		$extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
 		// user
-		$extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
-		$extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
-		$extrafields->addExtraField('googleapi_email', "GoogleApiOwnerEmail", 'varchar', $this->numero + 2, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
-		$extrafields->addExtraField('googleapi_calendarId', "GoogleApiCalendarId", 'varchar', $this->numero + 3, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
-		$extrafields->addExtraField('googleapi_calendarTZ', "GoogleApiCalendarTZ", 'varchar', $this->numero + 4, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', '$conf->googleapi->enabled');
+		$extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_email', "GoogleApiOwnerEmail", 'varchar', $this->numero + 2, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_calendarId', "GoogleApiCalendarId", 'varchar', $this->numero + 3, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_calendarTZ', "GoogleApiCalendarTZ", 'varchar', $this->numero + 4, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		// thirdparty
+		$result = $extrafields->addExtraField(
+			'googleapiId',
+			'GoogleApiIdId',
+			'varchar',
+			$this->numero,
+			180,
+			'societe',
+			0,
+			0,
+			'',
+			'',
+			1,
+			'',
+			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			0,
+			'',
+			'',
+			'googleapi@googleapi',
+			'isModEnabled("googleapi")'
+		);
+		// contact
+		$result = $extrafields->addExtraField(
+			'googleapiId',
+			'GoogleApiIdId',
+			'varchar',
+			$this->numero,
+			180,
+			'contact',
+			0,
+			0,
+			'',
+			'',
+			1,
+			'',
+			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			0,
+			'',
+			'',
+			'googleapi@googleapi',
+			'isModEnabled("googleapi")'
+		);
+		// contact
+		$result = $extrafields->addExtraField(
+			'googleapiEtag',
+			'GoogleApiEtag',
+			'varchar',
+			$this->numero + 10,
+			255,
+			'contact',
+			0,
+			0,
+			'',
+			'',
+			1,
+			'',
+			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			0,
+			'',
+			'',
+			'googleapi@googleapi',
+			'isModEnabled("googleapi")'
+		);
 
 		$sql = [];
 

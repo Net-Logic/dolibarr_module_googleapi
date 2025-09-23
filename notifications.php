@@ -124,9 +124,9 @@ if ($row) {
 	//dol_syslog(print_r($opts, true), LOG_NOTICE);
 	try {
 		$events = $service->events->listEvents($calendarId, $opts);
-		dol_syslog("Events : " . print_r($events, true), LOG_NOTICE);
+		dol_syslog("Events : " . print_r($events, true), LOG_DEBUG);
 		$main_tz = $events->getTimeZone();
-		dol_syslog("Main Timezone : " . print_r($main_tz, true), LOG_NOTICE);
+		dol_syslog("Main Timezone : " . print_r($main_tz, true), LOG_DEBUG);
 		//dol_syslog(print_r($events, true), LOG_NOTICE);
 		$items = $events->getItems();
 		foreach ($items as $item) {

@@ -78,6 +78,7 @@ if (!empty($_GET['error'])) {
 	$scopes = [
 		'https://www.googleapis.com/auth/calendar',
 		'https://mail.google.com/',
+		'https://www.googleapis.com/auth/contacts',
 	];
 	// https://developers.google.com/identity/protocols/oauth2/scopes#docs
 	// $scopes[] = 'https://www.googleapis.com/auth/documents';

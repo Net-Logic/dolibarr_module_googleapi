@@ -44,6 +44,8 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 
+use Google\Service\PeopleService;
+use Google\Service\PeopleService\Person;
 
 /**
  *  Class of triggers for GoogleApi module
@@ -117,7 +119,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			// object comes from api googleapi
 			return 0;
 		}
-		if (get_class($object) == 'Contact' && !empty($object->context['googleapi'])) {
+		if ($object instanceof Contact && !empty($object->context['googleapi'])) {
 			// object comes from api googleapi
 			return 0;
 		}
@@ -406,6 +408,327 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 
 		return 0;
+	}
+
+	/**
+	 * trigger contact create
+	 *
+	 * @param string    $action     action
+	 * @param Contact   $object     actioncomm object
+	 * @param User      $user       user
+	 * @param Translate $langs      translate object
+	 * @param Conf      $conf       dolibarr configuration object
+	 * @return int
+	 */
+	public function contactCreate($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		$error = 0;
+		// si on crée un contact partagé, on ne fait rien
+		if ($object->priv != '1') {
+			return 0;
+		}
+		$client = getGoogleApiClient($user);
+		if ($client === false) {
+			return 0;
+		}
+		$service = new PeopleService($client);
+		// Create a new person object.
+		$phones = [];
+		// types phones : home, work, mobile, homeFax, workFax, otherFax, pager, workMobile, workPager, main, googleVoice, other
+		// gender       : male, female, unspecified
+		if (!empty($object->phone_pro)) {
+			$phones[] = [
+				'value' => $object->phone_pro,
+				'type' => 'work',
+			];
+		}
+		if (!empty($object->phone_perso)) {
+			$phones[] = [
+				'value' => $object->phone_perso,
+				'type' => 'home',
+			];
+		}
+		if (!empty($object->phone_mobile)) {
+			$phones[] = [
+				'value' => $object->phone_mobile,
+				'type' => 'workMobile',
+			];
+		}
+		if (!empty($object->fax)) {
+			$phones[] = [
+				'value' => $object->fax,
+				'type' => 'workFax',
+			];
+		}
+		$person = new Person([
+			'names' => [
+				[
+					'givenName' => $object->firstname,
+					'familyName' => $object->lastname,
+				]
+			],
+			'emailAddresses' => [
+				[
+					'value' => trim($object->email),
+					'type' => 'work',
+				],
+			],
+			'phoneNumbers' => $phones,
+		]);
+		try {
+			$response = $service->people->createContact($person);
+			$object->array_options['options_googleapiId'] = $response->getResourceName();
+			$object->array_options['options_googleapiEtag'] = $response->getEtag();
+			$object->update($object->id, $user, 1);
+		} catch (Exception $e) {
+			dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
+			$error++;
+			$this->errors[] = $e->getMessage();
+		}
+		// $email = new Model\EmailAddress();
+		// $email->setAddress($object->email)
+		// 	->setName($object->getFullName($langs));
+		// $address = new Model\PhysicalAddress();
+		// $address->setType('business')
+		// 	->setCity($object->town)
+		// 	->setPostalCode($object->zip)
+		// 	->setStreet($object->address);
+		// if (!empty($object->country_id)) {
+		// 	// getting country via dolibarr
+		// 	require_once DOL_DOCUMENT_ROOT . '/core/class/ccountry.class.php';
+		// 	$dolCountry = new Ccountry($this->db);
+		// 	$dolCountry->fetch($object->country_id);
+		// 	// setting country for api
+		// 	$address->setCountryOrRegion($langs->transnoentities('Country' . $dolCountry->code));
+		// }
+
+		// $data = [
+		// 	'givenName' => $object->firstname,
+		// 	'surname' => $object->lastname,
+		// 	//'nickName' => $object->firstname,
+		// 	//'givenName' => $object->firstname,
+		// 	'title' => $object->civility,
+		// 	// birthday
+		// 	'birthday' => (!empty($object->birthday) ? dol_print_date($object->birthday, '%Y-%m-%dT%H:%M:%SZ') : null),
+		// 	'personalNotes' => $object->note_private,
+		// 	'jobTitle' => $object->poste,
+		// 	// "emailAddresses": [{"@odata.type": "microsoft.graph.typedEmailAddress"}],
+		// 	'emailAddresses' => [$email],
+		// 	'postalAddresses' => [$address],
+		// 	'phones' => $phones,
+		// ];
+		// if (!$error) {
+		// 	// enregistrer l'id google dans dolibarr (extrafield)
+		// 	$object->array_options['options_googleapiId'] = $response->getId();
+		// 	$object->update($object->id, $user, 1);
+		// }
+
+		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * trigger contact modify
+	 *
+	 * @param string 	$action action
+	 * @param Contact   $object actioncomm object
+	 * @param User      $user user
+	 * @param Translate $langs translate object
+	 * @param Conf      $conf dolibarr configuration object
+	 * @return int
+	 */
+	public function contactModify($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		$error = 0;
+		// si on crée un contact partagé, on ne fait rien
+		if ($object->priv != '1') {
+			return 0;
+		}
+		$client = getGoogleApiClient($user);
+		if ($client === false) {
+			return 0;
+		}
+		$service = new PeopleService($client);
+		// $email = new Model\EmailAddress();
+		// $email->setAddress($object->email)
+		// 	->setName($object->getFullName($langs));
+		// $address = new Model\PhysicalAddress();
+		// $address->setType('business')
+		// 	->setCity($object->town)
+		// 	->setPostalCode($object->zip)
+		// 	->setStreet($object->address);
+		if (!empty($object->country_id)) {
+			// getting country via dolibarr
+			require_once DOL_DOCUMENT_ROOT . '/core/class/ccountry.class.php';
+			$dolCountry = new Ccountry($this->db);
+			$dolCountry->fetch($object->country_id);
+			// setting country for api
+			// $address->setCountryOrRegion($langs->transnoentities('Country' . $dolCountry->code));
+		}
+		// Create a new person object.
+		$phones = [];
+		// types : home, work, mobile, homeFax, workFax, otherFax, pager, workMobile, workPager, main, googleVoice, other
+		if (!empty($object->phone_pro)) {
+			$phones[] = [
+				'value' => $object->phone_pro,
+				'type' => 'work',
+			];
+		}
+		if (!empty($object->phone_perso)) {
+			$phones[] = [
+				'value' => $object->phone_perso,
+				'type' => 'home',
+			];
+		}
+		if (!empty($object->phone_mobile)) {
+			$phones[] = [
+				'value' => $object->phone_mobile,
+				'type' => 'workMobile',
+			];
+		}
+		if (!empty($object->fax)) {
+			$phones[] = [
+				'value' => $object->fax,
+				'type' => 'workFax',
+			];
+		}
+
+		// $data = [
+		// 	'givenName' => $object->firstname,
+		// 	'surname' => $object->lastname,
+		// 	//'nickName' => $object->firstname,
+		// 	//'givenName' => $object->firstname,
+		// 	'title' => $object->civility,
+		// 	// birthday
+		// 	'birthday' => (!empty($object->birthday) ? dol_print_date($object->birthday, '%Y-%m-%dT%H:%M:%SZ') : null),
+		// 	'personalNotes' => $object->note_private,
+		// 	'jobTitle' => $object->poste,
+		// 	// "emailAddresses": [{"@odata.type": "microsoft.graph.typedEmailAddress"}],
+		// 	'emailAddresses' => [$email],
+		// 	'postalAddresses' => [$address],
+		// 	'phones' => $phones,
+		// ];
+		// dol_syslog("google trigger contact test " . print_r($data, true), LOG_NOTICE);
+		if (empty($object->array_options['options_googleapiId'])) {
+			// création
+			$person = new Person([
+				'names' => [
+					[
+						'givenName' => $object->firstname,
+						'familyName' => $object->lastname,
+					]
+				],
+				'emailAddresses' => [
+					[
+						'value' => trim($object->email),
+					],
+					// [
+					// 	'value' => 'test2@example.com'
+					// ]
+				],
+				'phoneNumbers' => $phones,
+			]);
+
+			try {
+				$response = $service->people->createContact($person);
+				$object->array_options['options_googleapiId'] = $response->getResourceName();
+				$object->array_options['options_googleapiEtag'] = $response->getEtag();
+				$object->update($object->id, $user, 1);
+			} catch (Exception $e) {
+				dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
+				$error++;
+				$this->errors[] = $e->getMessage();
+			}
+		} else {
+			// Update
+			$resourceName = $object->array_options['options_googleapiId'];
+			$contact = $service->people->get(
+				$resourceName,
+				[
+					'personFields' => 'names,emailAddresses,phoneNumbers,metadata'
+				]
+			);
+			// var_dump($contact);
+			$person = new Person([
+				'names' => [
+					[
+						'givenName' => $object->firstname,
+						'familyName' => $object->lastname,
+					]
+				],
+				'emailAddresses' => [
+					[
+						'value' => trim($object->email),
+						'type' => 'work',
+					],
+				],
+				'phoneNumbers' => $phones,
+				'etag' => $contact->getEtag(),
+			]);
+			// var_dump($person);
+			try {
+				$response = $service->people->updateContact(
+					$resourceName,
+					$person,
+					['updatePersonFields' => 'names,emailAddresses,phoneNumbers']
+				);
+				// etag is changing when updating
+				$object->array_options['options_googleapiEtag'] = $response->getEtag();
+				$object->update($object->id, $user, 1);
+			} catch (Exception $e) {
+				dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
+				$error++;
+				$this->errors[] = $e->getMessage();
+			}
+		}
+
+		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * trigger contact delete
+	 *
+	 * @param string $action action
+	 * @param Contact $object actioncomm object
+	 * @param User $user user
+	 * @param Translate $langs translate object
+	 * @param Conf $conf dolibarr configuration object
+	 * @return int
+	 */
+	public function contactDelete($action, $object, User $user, Translate $langs, Conf $conf)
+	{
+		$error = 0;
+		// si on a un id dans l'ancienne copie du contact
+		if (!empty($object->oldcopy->array_options['options_googleapiId'])) {
+			// does user have valid token
+			// Token storage
+			// $token_ok = true;
+			// $token = getMicrosoftgraphRefreshenedUserToken($user);
+			// $graph = new Graph();
+			// try {
+			// 	$graph->setBaseUrl("https://graph.microsoft.com") ///https://graph.windows.net/
+			// 		->setApiVersion(getDolGlobalString('MICROSOFTGRAPH_API_VERSION', 'beta'))
+			// 		->setAccessToken($token->getToken());
+			// } catch (Exception $e) {
+			// 	dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
+			// 	$error++;
+			// 	$this->errors[] = $e->getMessage();
+			// 	$token_ok = false;
+			// }
+			// $contactId = $object->oldcopy->array_options['options_googleapiId'];
+			// $url = "/me/contacts/" . $contactId;
+			// if ($token_ok) {
+			// 	try {
+			// 		$graph->createRequest("DELETE", $url)
+			// 			->execute();
+			// 	} catch (Exception $e) {
+			// 		dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
+			// 		$error++;
+			// 		$this->errors[] = $e->getMessage();
+			// 	}
+			// }
+		}
+
+		return (!$error ? 0 : -1);
 	}
 
 	/**

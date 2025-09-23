@@ -477,9 +477,19 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		]);
 		try {
 			$response = $service->people->createContact($person);
-			$object->array_options['options_googleapiId'] = $response->getResourceName();
+			$resourceName = $response->getResourceName();
+			$object->array_options['options_googleapiId'] = $resourceName;
 			$object->array_options['options_googleapiEtag'] = $response->getEtag();
 			$object->update($object->id, $user, 1);
+			if (!empty($object->photo)) {
+				$photo = file_get_contents($conf->societe->dir_output . '/contact/' . $object->id . '/photos/' . $object->photo);
+				$request = new \Google\Service\PeopleService\UpdateContactPhotoRequest();
+				$request->setPhotoBytes(base64_encode($photo));
+				$person = $service->people->updateContactPhoto(
+					$resourceName,
+					$request
+				);
+			}
 		} catch (Exception $e) {
 			dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
 			$error++;
@@ -517,11 +527,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		// 	'postalAddresses' => [$address],
 		// 	'phones' => $phones,
 		// ];
-		// if (!$error) {
-		// 	// enregistrer l'id google dans dolibarr (extrafield)
-		// 	$object->array_options['options_googleapiId'] = $response->getId();
-		// 	$object->update($object->id, $user, 1);
-		// }
 
 		return (!$error ? 0 : -1);
 	}
@@ -591,7 +596,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 				'type' => 'workFax',
 			];
 		}
-
 		// $data = [
 		// 	'givenName' => $object->firstname,
 		// 	'surname' => $object->lastname,
@@ -630,9 +634,19 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 			try {
 				$response = $service->people->createContact($person);
-				$object->array_options['options_googleapiId'] = $response->getResourceName();
+				$resourceName = $response->getResourceName();
+				$object->array_options['options_googleapiId'] = $resourceName;
 				$object->array_options['options_googleapiEtag'] = $response->getEtag();
 				$object->update($object->id, $user, 1);
+				if (!empty($object->photo)) {
+					$photo = file_get_contents($conf->societe->dir_output . '/contact/' . $object->id . '/photos/' . $object->photo);
+					$request = new \Google\Service\PeopleService\UpdateContactPhotoRequest();
+					$request->setPhotoBytes(base64_encode($photo));
+					$person = $service->people->updateContactPhoto(
+						$resourceName,
+						$request
+					);
+				}
 			} catch (Exception $e) {
 				dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
 				$error++;
@@ -674,6 +688,15 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 				// etag is changing when updating
 				$object->array_options['options_googleapiEtag'] = $response->getEtag();
 				$object->update($object->id, $user, 1);
+				if (!empty($object->photo)) {
+					$photo = file_get_contents($conf->societe->dir_output . '/contact/' . $object->id . '/photos/' . $object->photo);
+					$request = new \Google\Service\PeopleService\UpdateContactPhotoRequest();
+					$request->setPhotoBytes(base64_encode($photo));
+					$person = $service->people->updateContactPhoto(
+						$resourceName,
+						$request
+					);
+				}
 			} catch (Exception $e) {
 				dol_syslog('Trigger error' . $this->name . ' for action ' . $action . ' :' . $e->getMessage(), LOG_ERR);
 				$error++;

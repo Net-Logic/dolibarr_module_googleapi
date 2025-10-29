@@ -30,7 +30,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/usergroups.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
 //require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-dol_include_once('prune/lib/prune.lib.php');
+dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
 require_once '../lib/googleapi.lib.php';
 

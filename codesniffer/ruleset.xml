@@ -20,6 +20,7 @@
 
 	<!-- Disallow usage of space -->
 	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent" />
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
 
 	<rule ref="Generic.WhiteSpace.ScopeIndent">
 	  <properties>

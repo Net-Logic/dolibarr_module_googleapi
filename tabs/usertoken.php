@@ -93,7 +93,7 @@ if ($action == 'setcalendar') {
 		}
 		$pageToken = $calendarList->getNextPageToken();
 		if ($pageToken) {
-			$optParams = array('pageToken' => $pageToken);
+			$optParams = ['pageToken' => $pageToken];
 			$calendarList = $service->calendarList->listCalendarList($optParams);
 		} else {
 			break;
@@ -136,7 +136,7 @@ if ($action == 'setcalendar') {
 		}
 		$pageToken = $calendarList->getNextPageToken();
 		if ($pageToken) {
-			$optParams = array('pageToken' => $pageToken);
+			$optParams = ['pageToken' => $pageToken];
 			$calendarList = $service->calendarList->listCalendarList($optParams);
 		} else {
 			break;
@@ -152,7 +152,7 @@ if ($action == 'setcalendar') {
 	if (GETPOST('applycolor') == 'on' && !empty($object->color)) {
 		$calendarListEntry = $entries[GETPOST('calendarid', 'alpha')];
 		$calendarListEntry->setBackgroundColor('#' . $object->color);
-		$updatedCalendarListEntry = $service->calendarList->update(GETPOST('calendarid', 'alpha'), $calendarListEntry, array("colorRgbFormat" => true));
+		$updatedCalendarListEntry = $service->calendarList->update(GETPOST('calendarid', 'alpha'), $calendarListEntry, ["colorRgbFormat" => true]);
 	}
 }
 

@@ -40,7 +40,7 @@ use League\OAuth2\Client\Provider\GoogleUser;
 use Google\Service\Calendar;
 
 // Load translation files required by the page
-$langs->loadLangs(array('admin', 'oauth', 'googleapi@googleapi'));
+$langs->loadLangs(['admin', 'oauth', 'googleapi@googleapi']);
 
 $action = GETPOST('action', 'aZ09');
 $value = GETPOST('value', 'alpha');

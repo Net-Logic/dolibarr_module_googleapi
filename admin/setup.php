@@ -38,7 +38,7 @@ use League\Flysystem\Filesystem;
 use Cache\Adapter\Filesystem\FilesystemCachePool;
 
 // Translations
-$langs->loadLangs(array("admin", 'oauth', "googleapi@googleapi"));
+$langs->loadLangs(["errors","admin","googleapi@googleapi"]);
 
 // Access control
 if (! $user->admin) {
@@ -56,35 +56,35 @@ $urlwithouturlroot = str_replace('http://', 'https://', $urlwithouturlroot);
 $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
 //$urlwithroot = DOL_MAIN_URL_ROOT;               // This is to use same domain name than current
 
-$arrayofparameters = array(
-	'OAUTH_GOOGLEAPI_ID' => array(
+$arrayofparameters = [
+	'OAUTH_GOOGLEAPI_ID' => [
 		'css' => 'minwidth500',
 		'type' => 'text',
 		'enabled' => 1,
-	),
-	'OAUTH_GOOGLEAPI_SECRET' => array(
+	],
+	'OAUTH_GOOGLEAPI_SECRET' => [
 		'css' => 'minwidth500',
 		'type' => 'password',
 		'enabled' => 1,
-	),
-	'OAUTH_GOOGLEAPI_URI' => array(
+	],
+	'OAUTH_GOOGLEAPI_URI' => [
 		'css' => 'minwidth500',
 		'default' => $urlwithroot . dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1),
-	),
-	// 'GOOGLEAPI_MYPARAM1' => array(
+	],
+	// 'GOOGLEAPI_MYPARAM1' => [
 	//     'css' => 'minwidth500',
 	//     'type' => 'text',
 	//     'enabled' => 1,
-	// ),
-	// 'GOOGLEAPI_MYPARAM2' => array(
+	// ],
+	// 'GOOGLEAPI_MYPARAM2' => [
 	//     'css' => 'minwidth500',
 	//     'type' => 'text',
 	//     'enabled' => 1,
-	// )
-);
+	// ],
+];
 
 // Paramètres ON/OFF GOOGLEAPI_ est rajouté au paramètre
-$modules = array(
+$modules = [
 	'GOOGLEAPI_ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
@@ -93,7 +93,7 @@ $modules = array(
 	'GOOGLEAPI_ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
 	// tweak dolibarr
 	'CHECKLASTVERSION_EXTERNALMODULE' => 'CHECKLASTVERSION_EXTERNALMODULE',
-);
+];
 
 /*
  * Actions
@@ -236,7 +236,7 @@ if ($action == 'edit') {
 	print '<br>' . PHP_EOL;
 }
 
-dol_fiche_end();
+print dol_get_fiche_end();
 
 // TESTS
 

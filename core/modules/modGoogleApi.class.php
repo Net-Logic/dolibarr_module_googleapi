@@ -255,13 +255,13 @@ class modGoogleApi extends DolibarrModules
 		$extrafields = new ExtraFields($this->db);
 
 		// actioncomm
-		$extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_EventId', "GoogleApi Id", 'varchar', $this->numero, 180, 'actioncomm', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
 		// user
-		$extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
-		$extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
-		$extrafields->addExtraField('googleapi_email', "GoogleApiOwnerEmail", 'varchar', $this->numero + 2, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
-		$extrafields->addExtraField('googleapi_calendarId', "GoogleApiCalendarId", 'varchar', $this->numero + 3, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
-		$extrafields->addExtraField('googleapi_calendarTZ', "GoogleApiCalendarTZ", 'varchar', $this->numero + 4, 128, 'user', 0, 0, '', '', 1, '', '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_Id', "GoogleApi Id", 'varchar', $this->numero, 64, 'user', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_lastevent_sync', "GoogleApiLastEventSync", 'varchar', $this->numero + 1, 64, 'user', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_email', "GoogleApiOwnerEmail", 'varchar', $this->numero + 2, 128, 'user', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_calendarId', "GoogleApiCalendarId", 'varchar', $this->numero + 3, 128, 'user', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
+		$extrafields->addExtraField('googleapi_calendarTZ', "GoogleApiCalendarTZ", 'varchar', $this->numero + 4, 128, 'user', 0, 0, '', '', 1, '', 'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0', 0, '', '', 'googleapi@googleapi', 'isModEnabled("googleapi")');
 		// thirdparty
 		$result = $extrafields->addExtraField(
 			'googleapiId',
@@ -276,7 +276,7 @@ class modGoogleApi extends DolibarrModules
 			'',
 			1,
 			'',
-			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0',
 			0,
 			'',
 			'',
@@ -297,7 +297,7 @@ class modGoogleApi extends DolibarrModules
 			'',
 			1,
 			'',
-			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0',
 			0,
 			'',
 			'',
@@ -318,7 +318,7 @@ class modGoogleApi extends DolibarrModules
 			'',
 			1,
 			'',
-			'(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)',
+			'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0',
 			0,
 			'',
 			'',

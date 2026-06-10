@@ -49,6 +49,10 @@ class ActionsGoogleApi
 	 */
 	public $errors = [];
 
+	/**
+	 *  @var array Warnings
+	 */
+	public $warnings = [];
 
 	/**
 	 *  @var array Hook results. Propagated to $hookmanager->resArray for later reuse

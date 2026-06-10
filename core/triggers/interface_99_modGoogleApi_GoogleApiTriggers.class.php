@@ -217,11 +217,18 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			$calendarId = $staticuser->array_options['options_googleapi_calendarId'];
 		}
 		$service = new \Google\Service\Calendar($client);
-		$event = $service->events->insert($calendarId, $event);
+		try {
+			$event = $service->events->insert($calendarId, $event);
 
-		// enregistrer l'id googleapi dans dolibarr (extrafield)
-		$object->array_options['options_googleapi_EventId'] = $event->getId();
-		$object->update($user, 1);
+			// enregistrer l'id googleapi dans dolibarr (extrafield)
+			$object->array_options['options_googleapi_EventId'] = $event->getId();
+			$object->update($user, 1);
+		} catch (Throwable $t) {
+			dol_syslog($t->getMessage(), LOG_ERR);
+			setEventMessage($t->getMessage());
+		} catch (Exception $e) {
+			setEventMessage($e->getMessage());
+		}
 
 		return (!$error ? 0 : -1);
 	}
@@ -339,11 +346,18 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 		$service = new \Google\Service\Calendar($client);
 		if (empty($object->array_options['options_googleapi_EventId'])) {
-			$event = $service->events->insert($calendarId, $event);
-			// // enregistrer l'id googleapi dans dolibarr (extrafield)
-			$object->fetch_optionals();
-			$object->array_options['options_googleapi_EventId'] = $event->getId();
-			$object->update($user, 1);
+			try {
+				$event = $service->events->insert($calendarId, $event);
+				// // enregistrer l'id googleapi dans dolibarr (extrafield)
+				$object->fetch_optionals();
+				$object->array_options['options_googleapi_EventId'] = $event->getId();
+				$object->update($user, 1);
+			} catch (Throwable $t) {
+				dol_syslog($t->getMessage(), LOG_ERR);
+				setEventMessage($t->getMessage());
+			} catch (Exception $e) {
+				setEventMessage($e->getMessage());
+			}
 		} else {
 			$event = $service->events->update($calendarId, $object->array_options['options_googleapi_EventId'], $event);
 		}

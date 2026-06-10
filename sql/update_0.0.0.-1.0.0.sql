@@ -1,4 +1,4 @@
--- Copyright (C) 2019       Frédéric France         <frederic.france@netlogic.fr>
+-- Copyright (C) 2019-2026  Frédéric France         <frederic.france@netlogic.fr>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,5 +14,6 @@
 -- along with this program.  If not, see http://www.gnu.org/licenses/.
 
 -- TO FIX PHP WARNINGS
-UPDATE llx_extrafields SET enabled='!empty($conf->googleapi->enabled)' WHERE enabled='$conf->googleapi->enabled';
+UPDATE llx_extrafields SET enabled='isModEnabled("googleapi")' WHERE enabled='!empty($conf->googleapi->enabled)';
+UPDATE llx_extrafields set enabled = 'isModEnabled("googleapi")' WHERE enabled = '$conf->googleapi->enabled';
 UPDATE llx_c_actioncomm SET type='module', module='googleapi@googleapi' WHERE type='system' AND module='googleapi';

@@ -53,7 +53,7 @@ $id = (int) GETPOST('id', 'int');
 $rowid = (int) GETPOST('rowid', 'int');
 $ref = GETPOST('ref', 'alpha');
 // Note that conf->hooks_modules contains array
-$hookmanager->initHooks(array('googleapiemaillist', 'globalcard'));
+$hookmanager->initHooks(['googleapiemaillist', 'globalcard']);
 
 $linkback = '';
 // Initialize technical objects
@@ -205,15 +205,15 @@ if ($user->socid > 0) {
 	//$socid = $user->socid;
 	accessforbidden();
 }
-$arrayofjs = array(
+$arrayofjs = [
 	'https://uicdn.toast.com/tui.code-snippet/latest/tui-code-snippet.js',
 	'https://uicdn.toast.com/tui.pagination/latest/tui-pagination.js',
 	'https://uicdn.toast.com/tui-grid/latest/tui-grid.js',
-);
-$arrayofcss = array(
+];
+$arrayofcss = [
 	'https://uicdn.toast.com/tui-grid/latest/tui-grid.css',
 	'https://uicdn.toast.com/tui.pagination/latest/tui-pagination.css',
-);
+];
 
 llxHeader('', $pagetitle, '', '', 0, 0, $arrayofjs, $arrayofcss);
 
@@ -241,24 +241,24 @@ if ($id > 0 || !empty($ref)) {
 
 	print '<br>';
 
-	$arrayfields = array(
-		'rowid' => array(
+	$arrayfields = [
+		'rowid' => [
 			'label' => $langs->transnoentities("Id"),
 			'checked' => 1
-		),
-		'userid' => array(
+		],
+		'userid' => [
 			'label' => $langs->transnoentities("GoogleApiUserId"),
 			'checked' => 1
-		),
-		'fk_object' => array(
+		],
+		'fk_object' => [
 			'label' => $langs->transnoentities("ObjectId"),
 			'checked' => 1,
-		),
-		'messageid' => array(
+		],
+		'messageid' => [
 			'label' => $langs->transnoentities("GoogleApiMessageId"),
 			'checked' => 1,
-		),
-	);
+		],
+	];
 
 	print '<div id="grid"></div>';
 	print "<script>

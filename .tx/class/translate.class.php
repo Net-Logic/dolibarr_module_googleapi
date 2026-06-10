@@ -35,11 +35,11 @@ class Translate
 	public $shortlang; // Short language for current user
 	public $charset_output = 'UTF-8'; // Codage used by "trans" method outputs
 
-	public $tab_translate = array(); // Array of all translations key=>value
-	private $tab_loaded = array(); // Array to store result after loading each language file
+	public $tab_translate = []; // Array of all translations key=>value
+	private $tab_loaded = []; // Array to store result after loading each language file
 
-	public $cache_labels = array(); // Cache for labels return by getLabelFromKey method
-	public $cache_currencies = array(); // Cache to store currency symbols
+	public $cache_labels = []; // Cache for labels return by getLabelFromKey method
+	public $cache_currencies = []; // Cache to store currency symbols
 	private $cache_currencies_all_loaded = false;
 
 	/**
@@ -49,7 +49,7 @@ class Translate
 	 */
 	public function __construct($dir)
 	{
-		$this->dir = array($dir);
+		$this->dir = [$dir];
 	}
 
 
@@ -80,13 +80,13 @@ class Translate
 		//print "Short code before _ : ".$langpart[0].' / Short code after _ : '.$langpart[1].'<br>';
 		if (!empty($langpart[1])) {	// If it's for a codetouse that is a long code xx_YY
 			// Array force long code from first part, even if long code is defined
-			$longforshort = array('ar' => 'ar_SA');
-			$longforshortexcep = array('ar_EG');
+			$longforshort = ['ar' => 'ar_SA'];
+			$longforshortexcep = ['ar_EG'];
 			if (isset($longforshort[strtolower($langpart[0])]) && !in_array($codetouse, $longforshortexcep)) {
 				$srclang = $longforshort[strtolower($langpart[0])];
 			} elseif (!is_numeric($langpart[1])) {		// Second part YY may be a numeric with some Chrome browser
 				$srclang = strtolower($langpart[0]) . "_" . strtoupper($langpart[1]);
-				$longforlong = array('no_nb' => 'nb_NO');
+				$longforlong = ['no_nb' => 'nb_NO'];
 				if (isset($longforlong[strtolower($srclang)])) {
 					$srclang = $longforlong[strtolower($srclang)];
 				}
@@ -95,12 +95,12 @@ class Translate
 			}
 		} else {						// If it's for a codetouse that is a short code xx
 			// Array to convert short lang code into long code.
-			$longforshort = array(
+			$longforshort = [
 				'am' => 'am_ET', 'ar' => 'ar_SA', 'bn' => 'bn_DB', 'el' => 'el_GR', 'ca' => 'ca_ES', 'cs' => 'cs_CZ', 'en' => 'en_US', 'fa' => 'fa_IR',
 				'gl' => 'gl_ES', 'he' => 'he_IL', 'hi' => 'hi_IN', 'ja' => 'ja_JP',
 				'ka' => 'ka_GE', 'km' => 'km_KH', 'kn' => 'kn_IN', 'ko' => 'ko_KR', 'lo' => 'lo_LA', 'nb' => 'nb_NO', 'no' => 'nb_NO', 'ne' => 'ne_NP',
 				'sl' => 'sl_SI', 'sq' => 'sq_AL', 'sr' => 'sr_RS', 'sv' => 'sv_SE', 'uk' => 'uk_UA', 'vi' => 'vi_VN', 'zh' => 'zh_CN'
-			);
+			];
 			if (isset($longforshort[strtolower($langpart[0])])) {
 				$srclang = $longforshort[strtolower($langpart[0])];
 			} elseif (!empty($langpart[0])) {
@@ -185,7 +185,7 @@ class Translate
 		$modulename = '';
 
 		// Search if a module directory name is provided into lang file name
-		$regs = array();
+		$regs = [];
 		if (preg_match('/^([^@]+)@([^@]+)$/i', $domain, $regs)) {
 			$newdomain = $regs[1];
 			$modulename = $regs[2];
@@ -204,7 +204,7 @@ class Translate
 
 		// Redefine alt
 		$langarray = explode('_', $langofdir);
-		if ($alt < 1 && isset($langarray[1]) && (strtolower($langarray[0]) == strtolower($langarray[1]) || in_array(strtolower($langofdir), array('el_gr')))) {
+		if ($alt < 1 && isset($langarray[1]) && (strtolower($langarray[0]) == strtolower($langarray[1]) || in_array(strtolower($langofdir), ['el_gr']))) {
 			$alt = 1;
 		}
 		if ($alt < 2 && strtolower($langofdir) == 'en_us') {
@@ -255,7 +255,7 @@ class Translate
 										continue;
 									} else {
 										// Convert some strings: Parse and render carriage returns. Also, change '\\s' into '\s' because transifex sync pull the string '\s' into string '\\s'
-										$this->tab_translate[$key] = str_replace(array('\\n', '\\\\s'), array("\n", '\s'), $value);
+										$this->tab_translate[$key] = str_replace(['\\n', '\\\\s'], ["\n", '\s'], $value);
 									}
 								}
 							}
@@ -359,7 +359,7 @@ class Translate
 		}
 
 		$newstr = $key;
-		$reg = array();
+		$reg = [];
 		if (preg_match('/^Civility([0-9A-Z]+)$/i', $key, $reg)) {
 			$newstr = $this->getLabelFromKey($db, $reg[1], 'c_civility', 'code', 'label');
 		} elseif (preg_match('/^Currency([A-Z][A-Z][A-Z])$/i', $key, $reg)) {
@@ -412,8 +412,8 @@ class Translate
 			// We replace some HTML tags by __xx__ to avoid having them encoded by htmlentities because
 			// we want to keep '"' '<b>' '</b>' '<strong' '</strong>' '<a ' '</a>' '<br>' '< ' '<span' '</span>' that are reliable HTML tags inside translation strings.
 			$str = str_replace(
-				array('"', '<b>', '</b>', '<u>', '</u>', '<i', '</i>', '<center>', '</center>', '<strong>', '</strong>', '<a ', '</a>', '<br>', '<span', '</span>', '< ', '>'), // We accept '< ' but not '<'. We can accept however '>'
-				array('__quot__', '__tagb__', '__tagbend__', '__tagu__', '__taguend__', '__tagi__', '__tagiend__', '__tagcenter__', '__tagcenterend__', '__tagb__', '__tagbend__', '__taga__', '__tagaend__', '__tagbr__', '__tagspan__', '__tagspanend__', '__ltspace__', '__gt__'),
+				['"', '<b>', '</b>', '<u>', '</u>', '<i', '</i>', '<center>', '</center>', '<strong>', '</strong>', '<a ', '</a>', '<br>', '<span', '</span>', '< ', '>'], // We accept '< ' but not '<'. We can accept however '>'
+				['__quot__', '__tagb__', '__tagbend__', '__tagu__', '__taguend__', '__tagi__', '__tagiend__', '__tagcenter__', '__tagcenterend__', '__tagb__', '__tagbend__', '__taga__', '__tagaend__', '__tagbr__', '__tagspan__', '__tagspanend__', '__ltspace__', '__gt__'],
 				$str
 			);
 
@@ -426,8 +426,8 @@ class Translate
 
 			// Restore reliable HTML tags into original translation string
 			$str = str_replace(
-				array('__quot__', '__tagb__', '__tagbend__', '__tagu__', '__taguend__', '__tagi__', '__tagiend__', '__tagcenter__', '__tagcenterend__', '__taga__', '__tagaend__', '__tagbr__', '__tagspan__', '__tagspanend__', '__ltspace__', '__gt__'),
-				array('"', '<b>', '</b>', '<u>', '</u>', '<i', '</i>', '<center>', '</center>', '<a ', '</a>', '<br>', '<span', '</span>', '< ', '>'),
+				['__quot__', '__tagb__', '__tagbend__', '__tagu__', '__taguend__', '__tagi__', '__tagiend__', '__tagcenter__', '__tagcenterend__', '__taga__', '__tagaend__', '__tagbr__', '__tagspan__', '__tagspanend__', '__ltspace__', '__gt__'],
+				['"', '<b>', '</b>', '<u>', '</u>', '<i', '</i>', '<center>', '</center>', '<a ', '</a>', '<br>', '<span', '</span>', '< ', '>'],
 				$str
 			);
 
@@ -584,13 +584,13 @@ class Translate
 
 		// We scan directory langs to detect available languages
 		$handle = opendir($langdir . "/langs");
-		$langs_available = array();
+		$langs_available = [];
 		while ($dir = trim(readdir($handle))) {
-			$regs = array();
+			$regs = [];
 			if (preg_match('/^([a-z]+)_([A-Z]+)/i', $dir, $regs)) {
 				// We must keep only main languages
 				if ($mainlangonly) {
-					$arrayofspecialmainlanguages = array(
+					$arrayofspecialmainlanguages = [
 						'en' => 'en_US',
 						'am' => 'am_ET',
 						'ar' => 'ar_SA',
@@ -619,7 +619,7 @@ class Translate
 						'uk' => 'uk_UA',
 						'vi' => 'vi_VN',
 						'zh' => 'zh_CN'
-					);
+					];
 					if (strtolower($regs[1]) != strtolower($regs[2]) && !in_array($dir, $arrayofspecialmainlanguages)) {
 						continue;
 					}
@@ -697,7 +697,7 @@ class Translate
 
 		$newnumber = $number;
 
-		$dirsubstitutions = array_merge(array(), $conf->modules_parts['substitutions']);
+		$dirsubstitutions = array_merge([], $conf->modules_parts['substitutions']);
 		foreach ($dirsubstitutions as $reldir) {
 			$dir = dol_buildpath($reldir, 0);
 			$newdir = dol_osencode($dir);
@@ -798,7 +798,7 @@ class Translate
 	{
 		$symbol = $this->getCurrencySymbol($currency_code);
 
-		if (in_array($currency_code, array('USD'))) {
+		if (in_array($currency_code, ['USD'])) {
 			return $symbol . $amount;
 		} else {
 			return $amount . $symbol;
@@ -859,7 +859,7 @@ class Translate
 		$resql = $db->query($sql);
 		if ($resql) {
 			$this->load("dict");
-			$label = array();
+			$label = [];
 			if (!empty($currency_code)) {
 				foreach ($this->cache_currencies as $key => $val) {
 					$label[$key] = $val['label']; // Label in already loaded cache

@@ -49,6 +49,10 @@ class ActionsGoogleApi
 	 */
 	public $errors = [];
 
+	/**
+	 *  @var array Warnings
+	 */
+	public $warnings = [];
 
 	/**
 	 *  @var array Hook results. Propagated to $hookmanager->resArray for later reuse
@@ -282,7 +286,7 @@ class ActionsGoogleApi
 		// what TODO with context 'emailing'
 		// context notification?
 		// https://developers.google.com/resources/api-libraries/documentation/gmail/v1/php/latest/class-Google_Service_Gmail_Message.html
-		if (in_array('mail', $contexts) && !in_array($object->sendcontext, array('emailing', 'notification'))) {
+		if (in_array('mail', $contexts) && !in_array($object->sendcontext, ['emailing', 'notification'])) {
 			dol_include_once('/googleapi/lib/googleapi.lib.php');
 			$fromsender = $this->getArrayAddress($object->addr_from);
 			if (!empty($user->array_options['options_googleapi_email']) && $fromsender[0]['address'] == $user->array_options['options_googleapi_email']) {
@@ -475,10 +479,10 @@ class ActionsGoogleApi
 					$name  = null;
 					$email = trim($val);
 				}
-				$ret[] = array(
+				$ret[] = [
 					'name' => empty($conf->global->MAIN_MAIL_NO_FULL_EMAIL) ? $name : null,
 					'address' => $email,
-				);
+				];
 			}
 		}
 

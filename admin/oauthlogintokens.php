@@ -36,7 +36,7 @@ use League\OAuth2\Client\Grant\RefreshToken;
 use League\OAuth2\Client\Provider\GoogleUser;
 
 // Load translation files required by the page
-$langs->loadLangs(array('admin', 'oauth', 'googleapi@googleapi'));
+$langs->loadLangs(["errors","admin","googleapi@googleapi"]);
 
 if (!$user->admin) {
 	accessforbidden();
@@ -46,12 +46,12 @@ $action = GETPOST('action', 'aZ09');
 $value = GETPOST('value', 'alpha');
 $varname = GETPOST('varname', 'alpha');
 
-$key = array(
+$key = [
 	'OAUTH_GOOGLEAPI_NAME',
 	'OAUTH_GOOGLEAPI_ID',
 	'OAUTH_GOOGLEAPI_SECRET',
 	'OAUTH_GOOGLEAPI_DESC',
-);
+];
 
 
 /*

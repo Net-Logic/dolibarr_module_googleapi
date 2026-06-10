@@ -30,7 +30,7 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/usergroups.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
 //require_once DOL_DOCUMENT_ROOT.'/core/class/doleditor.class.php';
-dol_include_once('prune/lib/prune.lib.php');
+dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
 require_once '../lib/googleapi.lib.php';
 
@@ -40,7 +40,7 @@ use League\OAuth2\Client\Provider\GoogleUser;
 use Google\Service\Calendar;
 
 // Load translation files required by the page
-$langs->loadLangs(array('admin', 'oauth', 'googleapi@googleapi'));
+$langs->loadLangs(['admin', 'oauth', 'googleapi@googleapi']);
 
 $action = GETPOST('action', 'aZ09');
 $value = GETPOST('value', 'alpha');
@@ -93,7 +93,7 @@ if ($action == 'setcalendar') {
 		}
 		$pageToken = $calendarList->getNextPageToken();
 		if ($pageToken) {
-			$optParams = array('pageToken' => $pageToken);
+			$optParams = ['pageToken' => $pageToken];
 			$calendarList = $service->calendarList->listCalendarList($optParams);
 		} else {
 			break;
@@ -136,7 +136,7 @@ if ($action == 'setcalendar') {
 		}
 		$pageToken = $calendarList->getNextPageToken();
 		if ($pageToken) {
-			$optParams = array('pageToken' => $pageToken);
+			$optParams = ['pageToken' => $pageToken];
 			$calendarList = $service->calendarList->listCalendarList($optParams);
 		} else {
 			break;
@@ -152,7 +152,7 @@ if ($action == 'setcalendar') {
 	if (GETPOST('applycolor') == 'on' && !empty($object->color)) {
 		$calendarListEntry = $entries[GETPOST('calendarid', 'alpha')];
 		$calendarListEntry->setBackgroundColor('#' . $object->color);
-		$updatedCalendarListEntry = $service->calendarList->update(GETPOST('calendarid', 'alpha'), $calendarListEntry, array("colorRgbFormat" => true));
+		$updatedCalendarListEntry = $service->calendarList->update(GETPOST('calendarid', 'alpha'), $calendarListEntry, ["colorRgbFormat" => true]);
 	}
 }
 

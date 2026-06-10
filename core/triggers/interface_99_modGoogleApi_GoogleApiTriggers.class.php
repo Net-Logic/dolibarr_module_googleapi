@@ -128,7 +128,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		// For example : COMPANY_CREATE => public function companyCreate($action, $object, User $user, Translate $langs, Conf $conf)
 		$methodName = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', strtolower($action)))));
 		// setEventMessage($methodName);
-		$callback = array($this, $methodName);
+		$callback = [$this, $methodName];
 		if (is_callable($callback)) {
 			dol_syslog("Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id, LOG_INFO);
 			return call_user_func($callback, $action, $object, $user, $langs, $conf);
@@ -195,20 +195,20 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			'description' => $object->note,
 			'start' => $start,
 			'end' => $end,
-			'recurrence' => array(
+			'recurrence' => [
 				//'RRULE:FREQ=DAILY;COUNT=2'
-			),
-			'attendees' => array(
+			],
+			'attendees' => [
 				// array('email' => 'lpage@example.com'),
 				// array('email' => 'sbrin@example.com'),
-			),
-			'reminders' => array(
+			],
+			'reminders' => [
 				// 'useDefault' => false,
 				// 'overrides' => array(
 				// 	array('method' => 'email', 'minutes' => 24 * 60),
 				// 	array('method' => 'popup', 'minutes' => 10),
 				// ),
-			),
+			],
 		]);
 
 		if (empty($staticuser->array_options['options_googleapi_calendarId'])) {
@@ -217,11 +217,18 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			$calendarId = $staticuser->array_options['options_googleapi_calendarId'];
 		}
 		$service = new \Google\Service\Calendar($client);
-		$event = $service->events->insert($calendarId, $event);
+		try {
+			$event = $service->events->insert($calendarId, $event);
 
-		// enregistrer l'id googleapi dans dolibarr (extrafield)
-		$object->array_options['options_googleapi_EventId'] = $event->getId();
-		$object->update($user, 1);
+			// enregistrer l'id googleapi dans dolibarr (extrafield)
+			$object->array_options['options_googleapi_EventId'] = $event->getId();
+			$object->update($user, 1);
+		} catch (Throwable $t) {
+			dol_syslog($t->getMessage(), LOG_ERR);
+			setEventMessage($t->getMessage());
+		} catch (Exception $e) {
+			setEventMessage($e->getMessage());
+		}
 
 		return (!$error ? 0 : -1);
 	}
@@ -339,11 +346,18 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 		$service = new \Google\Service\Calendar($client);
 		if (empty($object->array_options['options_googleapi_EventId'])) {
-			$event = $service->events->insert($calendarId, $event);
-			// // enregistrer l'id googleapi dans dolibarr (extrafield)
-			$object->fetch_optionals();
-			$object->array_options['options_googleapi_EventId'] = $event->getId();
-			$object->update($user, 1);
+			try {
+				$event = $service->events->insert($calendarId, $event);
+				// // enregistrer l'id googleapi dans dolibarr (extrafield)
+				$object->fetch_optionals();
+				$object->array_options['options_googleapi_EventId'] = $event->getId();
+				$object->update($user, 1);
+			} catch (Throwable $t) {
+				dol_syslog($t->getMessage(), LOG_ERR);
+				setEventMessage($t->getMessage());
+			} catch (Exception $e) {
+				setEventMessage($e->getMessage());
+			}
 		} else {
 			$event = $service->events->update($calendarId, $object->array_options['options_googleapi_EventId'], $event);
 		}

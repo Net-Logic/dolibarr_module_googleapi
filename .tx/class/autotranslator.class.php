@@ -27,7 +27,7 @@
  */
 class AutoTranslator
 {
-	private $translatedFiles = array();
+	private $translatedFiles = [];
 	private $destlang = '';
 	private $refLang = '';
 	private $langDir = '';
@@ -88,9 +88,9 @@ class AutoTranslator
 			print "Processing file " . $file . ", with " . count($fileContent) . " lines<br>\n";
 
 			// Define target dirs
-			$targetlangs = array($this->destlang);
+			$targetlangs = [$this->destlang];
 			if ($this->destlang == 'all') {
-				$targetlangs = array();
+				$targetlangs = [];
 
 				// If we must process all languages
 				$arraytmp = dol_dir_list($this->langDir, 'directories', 0);
@@ -130,7 +130,7 @@ class AutoTranslator
 
 			// Process translation of source file for each target languages
 			foreach ($targetlangs as $my_destlang) {
-				$this->translatedFiles = array();
+				$this->translatedFiles = [];
 
 				$destPath = $this->langDir . $my_destlang . self::DIR_SEPARATOR . $file;
 				// Check destination file presence
@@ -238,9 +238,9 @@ class AutoTranslator
 		} else {
 			// If not translated then translate
 			if ($this->outputpagecode == 'UTF-8') {
-				$val = $this->translateTexts(array($value), substr($this->refLang, 0, 2), substr($my_destlang, 0, 2));
+				$val = $this->translateTexts([$value], substr($this->refLang, 0, 2), substr($my_destlang, 0, 2));
 			} else {
-				$val = utf8_decode($this->translateTexts(array($value), substr($this->refLang, 0, 2), substr($my_destlang, 0, 2)));
+				$val = utf8_decode($this->translateTexts([$value], substr($this->refLang, 0, 2), substr($my_destlang, 0, 2)));
 			}
 		}
 

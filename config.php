@@ -33,13 +33,13 @@ foreach ($filename as $val) {
 	$arraymain[] = implode('/', $newfile);
 }
 $arraymain = array_merge(
-	array(
+	[
 		$_SERVER["CONTEXT_DOCUMENT_ROOT"] ?? '',
 		'..',
 		'../..',
 		'../../..',
 		'../../../..',
-	),
+	],
 	array_reverse($arraymain)
 );
 foreach ($arraymain as $path) {

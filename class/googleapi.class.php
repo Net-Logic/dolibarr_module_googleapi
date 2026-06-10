@@ -36,8 +36,14 @@ class GoogleApi
 
 	public $watchResp = '';
 
+	/**
+	 * @var string
+	 */
 	public $error;
 
+	/**
+	 * @var string[]
+	 */
 	public $errors = [];
 
 	/**
@@ -91,18 +97,18 @@ class GoogleApi
 					$staticuser = new User($this->db);
 					$staticuser->fetch($row->uid);
 					// we check for user which have a token
-					if (!empty($conf->global->GOOGLEAPI_ENABLE_PUSH_ME_EVENTS)) {
-						$this->chekValidPushNotificationFor($staticuser, 'events', $urlfornotification);
+					if (getDolGlobalInt('GOOGLEAPI_ENABLE_PUSH_ME_EVENTS')) {
+						$this->chekValidPushNotificationForEvents($staticuser, $urlfornotification);
 						$pushactive++;
 					}
 					// if (! empty($conf->global->GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES)) {
 					// 	$this->chekValidPushNotificationFor($staticuser, 'messages', $urlfornotification);
 					// 	$pushactive++;
 					// }
-					// if (! empty($conf->global->GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS)) {
-					// 	$this->chekValidPushNotificationFor($staticuser, 'contacts', $urlfornotification);
-					// 	$pushactive++;
-					// }
+					if (getDolGlobalInt('GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS')) {
+						$this->chekValidPushNotificationForContacts($staticuser, $urlfornotification);
+						$pushactive++;
+					}
 				}
 			}
 		}
@@ -118,15 +124,11 @@ class GoogleApi
 	 * Function to check if push is valid for user
 	 *
 	 * @param   User    $user             user id
-	 * @param   string  $type               type
 	 * @param   string  $urlfornotification url
 	 * @return int
 	 */
-	private function chekValidPushNotificationFor($user, $type, $urlfornotification)
+	private function chekValidPushNotificationForEvents($user, $urlfornotification)
 	{
-
-		global $conf, $db;
-
 		$now = dol_now();
 		require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 		dol_include_once('/googleapi/lib/googleapi.lib.php');
@@ -135,7 +137,110 @@ class GoogleApi
 		$service = new Google\Service\Calendar($client);
 
 		$sql = "SELECT rowid, userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber FROM " . MAIN_DB_PREFIX . "googleapi_watchs";
-		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="' . $this->db->escape($type) . '"';
+		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="events"';
+
+		$resql = $this->db->query($sql);
+		if ($resql && $this->db->num_rows($resql) > 0) {
+			// on a déjà quelquechose
+			$row = $this->db->fetch_object($resql);
+			$calendarId = $user->array_options['options_googleapi_calendarId'] ?: 'primary';
+
+			// is it going to expire in 30min
+			// expiration is gmt
+			$expiration = dol_stringtotime($row->expirationDateTime, 1);
+			// check with cron
+			if (($expiration - $now - (13 * 3600)) < 0) {
+				// expired
+				$this->output .= 'push expired ';
+				// create a new one which may overlap
+				$uuid = $this->getUuid();
+
+				try {
+					$channelId = $uuid;
+					$channel = new Google\Service\Calendar\Channel($client);
+					$channel->setId($channelId);
+					$channel->setType('web_hook');
+					$channel->setAddress($urlfornotification);
+					$watch = $service->events->watch($calendarId, $channel);
+
+					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "googleapi_watchs";
+					$sql .= " (userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber) VALUES(";
+					$sql .= " " . (int) $user->id;
+					$sql .= ", '" . $this->db->escape($uuid) . "'";
+					$sql .= ", '" . $this->db->escape($watch->getId()) . "'";
+					$sql .= ", 'events'";
+					$sql .= ", '" . $this->db->escape($watch->getResourceUri()) . "'";
+					$sql .= ", '" . $this->db->escape($watch->getResourceId()) . "'";
+					//$sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";
+					$sql .= ", '" . ($this->db->idate(substr($watch->getExpiration(), 0, -3))) . "'";
+					$sql .= ", '1')";
+					$resql = $this->db->query($sql);
+					dol_syslog(get_class($this) . ' ' . $sql, LOG_NOTICE);
+				} catch (Exception $e) {
+					dol_syslog($e->getmessage(), LOG_ERR);
+				}
+				// delete the old one from db
+				$sql = "DELETE FROM " . MAIN_DB_PREFIX . "googleapi_watchs ";
+				$sql .= " WHERE rowid=" . (int) $row->rowid;
+				$this->db->query($sql);
+				dol_syslog(get_class($this) . ' ' . $sql, LOG_NOTICE);
+				$this->output .= 'New Active ' . ($expiration - $now) . ' sec, ';
+				//print $sql;exit;
+			} else {
+				// active
+				$this->output .= 'Active ' . ($expiration - $now) . ' sec, ';
+			}
+		} else {
+			$uuid = $this->getUuid();
+
+			try {
+				$channelId = $uuid;
+				$channel = new Google\Service\Calendar\Channel($client);
+				$channel->setId($channelId);
+				$channel->setType('web_hook');
+				$channel->setAddress($urlfornotification);
+				$watch = $service->events->watch($calendarId, $channel);
+
+				$sql = "INSERT INTO " . MAIN_DB_PREFIX . "googleapi_watchs";
+				$sql .= " (userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber) VALUES(";
+				$sql .= " " . (int) $user->id;
+				$sql .= ", '" . $this->db->escape($uuid) . "'";
+				$sql .= ", '" . $this->db->escape($watch->getId()) . "'";
+				$sql .= ", 'events'";
+				$sql .= ", '" . $this->db->escape($watch->getResourceUri()) . "'";
+				$sql .= ", '" . $this->db->escape($watch->getResourceId()) . "'";
+				//$sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";
+				// timestamp in ms
+				$sql .= ", '" . ($this->db->idate(substr($watch->getExpiration(), 0, -3))) . "'";
+				$sql .= ", '1')";
+
+				$resql = $this->db->query($sql);
+			} catch (Exception $e) {
+				dol_syslog($e->getmessage(), LOG_ERR);
+			}
+			//exit;
+		}
+		return 0;
+	}
+
+	/**
+	 * Function to check if push is valid for user
+	 *
+	 * @param   User    $user             user id
+	 * @param   string  $urlfornotification url
+	 * @return int
+	 */
+	private function chekValidPushNotificationForContacts($user, $urlfornotification)
+	{
+		$now = dol_now();
+		require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+		dol_include_once('/googleapi/lib/googleapi.lib.php');
+		dol_include_once('/prune/vendor/autoload.php');
+		$client = getGoogleApiClient($user);
+		$service = new Google\Service\WorkspaceEvents($client);
+
+		$sql = "SELECT rowid, userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber FROM " . MAIN_DB_PREFIX . "googleapi_watchs";
+		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="contacts"';
 
 		$resql = $this->db->query($sql);
 		if ($resql && $this->db->num_rows($resql) > 0) {
@@ -154,22 +259,22 @@ class GoogleApi
 
 				try {
 					$channelId = $uuid;
-					$channel = new Google\Service\Calendar\Channel($client);
-					$channel->setId($channelId);
-					$channel->setType('web_hook');
-					$channel->setAddress($urlfornotification);
-					$watch = $service->events->watch('primary', $channel);
+					$channel = new Google\Service\WorkspaceEvents\Subscription();
+					$channel->setEventTypes(['google.workspace.people.contact.v1.modified']);
+					$channel->setNotificationEndpoint($urlfornotification);
+					$channel->setPayloadOptions(['includeResource' => true]);
+					$watch = $service->subscriptions->create($channel);
 
 					$sql = "INSERT INTO " . MAIN_DB_PREFIX . "googleapi_watchs";
 					$sql .= " (userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber) VALUES(";
 					$sql .= " " . (int) $user->id;
 					$sql .= ", '" . $this->db->escape($uuid) . "'";
-					$sql .= ", '" . $this->db->escape($watch->getId()) . "'";
-					$sql .= ", '" . $this->db->escape($type) . "'";
-					$sql .= ", '" . $this->db->escape($watch->getResourceUri()) . "'";
-					$sql .= ", '" . $this->db->escape($watch->getResourceId()) . "'";
+					$sql .= ", '" . $this->db->escape($watch->getName()) . "'";
+					$sql .= ", 'contacts'";
+					$sql .= ", ''";
+					$sql .= ", ''";
 					//$sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";
-					$sql .= ", '" . ($this->db->idate(substr($watch->getExpiration(), 0, -3))) . "'";
+					$sql .= ", '" . ($this->db->idate(substr($watch->getExpirationTime(), 0, -3))) . "'";
 					$sql .= ", '1')";
 					$resql = $this->db->query($sql);
 					dol_syslog(get_class($this) . ' ' . $sql, LOG_NOTICE);
@@ -198,14 +303,14 @@ class GoogleApi
 				$channel->setType('web_hook');
 				$channel->setAddress($urlfornotification);
 				$calendarId = $user->array_options['options_googleapi_calendarId'] ?? 'primary';
-				$watch = $service->events->watch($calendarId, $channel);
+				$watch = $service->peoples->watch($calendarId, $channel);
 
 				$sql = "INSERT INTO " . MAIN_DB_PREFIX . "googleapi_watchs";
 				$sql .= " (userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber) VALUES(";
 				$sql .= " " . (int) $user->id;
 				$sql .= ", '" . $this->db->escape($uuid) . "'";
 				$sql .= ", '" . $this->db->escape($watch->getId()) . "'";
-				$sql .= ", '" . $this->db->escape($type) . "'";
+				$sql .= ", 'contacts'";
 				$sql .= ", '" . $this->db->escape($watch->getResourceUri()) . "'";
 				$sql .= ", '" . $this->db->escape($watch->getResourceId()) . "'";
 				//$sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";

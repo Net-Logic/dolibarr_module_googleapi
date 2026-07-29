@@ -71,7 +71,7 @@ class modGoogleApi extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr',
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.0.2';
+		$this->version = '1.1.0';
 
 		// Url to the file with your last numberversion of this module
 		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';
@@ -174,7 +174,9 @@ class modGoogleApi extends DolibarrModules
 		}
 
 		// Array to add new pages in new tabs
-		$this->tabs = [];
+		$this->tabs = [
+			array('data' => 'ecm:+googledrive:GoogleApiDriveTab:googleapi@googleapi:$user->rights->googleapi->read:/googleapi/ecmgoogledrive.php'),
+		];
 
 		// Dictionaries
 		$this->dictionaries = [];

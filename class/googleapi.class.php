@@ -336,6 +336,7 @@ class GoogleApi
 	 */
 	private function getUuid()
 	{
+		$data = '0123456789012345';
 		try {
 			$data = random_bytes(16);
 		} catch (Exception $e) {

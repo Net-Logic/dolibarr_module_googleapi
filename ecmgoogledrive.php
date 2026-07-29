@@ -51,7 +51,30 @@ $driveservice = getGoogleDriveService($user);
  * Actions
  */
 
-// Google Drive mutation actions (upload, rename, delete) are added here by later tasks.
+if ($action == 'upload' && $permissiontowrite) {
+	if (!empty($_FILES['userfile']['tmp_name']) && is_uploaded_file($_FILES['userfile']['tmp_name'])) {
+		$parentid = GETPOST('folderid', 'alpha') ? GETPOST('folderid', 'alpha') : 'root';
+		if (is_object($driveservice)) {
+			try {
+				$drivefile = new \Google\Service\Drive\DriveFile();
+				$drivefile->setName($_FILES['userfile']['name']);
+				$drivefile->setParents(array($parentid));
+				$driveservice->files->create($drivefile, array(
+					'data' => file_get_contents($_FILES['userfile']['tmp_name']),
+					'mimeType' => $_FILES['userfile']['type'] ? $_FILES['userfile']['type'] : 'application/octet-stream',
+					'uploadType' => 'multipart',
+				));
+				setEventMessages($langs->trans("GoogleApiDriveFileUploaded"), null, 'mesgs');
+			} catch (Exception $e) {
+				setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
+			}
+		}
+	} else {
+		setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("File")), null, 'errors');
+	}
+}
+
+// Google Drive rename/delete actions are added here by the next task.
 
 /*
  * View

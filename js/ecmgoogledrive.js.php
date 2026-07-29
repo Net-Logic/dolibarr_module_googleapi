@@ -110,16 +110,23 @@ function ecmGoogleDriveDelete(fileid, filename)
 }
 
 jQuery(document).ready(function() {
-	jQuery('#filetree').fileTree(
-		{
-			root: 'root/',
-			script: '<?php echo dol_buildpath('/googleapi/core/ajax/ecmgoogledrivetree.php', 1); ?>?token=<?php echo currentToken(); ?>',
-			folderEvent: 'click',
-			multiFolder: false
-		},
-		function(file) {
-			// Files are not shown in the left tree (folders only): nothing to do here.
-		}
-	);
+	// Load the file list first, and isolate the folder tree init: a failure of the jqueryFileTree
+	// plugin (not loaded, error, ...) must never prevent the file list from being displayed.
 	ecmGoogleDriveLoadList('root');
+
+	try {
+		jQuery('#filetree').fileTree(
+			{
+				root: 'root/',
+				script: '<?php echo dol_buildpath('/googleapi/core/ajax/ecmgoogledrivetree.php', 1); ?>?token=<?php echo currentToken(); ?>',
+				folderEvent: 'click',
+				multiFolder: false
+			},
+			function(file) {
+				// Files are not shown in the left tree (folders only): nothing to do here.
+			}
+		);
+	} catch (e) {
+		console.error('ecmgoogledrive: unable to initialize the folder tree', e);
+	}
 });

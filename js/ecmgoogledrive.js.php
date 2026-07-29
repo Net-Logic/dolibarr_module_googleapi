@@ -42,6 +42,16 @@ top_httphead('application/javascript');
 ?>
 var ecmGoogleDriveBreadcrumb = [{id: 'root', name: '<?php echo dol_escape_js($langs->trans("Home")); ?>'}];
 
+/**
+ * Escape a string so it can safely be concatenated into an HTML fragment that is later
+ * injected with .html(). Drive file and folder names are attacker-controlled: anybody
+ * sharing a folder with the connected account chooses its name.
+ */
+function ecmGoogleDriveEscapeHtml(str)
+{
+	return jQuery('<div>').text(str === null || typeof str === 'undefined' ? '' : str).html();
+}
+
 function ecmGoogleDriveRenderBreadcrumb()
 {
 	var html = '';
@@ -49,7 +59,7 @@ function ecmGoogleDriveRenderBreadcrumb()
 		if (i > 0) {
 			html += ' / ';
 		}
-		html += '<a href="#" onclick="ecmGoogleDriveGoToBreadcrumb('+i+'); return false;">'+ecmGoogleDriveBreadcrumb[i].name+'</a>';
+		html += '<a href="#" onclick="ecmGoogleDriveGoToBreadcrumb('+i+'); return false;">'+ecmGoogleDriveEscapeHtml(ecmGoogleDriveBreadcrumb[i].name)+'</a>';
 	}
 	jQuery('#ecmgdrive-breadcrumb').html(html);
 }

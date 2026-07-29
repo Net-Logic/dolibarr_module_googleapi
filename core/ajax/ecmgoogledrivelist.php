@@ -78,7 +78,13 @@ if (is_object($driveservice)) {
 			print '<td>';
 			if ($isfolder) {
 				print img_picto('', 'folder', 'class="paddingright"');
-				print '<a href="#" onclick="ecmGoogleDriveNavigate(\''.dol_escape_js($fileid).'\', \''.dol_escape_js($filename).'\'); return false;">';
+				// Drive names are attacker-controlled. dol_escape_js() alone is not enough inside an HTML
+				// attribute: the browser HTML-decodes the attribute before running it as JS, so an entity
+				// such as &#39; would become a real quote and break out of the JS string. The whole handler
+				// is therefore also HTML-escaped. $escapeonlyhtmltags=1 is required: the default mode of
+				// dol_escape_htmltag() re-emits the literal sequence "&#39;" untouched.
+				$onclick = "ecmGoogleDriveNavigate('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
+				print '<a href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'">';
 				print dol_escape_htmltag($filename);
 				print '</a>';
 			} else {
@@ -107,10 +113,12 @@ if (is_object($driveservice)) {
 				print '<a class="editfielda marginleftonly" href="'.dol_escape_htmltag($file->getWebViewLink()).'" target="_blank" rel="noopener noreferrer" title="'.dol_escape_htmltag($langs->trans("GoogleApiOpenInDrive")).'">'.img_picto($langs->trans("GoogleApiOpenInDrive"), 'globe').'</a>';
 			}
 			if ($permissiontowrite) {
-				print ' <a class="editfielda marginleftonly" href="#" onclick="ecmGoogleDriveRename(\''.dol_escape_js($fileid).'\', \''.dol_escape_js($filename).'\'); return false;" title="'.dol_escape_htmltag($langs->trans("GoogleApiRename")).'">'.img_picto($langs->trans("GoogleApiRename"), 'edit').'</a>';
+				$onclick = "ecmGoogleDriveRename('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
+				print ' <a class="editfielda marginleftonly" href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'" title="'.dol_escape_htmltag($langs->trans("GoogleApiRename")).'">'.img_picto($langs->trans("GoogleApiRename"), 'edit').'</a>';
 			}
 			if ($permissiontodelete) {
-				print ' <a class="deletefilelink marginleftonly" href="#" onclick="ecmGoogleDriveDelete(\''.dol_escape_js($fileid).'\', \''.dol_escape_js($filename).'\'); return false;" title="'.dol_escape_htmltag($langs->trans("Delete")).'">'.img_picto($langs->trans("Delete"), 'delete').'</a>';
+				$onclick = "ecmGoogleDriveDelete('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
+				print ' <a class="deletefilelink marginleftonly" href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'" title="'.dol_escape_htmltag($langs->trans("Delete")).'">'.img_picto($langs->trans("Delete"), 'delete').'</a>';
 			}
 			print '</td>';
 

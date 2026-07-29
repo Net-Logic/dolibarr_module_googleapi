@@ -59,7 +59,10 @@ if (is_object($driveservice)) {
 		));
 		foreach ($result->getFiles() as $folder) {
 			print '<li class="directory collapsed">';
-			print '<a class="jqft ecmjqft" href="#" rel="'.dol_escape_htmltag($folder->getId()).'/" onclick="ecmGoogleDriveNavigate(\''.dol_escape_js($folder->getId()).'\', \''.dol_escape_js($folder->getName()).'\');">';
+			// See ecmgoogledrivelist.php: the JS handler built from attacker-controlled Drive names must
+			// also be HTML-escaped as a whole, with $escapeonlyhtmltags=1 so that "&#39;" is escaped too.
+			$onclick = "ecmGoogleDriveNavigate('".dol_escape_js($folder->getId())."', '".dol_escape_js($folder->getName())."');";
+			print '<a class="jqft ecmjqft" href="#" rel="'.dol_escape_htmltag($folder->getId()).'/" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'">';
 			print dol_escape_htmltag($folder->getName());
 			print '</a>';
 			print '</li>'."\n";

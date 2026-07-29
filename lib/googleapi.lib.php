@@ -195,6 +195,32 @@ function getGoogleApiClient($fuser)
 }
 
 /**
+ * Get an authenticated Google Drive service for a user's connected Google account
+ *
+ * @param User $fuser User owning the Google OAuth token
+ * @return \Google\Service\Drive|false Drive service, or false if the user has no valid token
+ */
+function getGoogleDriveService($fuser)
+{
+	$client = getGoogleApiClient($fuser);
+	if (!is_object($client)) {
+		return false;
+	}
+	return new \Google\Service\Drive($client);
+}
+
+/**
+ * Escape a Google Drive object id for safe use inside a Drive API 'q' query string
+ *
+ * @param string $id Drive file or folder id
+ * @return string Escaped id
+ */
+function googleapiDriveEscapeId($id)
+{
+	return str_replace("'", "\\'", (string) $id);
+}
+
+/**
  * Create agenda event from task
  *
  * @param   User    $owner          Owner of actioncomm

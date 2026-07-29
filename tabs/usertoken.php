@@ -25,7 +25,10 @@
 
 // Load Dolibarr environment
 include '../config.php';
-
+/**
+ * @var Translate $langs
+ * @var string $dolibarr_main_url_root
+ */
 require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/usergroups.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
@@ -175,10 +178,10 @@ $tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $object->id);
 $refreshtoken = false;
 $expiredat = '';
 
-// Is token expired or will token expire in the next 30 seconds
+// Is token expired or will token expire in the next 60 seconds
 if (is_object($token)) {
 	$expire = $token->hasExpired();
-	$isgoingtoexpire = (time() > ($token->getExpires() - 30));
+	$isgoingtoexpire = (time() > ($token->getExpires() - 60));
 	if ($isgoingtoexpire) {
 		$provider = new Google([
 			'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
@@ -186,10 +189,17 @@ if (is_object($token)) {
 			'redirectUri' => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 		]);
 		$grant = new RefreshToken();
-		$token = $provider->getAccessToken($grant, ['refresh_token' => $tokenrefreshbackup]);
-		$expire = $token->hasExpired();
-		storeAccessToken('GoogleApi', $token, $tokenrefreshbackup, $object->id);
-		setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
+		try {
+			$token = $provider->getAccessToken($grant, ['refresh_token' => $tokenrefreshbackup]);
+			$expire = $token->hasExpired();
+			storeAccessToken('GoogleApi', $token, $tokenrefreshbackup, $object->id);
+			setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
+		} catch (Throwable $t) {
+			dol_syslog($t->getMessage(), LOG_ERR);
+		} catch (Exception $e) {
+			dol_syslog($e->getMessage(), LOG_WARNING);
+			setEventMessage($e->getMessage());
+		}
 	}
 	$refreshtoken = $token->getRefreshToken();
 
@@ -309,9 +319,11 @@ if (is_object($token)) {
 		// 'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType' => 'offline',
 	]);
-
-	$owner = $provider->getResourceOwner($token);
-	// var_dump($owner->toArray());
+	try {
+		$owner = $provider->getResourceOwner($token);
+	} catch (Exception $e) {
+		setEventMessage($e->getMessage());
+	}
 	if (!empty($owner)) {
 		$object->array_options['options_googleapi_Id'] = $owner->getId();
 		$object->array_options['options_googleapi_email'] = $owner->toArray()['email'];

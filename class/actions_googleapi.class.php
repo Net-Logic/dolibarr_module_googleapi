@@ -137,10 +137,14 @@ class ActionsGoogleApi
 					'googleapiremindemail' => [
 						'label' => $langs->trans('GoogleApiRemindByEmail'),
 						'disabled' => 0,
+						'mode' => 'email',
+						'data-html' => img_picto('', 'googleapi@googleapi', 'class="pictofixedwidth"') . $langs->trans('GoogleApiRemindByEmail'),
 					],
 					'googleapiremindnotif' => [
 						'label' => $langs->trans('GoogleApiRemindByNotification'),
 						'disabled' => 0,
+						'mode' => 'browser',
+						'data-html' => img_picto('', 'googleapi@googleapi', 'class="pictofixedwidth"') . $langs->trans('GoogleApiRemindByNotification'),
 					]
 				]
 			);
@@ -191,9 +195,6 @@ class ActionsGoogleApi
 	{
 		global $langs, $conf, $user;
 
-		// var_dump($parameters['object']);
-		// var_dump($parameters['mode']);
-		// var_dump($parameters);
 		if (!isset($parameters['object']->element)) {
 			return 0;
 		}
@@ -224,7 +225,7 @@ class ActionsGoogleApi
 					$sql .= ' AND fk_object=' . (int) $id;
 					$resql = $this->db->query($sql);
 					if ($resql && $obj = $this->db->fetch_object($resql)) {
-						$emailcount = $obj->nb;
+						$emailcount = (int) $obj->nb;
 					}
 					// If setting cache fails, this is not a problem, so we do not test result.
 					dol_setcache($cachekey, $emailcount, 120);
@@ -280,29 +281,40 @@ class ActionsGoogleApi
 		$error = 0; // Error counter
 		$contexts = explode(':', $parameters['context']);
 
-		// print '<pre>'.print_r($parameters, true).'</pre>';
-		// print '<pre>'.print_r($object, true).'</pre>';
-		// echo "action: " . $action;exit;
+		$context = $object->sendcontext ?? 'standard';
+		$googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
+		if (empty($googleapicontexts)) {
+			// set default
+			dolibarr_set_const($this->db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode(['standard' => true]), 'chaine', 0, '', $conf->entity);
+			$googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
+		}
+		if (!array_key_exists($context, $googleapicontexts)) {
+			// we found a new context
+			$googleapicontexts = array_merge($googleapicontexts, [$context => false]);
+			dolibarr_set_const($this->db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode($googleapicontexts), 'chaine', 0, '', $conf->entity);
+		}
+		$googleapicontextsok = [];
+		foreach ($googleapicontexts as $key => $item) {
+			if ($item) {
+				$googleapicontextsok[] = $key;
+			}
+		}
 		// what TODO with context 'emailing'
 		// context notification?
 		// https://developers.google.com/resources/api-libraries/documentation/gmail/v1/php/latest/class-Google_Service_Gmail_Message.html
-		if (in_array('mail', $contexts) && !in_array($object->sendcontext, ['emailing', 'notification'])) {
+		if (in_array($context, $googleapicontextsok)) {
 			dol_include_once('/googleapi/lib/googleapi.lib.php');
 			$fromsender = $this->getArrayAddress($object->addr_from);
 			if (!empty($user->array_options['options_googleapi_email']) && $fromsender[0]['address'] == $user->array_options['options_googleapi_email']) {
 				$client = getGoogleApiClient($user);
 				$service = new Google\Service\Gmail($client);
 
-				$replytosender = $this->getArrayAddress($object->reply_to);
-				$addrtorecipients = $this->getArrayAddress($object->addr_to);
-				$addrccrecipients = $this->getArrayAddress($object->addr_cc);
-				$addrbccrecipients = $this->getArrayAddress($object->addr_bcc);
-
 				$message = new Google\Service\Gmail\Message();
-				$mime = rtrim(strtr(base64_encode($object->message), '+/', '-_'), '=');
+				$mime = rtrim(strtr(base64_encode($this->buildRawMessage($object)), '+/', '-_'), '=');
 				$message->setRaw($mime);
 
 				$mailsent = false;
+				$response = null;
 				try {
 					$response = $service->users_messages->send('me', $message);
 					$mailsent = true;
@@ -314,7 +326,6 @@ class ActionsGoogleApi
 				if ($mailsent) {
 					$googleapiMessageId = $response->getId();
 				}
-				//var_dump($response);exit;
 			} else {
 				// nothing done
 				return 0;
@@ -322,14 +333,58 @@ class ActionsGoogleApi
 		}
 
 		if (!$error) {
-			//$this->results = array('msgid' => 'azerty');
-			//$this->resprints = 'A text to show';
 			// 1 si on a envoyé avec googleapi sinon 0
 			return 1; // or return 1 to replace standard code
 		} else {
-			$this->errors[] = 'Error message';
+			$this->errors[] = 'Error in googleapi module';
 			return -1;
 		}
+	}
+
+	/**
+	 * Build a full RFC 822 raw message (headers + body + attachments) from a CMailFile object,
+	 * suitable for the Gmail API 'raw' field.
+	 *
+	 * CMailFile only populates $object->headers/$object->message (the MIME parts used here) when
+	 * $object->sendmode == 'mail'. On this instance MAIN_MAIL_SENDMODE is 'smtps', so those
+	 * properties are never filled and used to be encoded empty, silently breaking every mail sent
+	 * through this hook. Rebuilding the message here from data that CMailFile always populates
+	 * (subject, addr_to/cc/bcc, html/msg, attachments, ...) makes this independent of sendmode.
+	 *
+	 * @param   CMailFile   $object     The mail object to process
+	 * @return  string                  Full raw RFC 822 message
+	 */
+	private function buildRawMessage($object)
+	{
+		$subjecttouse = $object->subject;
+		if (!ascii_check($subjecttouse)) {
+			$subjecttouse = CMailFile::encodetorfc2822($subjecttouse);
+		}
+
+		$headers = "To: ".CMailFile::getValidAddress($object->addr_to, 0, 1).$object->eol2;
+		$headers .= "Subject: ".$subjecttouse.$object->eol2;
+		$headers .= $object->write_smtpheaders();
+		$headers .= $object->write_mimeheaders($object->filename_list, $object->mimefilename_list);
+		$headers = preg_replace("/([\r\n]+)$/i", "", $headers);
+
+		$msgforbody = $object->msgishtml ? $object->html : $object->msg;
+		$body = $object->write_body($msgforbody);
+
+		$filesencoded = '';
+		if (!empty($object->atleastonefile) && is_array($object->filename_list)) {
+			$refmethod = new ReflectionMethod($object, 'write_files');
+			$refmethod->setAccessible(true);
+			$result = $refmethod->invoke($object, $object->filename_list, $object->mimetype_list, $object->mimefilename_list, $object->cid_list);
+			if (is_string($result)) {
+				$filesencoded = $result;
+			}
+		}
+
+		$rawmessage = $headers.$object->eol.$object->eol; // Blank line to separate headers from body
+		$rawmessage .= $body.$filesencoded;
+		$rawmessage .= "--".$object->mixed_boundary."--".$object->eol;
+
+		return $rawmessage;
 	}
 
 	/**

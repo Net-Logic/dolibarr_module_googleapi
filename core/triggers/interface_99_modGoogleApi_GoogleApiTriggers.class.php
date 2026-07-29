@@ -119,7 +119,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			// object comes from api googleapi
 			return 0;
 		}
-		if ($object instanceof Contact && !empty($object->context['googleapi'])) {
+		if (get_class($object) == 'Contact' && !empty($object->context['googleapi'])) {
 			// object comes from api googleapi
 			return 0;
 		}

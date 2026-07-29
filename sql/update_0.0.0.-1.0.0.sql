@@ -15,5 +15,5 @@
 
 -- TO FIX PHP WARNINGS
 UPDATE llx_extrafields SET enabled='isModEnabled("googleapi")' WHERE enabled='!empty($conf->googleapi->enabled)';
-UPDATE llx_extrafields set enabled = 'isModEnabled("googleapi")' WHERE enabled = '$conf->googleapi->enabled';
+UPDATE llx_extrafields SET enabled = 'isModEnabled("googleapi")' WHERE enabled = '$conf->googleapi->enabled';
 UPDATE llx_c_actioncomm SET type='module', module='googleapi@googleapi' WHERE type='system' AND module='googleapi';

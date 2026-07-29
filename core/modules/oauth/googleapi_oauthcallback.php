@@ -81,8 +81,8 @@ if (!empty($_GET['error'])) {
 		'https://www.googleapis.com/auth/contacts',
 	];
 	// https://developers.google.com/identity/protocols/oauth2/scopes#docs
-	// $scopes[] = 'https://www.googleapis.com/auth/documents';
-	// $scopes[] = 'https://www.googleapis.com/auth/drive';
+	$scopes[] = 'https://www.googleapis.com/auth/documents';
+	$scopes[] = 'https://www.googleapis.com/auth/drive';
 	// $scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
 	$authUrl = $provider->getAuthorizationUrl([
 		'prompt' => 'consent',
@@ -127,14 +127,6 @@ if (!empty($_GET['error'])) {
 	unset($_SESSION["backtourlsavedbeforeoauthjump"]);
 
 	header('Location: ' . $backtourl);
+	$db->close();
 	exit();
 }
-
-
-/*
- * View
- */
-
-// No view at all, just actions
-
-$db->close();

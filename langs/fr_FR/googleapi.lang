@@ -47,3 +47,5 @@ GoogleApiOwnerEmail=Email Google du compte connecté
 GoogleApiRemindByNotification=Rappel par notification Google
 GoogleApiCalendarTZ=Timezone de l'agenda Google
 GoogleApiIdId=Google ressource ID
+GoogleApiSendContexts = Contextes d'envoi
+GoogleApiEnabledContext = Contexte d'envoi %s

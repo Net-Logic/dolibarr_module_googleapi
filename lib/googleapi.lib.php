@@ -68,15 +68,16 @@ function googleapiAdminPrepareHead()
 /**
  * Complete $object to change ->label and ->note before pushing event to Google Calendar.
  *
- * @param   Object      $object     Object event to complete
+ * @param   ActionComm  $object     Object event to complete
  * @param   Translate   $langs      Language object
  * @return  void
  */
-function googleapi_complete_label_and_note(&$object, $langs)
+function googleapi_complete_label_and_note($object, $langs)
 {
 	global $conf, $db, $langs;
 	global $dolibarr_main_url_root;
 
+	$langs->load('googleapi@googleapi');
 	$eventlabel = trim($object->label);
 	// Define $urlwithroot
 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
@@ -165,9 +166,9 @@ function getGoogleApiClient($fuser)
 	]);
 
 	$token = retrieveAccessToken('GoogleApi', $fuser->id);
-	// Is token expired or will token expire in the next 30 seconds
+	// Is token expired or will token expire in the next 60 seconds
 	if (is_object($token)) {
-		$expire = time() > ($token->getExpires() - 30);
+		$expire = time() > ($token->getExpires() - 60);
 		if ($expire) {
 			try {
 				// il faut sauvegarder le refresh token car google ne le donne qu'une seule fois
@@ -180,6 +181,8 @@ function getGoogleApiClient($fuser)
 				$token = $provider->getAccessToken($grant, ['refresh_token' => $refreshtoken]);
 				//$token->setRefreshToken($refreshtoken);
 				storeAccessToken('GoogleApi', $token, $refreshtoken, $fuser->id);
+			} catch (Throwable $t) {
+				dol_syslog($t->getMessage(), LOG_ERR);
 			} catch (Exception $e) {
 				dol_syslog($e->getMessage(), LOG_WARNING);
 			}

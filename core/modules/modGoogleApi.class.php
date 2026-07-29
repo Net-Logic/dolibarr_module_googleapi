@@ -194,9 +194,9 @@ class modGoogleApi extends DolibarrModules
 				'method' => 'checkExpiredSheduledWatch',
 				'parameters' => '',
 				'comment' => 'Crée si nécessaire les notifications push de GoogleApi',
-				'frequency' => 12,
+				'frequency' => 1,
 				'unitfrequency' => 3600,
-				'status' => 0,
+				'status' => 1,
 				'test' => true,
 			],
 		];
@@ -207,7 +207,7 @@ class modGoogleApi extends DolibarrModules
 		// Permission id (must not be already used)
 		$this->rights[$r][0] = $this->numero + $r;
 		// Permission label
-		$this->rights[$r][1] = 'Read myobject of Googleapi';
+		$this->rights[$r][1] = 'Read object of Googleapi';
 		// Permission by default for new user (0/1)
 		$this->rights[$r][3] = 1;
 		// In php code, permission will be checked by test if ($user->rights->googleapi->level1->level2)
@@ -217,14 +217,14 @@ class modGoogleApi extends DolibarrModules
 
 		$r++;
 		$this->rights[$r][0] = $this->numero + $r;
-		$this->rights[$r][1] = 'Create/Update myobject of Googleapi';
+		$this->rights[$r][1] = 'Create/Update object of Googleapi';
 		$this->rights[$r][3] = 1;
 		$this->rights[$r][4] = 'write';
 		$this->rights[$r][5] = '';
 
 		$r++;
 		$this->rights[$r][0] = $this->numero + $r;
-		$this->rights[$r][1] = 'Delete myobject of Googleapi';
+		$this->rights[$r][1] = 'Delete object of Googleapi';
 		$this->rights[$r][3] = 1;
 		$this->rights[$r][4] = 'delete';
 		$this->rights[$r][5] = '';
@@ -312,6 +312,27 @@ class modGoogleApi extends DolibarrModules
 			$this->numero + 10,
 			255,
 			'contact',
+			0,
+			0,
+			'',
+			'',
+			1,
+			'',
+			'getDolGloblaInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0',
+			0,
+			'',
+			'',
+			'googleapi@googleapi',
+			'isModEnabled("googleapi")'
+		);
+		// ecmfiles
+		$result = $extrafields->addExtraField(
+			'googleapiId',
+			'GoogleApiIdId',
+			'varchar',
+			$this->numero,
+			180,
+			'ecmfiles',
 			0,
 			0,
 			'',

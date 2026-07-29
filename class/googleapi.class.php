@@ -135,6 +135,7 @@ class GoogleApi
 		dol_include_once('/prune/vendor/autoload.php');
 		$client = getGoogleApiClient($user);
 		$service = new Google\Service\Calendar($client);
+		$calendarId = $user->array_options['options_googleapi_calendarId'] ?: 'primary';
 
 		$sql = "SELECT rowid, userid, uuid, id, resourcetype, resourceUri, ressourceId, expirationDateTime, lastmessagenumber FROM " . MAIN_DB_PREFIX . "googleapi_watchs";
 		$sql .= ' WHERE userid=' . (int) $user->id . ' AND resourcetype="events"';
@@ -143,7 +144,6 @@ class GoogleApi
 		if ($resql && $this->db->num_rows($resql) > 0) {
 			// on a déjà quelquechose
 			$row = $this->db->fetch_object($resql);
-			$calendarId = $user->array_options['options_googleapi_calendarId'] ?: 'primary';
 
 			// is it going to expire in 30min
 			// expiration is gmt
@@ -217,6 +217,7 @@ class GoogleApi
 				$resql = $this->db->query($sql);
 			} catch (Exception $e) {
 				dol_syslog($e->getmessage(), LOG_ERR);
+				return -1;
 			}
 			//exit;
 		}
@@ -313,7 +314,7 @@ class GoogleApi
 				$sql .= ", 'contacts'";
 				$sql .= ", '" . $this->db->escape($watch->getResourceUri()) . "'";
 				$sql .= ", '" . $this->db->escape($watch->getResourceId()) . "'";
-				//$sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";
+				// $sql .= ", '" . ($watch->getExpiration())->format('Y-m-d H:i:s') . "'";
 				// timestamp in ms
 				$sql .= ", '" . ($this->db->idate(substr($watch->getExpiration(), 0, -3))) . "'";
 				$sql .= ", '1')";
@@ -321,9 +322,11 @@ class GoogleApi
 				$resql = $this->db->query($sql);
 			} catch (Exception $e) {
 				dol_syslog($e->getmessage(), LOG_ERR);
+				return -1;
 			}
 			//exit;
 		}
+
 		return 0;
 	}
 

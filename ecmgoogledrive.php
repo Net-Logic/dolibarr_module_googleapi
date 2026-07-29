@@ -74,7 +74,34 @@ if ($action == 'upload' && $permissiontowrite) {
 	}
 }
 
-// Google Drive rename/delete actions are added here by the next task.
+if ($action == 'renamedrivefile' && $permissiontowrite) {
+	$fileid = GETPOST('fileid', 'alpha');
+	$newname = GETPOST('newname', 'alphanohtml');
+	if ($fileid && $newname && is_object($driveservice)) {
+		try {
+			$drivefile = new \Google\Service\Drive\DriveFile();
+			$drivefile->setName($newname);
+			$driveservice->files->update($fileid, $drivefile);
+			setEventMessages($langs->trans("GoogleApiDriveFileRenamed"), null, 'mesgs');
+		} catch (Exception $e) {
+			setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
+		}
+	}
+}
+
+if ($action == 'deletedrivefile' && $permissiontodelete) {
+	$fileid = GETPOST('fileid', 'alpha');
+	if ($fileid && is_object($driveservice)) {
+		try {
+			$drivefile = new \Google\Service\Drive\DriveFile();
+			$drivefile->setTrashed(true);
+			$driveservice->files->update($fileid, $drivefile);
+			setEventMessages($langs->trans("GoogleApiDriveFileDeleted"), null, 'mesgs');
+		} catch (Exception $e) {
+			setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
+		}
+	}
+}
 
 /*
  * View

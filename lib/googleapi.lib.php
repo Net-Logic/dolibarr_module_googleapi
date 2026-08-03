@@ -23,6 +23,7 @@
 
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
+require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 use League\OAuth2\Client\Provider\Google;
 use League\OAuth2\Client\Grant\RefreshToken;

@@ -183,12 +183,19 @@ function getGoogleApiClient($fuser)
 				storeAccessToken('GoogleApi', $token, $refreshtoken, $fuser->id);
 			} catch (Throwable $t) {
 				dol_syslog($t->getMessage(), LOG_ERR);
+				// Refresh failed: $token is still the stale, expired token fetched above. Do not
+				// hand back a client built from it (the caller would get a raw 401 from the API
+				// instead of correctly treating this as "not connected, please reconnect").
+				$token = false;
 			} catch (Exception $e) {
 				dol_syslog($e->getMessage(), LOG_WARNING);
+				$token = false;
 			}
 		}
-		$client = new Google_Client();
-		$client->setAccessToken($token->getToken());
+		if (is_object($token)) {
+			$client = new Google_Client();
+			$client->setAccessToken($token->getToken());
+		}
 	}
 
 	return $client;

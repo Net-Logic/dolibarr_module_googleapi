@@ -292,6 +292,56 @@ function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relati
 }
 
 /**
+ * Upload a local file to Google Drive using a resumable, chunked upload (never loads the
+ * whole file into memory at once)
+ *
+ * @param \Google\Client $client Authenticated Google client (as returned by getGoogleApiClient())
+ * @param string $localpath Absolute path of the local file to upload
+ * @param string $drivefilename Name to give the file on Drive
+ * @param string $parentfolderid Drive id of the destination folder
+ * @param string $mimetype Mime type to set on the Drive file
+ * @return string|false Drive file id, or false on failure
+ */
+function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parentfolderid, $mimetype)
+{
+	$handle = null;
+	try {
+		$filesize = (int) dol_filesize($localpath);
+
+		$drivefile = new \Google\Service\Drive\DriveFile();
+		$drivefile->setName($drivefilename);
+		$drivefile->setParents(array($parentfolderid));
+
+		// 1 MB chunks: avoids loading the whole file in memory at once, matching the same
+		// approach already used by the manual "Google Drive" ECM tab upload.
+		$chunksizebytes = 1 * 1024 * 1024;
+
+		$client->setDefer(true);
+		$uploadservice = new \Google\Service\Drive($client);
+		$request = $uploadservice->files->create($drivefile, array('mimeType' => $mimetype));
+		$media = new \Google\Http\MediaFileUpload($client, $request, $mimetype, null, true, $chunksizebytes);
+		$media->setFileSize($filesize);
+
+		$handle = fopen($localpath, 'rb');
+		$status = false;
+		while ($status === false && !feof($handle)) {
+			$chunk = fread($handle, $chunksizebytes);
+			$status = $media->nextChunk($chunk);
+		}
+
+		return $status->getId();
+	} catch (Exception $e) {
+		dol_syslog('googleapiUploadFileToDrive: '.$e->getMessage(), LOG_ERR);
+		return false;
+	} finally {
+		if ($handle) {
+			fclose($handle);
+		}
+		$client->setDefer(false);
+	}
+}
+
+/**
  * Create agenda event from task
  *
  * @param   User    $owner          Owner of actioncomm

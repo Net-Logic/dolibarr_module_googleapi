@@ -43,3 +43,4 @@ GoogleApiDriveFileUploaded=File uploaded to Google Drive
 GoogleApiDriveFileRenamed=Renamed on Google Drive
 GoogleApiDriveFileDeleted=Moved to the Google Drive trash
 GoogleApiErrorDriveApi=Google Drive API error: %s
+GoogleApiDriveSyncFailed=Could not copy "%s" to Google Drive: %s

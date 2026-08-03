@@ -62,3 +62,4 @@ GoogleApiDriveFileUploaded=Fichier envoyé sur Google Drive
 GoogleApiDriveFileRenamed=Renommé sur Google Drive
 GoogleApiDriveFileDeleted=Déplacé vers la corbeille Google Drive
 GoogleApiErrorDriveApi=Erreur API Google Drive : %s
+GoogleApiDriveSyncFailed=Impossible de copier "%s" vers Google Drive : %s

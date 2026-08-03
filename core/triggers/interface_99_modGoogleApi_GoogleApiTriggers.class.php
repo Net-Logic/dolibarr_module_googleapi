@@ -34,6 +34,7 @@
 
 require_once DOL_DOCUMENT_ROOT . '/core/triggers/dolibarrtriggers.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 dol_include_once('/googleapi/lib/googleapi.lib.php');
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
@@ -766,6 +767,70 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 
 		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * Trigger ECMFILES_CREATE
+	 *
+	 * @param string        $action     Event action code
+	 * @param EcmFiles      $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function ecmfilesCreate($action, EcmFiles $object, User $user, Translate $langs, Conf $conf)
+	{
+		if (empty($object->src_object_type)) {
+			return 0;
+		}
+
+		$syncobjects = json_decode(getDolGlobalString('GOOGLEAPI_DRIVE_SYNC_OBJECTS', '{}'), true);
+		if (!is_array($syncobjects)) {
+			$syncobjects = array();
+		}
+		if (!array_key_exists($object->src_object_type, $syncobjects)) {
+			$syncobjects[$object->src_object_type] = false;
+			dolibarr_set_const($this->db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($syncobjects), 'chaine', 0, '', $conf->entity);
+		}
+		if (empty($syncobjects[$object->src_object_type])) {
+			return 0;
+		}
+
+		$client = getGoogleApiClient($user);
+		if ($client === false) {
+			return 0;
+		}
+
+		$localpath = DOL_DATA_ROOT.'/'.$object->filepath.'/'.$object->filename;
+		if (!dol_is_file($localpath)) {
+			return 0;
+		}
+
+		$rootfoldername = getDolGlobalString('GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER', 'Dolibarr');
+
+		try {
+			$driveservice = new \Google\Service\Drive($client);
+			$parentfolderid = googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $object->filepath);
+			if ($parentfolderid === false) {
+				throw new Exception('Could not resolve/create the Drive folder path for '.$object->filepath);
+			}
+
+			$mimetype = dol_mimetype($object->filename, 'application/octet-stream', 0);
+			$driveid = googleapiUploadFileToDrive($client, $localpath, $object->filename, $parentfolderid, $mimetype);
+			if ($driveid === false) {
+				throw new Exception('Drive upload failed');
+			}
+
+			$object->array_options['options_googleapiId'] = $driveid;
+			$object->update($user, 1);
+		} catch (Exception $e) {
+			dol_syslog('ecmfilesCreate: '.$e->getMessage(), LOG_ERR);
+			$langs->load('googleapi@googleapi');
+			setEventMessages($langs->trans('GoogleApiDriveSyncFailed', $object->filename, $e->getMessage()), null, 'warnings');
+		}
+
+		return 0;
 	}
 
 	/**

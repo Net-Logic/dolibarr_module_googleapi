@@ -35,6 +35,7 @@
 require_once DOL_DOCUMENT_ROOT . '/core/triggers/dolibarrtriggers.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 dol_include_once('/googleapi/lib/googleapi.lib.php');
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
@@ -811,19 +812,23 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 
 		try {
 			$driveservice = new \Google\Service\Drive($client);
-			$parentfolderid = googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $object->filepath);
+			$foldererrmsg = '';
+			$parentfolderid = googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $object->filepath, $foldererrmsg);
 			if ($parentfolderid === false) {
-				throw new Exception('Could not resolve/create the Drive folder path for '.$object->filepath);
+				throw new Exception($foldererrmsg !== '' ? $foldererrmsg : 'Could not resolve/create the Drive folder path for '.$object->filepath);
 			}
 
 			$mimetype = dol_mimetype($object->filename, 'application/octet-stream', 0);
-			$driveid = googleapiUploadFileToDrive($client, $localpath, $object->filename, $parentfolderid, $mimetype);
+			$uploaderrmsg = '';
+			$driveid = googleapiUploadFileToDrive($client, $localpath, $object->filename, $parentfolderid, $mimetype, $uploaderrmsg);
 			if ($driveid === false) {
-				throw new Exception('Drive upload failed');
+				throw new Exception($uploaderrmsg !== '' ? $uploaderrmsg : 'Drive upload failed');
 			}
 
 			$object->array_options['options_googleapiId'] = $driveid;
-			$object->update($user, 1);
+			if ($object->insertExtraFields() < 0) {
+				throw new Exception('Could not record the Drive file id: '.$object->error);
+			}
 		} catch (Exception $e) {
 			dol_syslog('ecmfilesCreate: '.$e->getMessage(), LOG_ERR);
 			$langs->load('googleapi@googleapi');

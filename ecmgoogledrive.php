@@ -58,11 +58,12 @@ if ($action == 'upload' && $permissiontowrite) {
 		if (is_object($client)) {
 			$uploadedfilename = dol_sanitizeFileName($_FILES['userfile']['name']);
 			$mimetype = dol_mimetype($uploadedfilename, 'application/octet-stream', 0);
-			$driveid = googleapiUploadFileToDrive($client, $_FILES['userfile']['tmp_name'], $uploadedfilename, $parentid, $mimetype);
+			$uploaderrmsg = '';
+			$driveid = googleapiUploadFileToDrive($client, $_FILES['userfile']['tmp_name'], $uploadedfilename, $parentid, $mimetype, $uploaderrmsg);
 			if ($driveid !== false) {
 				setEventMessages($langs->trans("GoogleApiDriveFileUploaded"), null, 'mesgs');
 			} else {
-				setEventMessages($langs->trans("GoogleApiErrorDriveApi", 'upload failed'), null, 'errors');
+				setEventMessages($langs->trans("GoogleApiErrorDriveApi", $uploaderrmsg !== '' ? $uploaderrmsg : 'upload failed'), null, 'errors');
 			}
 		}
 	} else {

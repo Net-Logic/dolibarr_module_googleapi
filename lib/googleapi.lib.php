@@ -234,9 +234,10 @@ function googleapiDriveEscapeId($id)
  * @param \Google\Service\Drive $driveservice Drive service for the current user
  * @param string $name Folder name to find or create
  * @param string $parentid Drive id of the parent folder ('root' for the Drive root)
+ * @param string $errmsg Set to the real error detail on failure (by reference)
  * @return string|false Drive folder id, or false on API failure
  */
-function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid)
+function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid, &$errmsg = '')
 {
 	try {
 		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false and name='".googleapiDriveEscapeId($name)."'";
@@ -256,8 +257,9 @@ function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid)
 		$folder->setParents(array($parentid));
 		$created = $driveservice->files->create($folder, array('fields' => 'id'));
 		return $created->getId();
-	} catch (Exception $e) {
+	} catch (Throwable $e) {
 		dol_syslog('googleapiGetOrCreateDriveFolder: '.$e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
 		return false;
 	}
 }
@@ -269,11 +271,12 @@ function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid)
  * @param \Google\Service\Drive $driveservice Drive service for the current user
  * @param string $rootfoldername Name of the top-level Drive folder (e.g. 'Dolibarr')
  * @param string $relativepath Path relative to DOL_DATA_ROOT (e.g. "facture/FA2401-0001")
+ * @param string $errmsg Set to the real error detail on failure (by reference)
  * @return string|false Drive id of the deepest folder, or false on API failure
  */
-function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relativepath)
+function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relativepath, &$errmsg = '')
 {
-	$parentid = googleapiGetOrCreateDriveFolder($driveservice, $rootfoldername, 'root');
+	$parentid = googleapiGetOrCreateDriveFolder($driveservice, $rootfoldername, 'root', $errmsg);
 	if ($parentid === false) {
 		return false;
 	}
@@ -283,7 +286,7 @@ function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relati
 	});
 
 	foreach ($segments as $segment) {
-		$parentid = googleapiGetOrCreateDriveFolder($driveservice, $segment, $parentid);
+		$parentid = googleapiGetOrCreateDriveFolder($driveservice, $segment, $parentid, $errmsg);
 		if ($parentid === false) {
 			return false;
 		}
@@ -301,9 +304,10 @@ function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relati
  * @param string $drivefilename Name to give the file on Drive
  * @param string $parentfolderid Drive id of the destination folder
  * @param string $mimetype Mime type to set on the Drive file
+ * @param string $errmsg Set to the real error detail on failure (by reference)
  * @return string|false Drive file id, or false on failure
  */
-function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parentfolderid, $mimetype)
+function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parentfolderid, $mimetype, &$errmsg = '')
 {
 	$handle = null;
 	try {
@@ -324,15 +328,27 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 		$media->setFileSize($filesize);
 
 		$handle = fopen($localpath, 'rb');
+		if ($handle === false) {
+			dol_syslog('googleapiUploadFileToDrive: cannot open '.$localpath, LOG_ERR);
+			$errmsg = 'Cannot open '.$localpath;
+			return false;
+		}
 		$status = false;
 		while ($status === false && !feof($handle)) {
 			$chunk = fread($handle, $chunksizebytes);
 			$status = $media->nextChunk($chunk);
 		}
 
+		if (!is_object($status)) {
+			dol_syslog('googleapiUploadFileToDrive: upload did not complete', LOG_ERR);
+			$errmsg = 'Drive upload did not complete';
+			return false;
+		}
+
 		return $status->getId();
-	} catch (Exception $e) {
+	} catch (Throwable $e) {
 		dol_syslog('googleapiUploadFileToDrive: '.$e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
 		return false;
 	} finally {
 		if ($handle) {

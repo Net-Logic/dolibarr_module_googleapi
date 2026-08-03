@@ -125,19 +125,21 @@ if (!is_object($driveservice)) {
 	$urltoconnect = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1).'?backtourl='.urlencode(dol_buildpath('/googleapi/ecmgoogledrive.php', 1));
 	print '<a class="butAction" href="'.$urltoconnect.'">'.$langs->trans("GoogleApiConnectDrive").'</a>'."\n";
 } else {
-	// Reuse the same layout/CSS as native ECM (core/tpl/filemanager.tpl.php): #ecm-layout-west/#ecm-layout-center
-	// are already styled by the theme (width, float, borders) so the left tree gets the same boxed
-	// "Répertoires" panel and folder icons as htdocs/ecm/index.php, with no extra CSS needed here.
+	// Reuse the same #ecm-layout-west/#ecm-layout-center classes as native ECM (core/tpl/filemanager.tpl.php)
+	// for width/positioning. The panel box itself uses plain divs (not the ".liste" table used natively)
+	// because that table relies on a percentage height that only resolves correctly in some browsers once
+	// content is injected dynamically by jqueryFileTree (confirmed broken in Firefox: the box collapsed to
+	// a single row while the rest of the tree rendered outside it). Plain divs have no such height dependency.
+	print '<style>
+.ecmgdrivetreepanel { background: #FFF; border: 1px solid #e5e5e5; }
+.ecmgdrivetreepanel-title { padding: 5px 8px; font-weight: bold; background: #f5f5f5; border-bottom: 1px solid #e5e5e5; }
+</style>'."\n";
 	print '<div id="containerlayout">'."\n";
 	print '<div id="ecm-layout-west" class="inline-block">'."\n";
-	print '<table class="liste centpercent noborder">'."\n";
-	print '<tr class="liste_titre">'."\n";
-	print '<th class="liste_titre left"><span style="padding-left: 5px; padding-right: 5px;">'.$langs->trans("ECMSections").'</span></th>'."\n";
-	print '</tr>'."\n";
-	print '<tr class="oddeven nohover"><td>'."\n";
+	print '<div class="ecmgdrivetreepanel">'."\n";
+	print '<div class="ecmgdrivetreepanel-title">'.$langs->trans("ECMSections").'</div>'."\n";
 	print '<div id="filetree" class="ecmfiletree"></div>'."\n";
-	print '</td></tr>'."\n";
-	print '</table>'."\n";
+	print '</div>'."\n";
 	print '</div>'."\n";
 	print '<div id="ecm-layout-center" class="inline-block">'."\n";
 	print '<div id="ecmgdrive-breadcrumb"></div>'."\n";

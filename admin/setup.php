@@ -138,13 +138,18 @@ foreach ($googleapicontexts as $constant => $value) {
 	}
 	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode($googleapicontexts), 'chaine', 0, '', $conf->entity);
 }
+$googleapidrivesyncobjectschanged = false;
 foreach ($googleapidrivesyncobjects as $constant => $value) {
 	if ($action == 'drivesyncenable_' . strtolower($constant)) {
 		$googleapidrivesyncobjects[$constant] = true;
+		$googleapidrivesyncobjectschanged = true;
 	}
 	if ($action == 'drivesyncdisable_' . strtolower($constant)) {
 		$googleapidrivesyncobjects[$constant] = false;
+		$googleapidrivesyncobjectschanged = true;
 	}
+}
+if ($googleapidrivesyncobjectschanged) {
 	dolibarr_set_const($db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($googleapidrivesyncobjects), 'chaine', 0, '', $conf->entity);
 }
 if ($action == 'update') {

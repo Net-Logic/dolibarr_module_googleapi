@@ -56,42 +56,13 @@ if ($action == 'upload' && $permissiontowrite) {
 		$parentid = GETPOST('folderid', 'alpha') ? GETPOST('folderid', 'alpha') : 'root';
 		$client = getGoogleApiClient($user);
 		if (is_object($client)) {
-			$handle = null;
-			try {
-				$uploadedfilename = dol_sanitizeFileName($_FILES['userfile']['name']);
-				$mimetype = dol_mimetype($uploadedfilename, 'application/octet-stream', 0);
-				$filesize = (int) $_FILES['userfile']['size'];
-
-				$drivefile = new \Google\Service\Drive\DriveFile();
-				$drivefile->setName($uploadedfilename);
-				$drivefile->setParents(array($parentid));
-
-				// Upload in fixed-size chunks read straight from the PHP upload tempfile instead of
-				// loading the whole file into one string (file_get_contents() would not scale to
-				// large Drive files and risks hitting memory_limit).
-				$chunksizebytes = 1 * 1024 * 1024;
-
-				$client->setDefer(true);
-				$uploadservice = new \Google\Service\Drive($client);
-				$request = $uploadservice->files->create($drivefile, array('mimeType' => $mimetype));
-				$media = new \Google\Http\MediaFileUpload($client, $request, $mimetype, null, true, $chunksizebytes);
-				$media->setFileSize($filesize);
-
-				$handle = fopen($_FILES['userfile']['tmp_name'], 'rb');
-				$status = false;
-				while ($status === false && !feof($handle)) {
-					$chunk = fread($handle, $chunksizebytes);
-					$status = $media->nextChunk($chunk);
-				}
-
+			$uploadedfilename = dol_sanitizeFileName($_FILES['userfile']['name']);
+			$mimetype = dol_mimetype($uploadedfilename, 'application/octet-stream', 0);
+			$driveid = googleapiUploadFileToDrive($client, $_FILES['userfile']['tmp_name'], $uploadedfilename, $parentid, $mimetype);
+			if ($driveid !== false) {
 				setEventMessages($langs->trans("GoogleApiDriveFileUploaded"), null, 'mesgs');
-			} catch (Exception $e) {
-				setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
-			} finally {
-				if ($handle) {
-					fclose($handle);
-				}
-				$client->setDefer(false);
+			} else {
+				setEventMessages($langs->trans("GoogleApiErrorDriveApi", 'upload failed'), null, 'errors');
 			}
 		}
 	} else {

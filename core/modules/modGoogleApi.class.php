@@ -334,7 +334,7 @@ class modGoogleApi extends DolibarrModules
 			'varchar',
 			$this->numero,
 			180,
-			'ecmfiles',
+			'ecm_files',
 			0,
 			0,
 			'',

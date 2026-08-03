@@ -1,7 +1,23 @@
 # Link Drive-mirrored files into their synced Google Calendar event
 
 Date: 2026-08-03
-Status: Approved by user, implementation plan pending.
+Status: Implemented and shipped (commits 2897700..53c3caa on `dev`).
+
+## Post-implementation note: attachment durability across `actionModify()`
+
+The final whole-branch review raised a concern: `actionModify()` (pre-existing
+code, unrelated to this feature) pushes a full-replacement `events->update()`
+call built from a freshly constructed `Event` object that never sets
+`attachments`, whenever a synced `actioncomm` is later edited in Dolibarr
+(triggering `ACTION_MODIFY`). The worry was that this might silently wipe out
+any attachments this feature had added.
+
+Verified live (2026-08-03): attached a file to a synced event, edited the
+event's label in Dolibarr (firing `actionModify()`), then re-fetched the
+event — the attachment survived unchanged. The Google Calendar API's
+`events.update()`, as called by this module's PHP client library, does not
+clear fields omitted from the request body. No code change was needed; this
+note exists so the question isn't re-litigated.
 
 ## Context
 

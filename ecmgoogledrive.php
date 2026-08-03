@@ -56,12 +56,13 @@ if ($action == 'upload' && $permissiontowrite) {
 		$parentid = GETPOST('folderid', 'alpha') ? GETPOST('folderid', 'alpha') : 'root';
 		if (is_object($driveservice)) {
 			try {
+				$uploadedfilename = dol_sanitizeFileName($_FILES['userfile']['name']);
 				$drivefile = new \Google\Service\Drive\DriveFile();
-				$drivefile->setName($_FILES['userfile']['name']);
+				$drivefile->setName($uploadedfilename);
 				$drivefile->setParents(array($parentid));
 				$driveservice->files->create($drivefile, array(
 					'data' => file_get_contents($_FILES['userfile']['tmp_name']),
-					'mimeType' => $_FILES['userfile']['type'] ? $_FILES['userfile']['type'] : 'application/octet-stream',
+					'mimeType' => dol_mimetype($uploadedfilename, 'application/octet-stream', 0),
 					'uploadType' => 'multipart',
 				));
 				setEventMessages($langs->trans("GoogleApiDriveFileUploaded"), null, 'mesgs');

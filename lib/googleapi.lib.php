@@ -228,6 +228,70 @@ function googleapiDriveEscapeId($id)
 }
 
 /**
+ * Find a Drive folder by exact name under a given parent, creating it if it does not exist
+ *
+ * @param \Google\Service\Drive $driveservice Drive service for the current user
+ * @param string $name Folder name to find or create
+ * @param string $parentid Drive id of the parent folder ('root' for the Drive root)
+ * @return string|false Drive folder id, or false on API failure
+ */
+function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid)
+{
+	try {
+		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false and name='".googleapiDriveEscapeId($name)."'";
+		$result = $driveservice->files->listFiles(array(
+			'q' => $query,
+			'fields' => 'files(id)',
+			'pageSize' => 1,
+		));
+		$existing = $result->getFiles();
+		if (!empty($existing)) {
+			return $existing[0]->getId();
+		}
+
+		$folder = new \Google\Service\Drive\DriveFile();
+		$folder->setName($name);
+		$folder->setMimeType('application/vnd.google-apps.folder');
+		$folder->setParents(array($parentid));
+		$created = $driveservice->files->create($folder, array('fields' => 'id'));
+		return $created->getId();
+	} catch (Exception $e) {
+		dol_syslog('googleapiGetOrCreateDriveFolder: '.$e->getMessage(), LOG_ERR);
+		return false;
+	}
+}
+
+/**
+ * Resolve (creating as needed) the Drive folder matching a Dolibarr relative document path,
+ * nested under a fixed top-level root folder
+ *
+ * @param \Google\Service\Drive $driveservice Drive service for the current user
+ * @param string $rootfoldername Name of the top-level Drive folder (e.g. 'Dolibarr')
+ * @param string $relativepath Path relative to DOL_DATA_ROOT (e.g. "facture/FA2401-0001")
+ * @return string|false Drive id of the deepest folder, or false on API failure
+ */
+function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relativepath)
+{
+	$parentid = googleapiGetOrCreateDriveFolder($driveservice, $rootfoldername, 'root');
+	if ($parentid === false) {
+		return false;
+	}
+
+	$segments = array_filter(explode('/', trim((string) $relativepath, '/')), function ($segment) {
+		return $segment !== '';
+	});
+
+	foreach ($segments as $segment) {
+		$parentid = googleapiGetOrCreateDriveFolder($driveservice, $segment, $parentid);
+		if ($parentid === false) {
+			return false;
+		}
+	}
+
+	return $parentid;
+}
+
+/**
  * Create agenda event from task
  *
  * @param   User    $owner          Owner of actioncomm

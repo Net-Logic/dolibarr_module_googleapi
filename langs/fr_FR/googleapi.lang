@@ -63,6 +63,7 @@ GoogleApiDriveFileRenamed=Renommé sur Google Drive
 GoogleApiDriveFileDeleted=Déplacé vers la corbeille Google Drive
 GoogleApiErrorDriveApi=Erreur API Google Drive : %s
 GoogleApiDriveSyncFailed=Impossible de copier "%s" vers Google Drive : %s
+GoogleApiCalendarAttachFailed=Impossible de joindre "%s" à l'événement Google Calendar : %s
 GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER=Dossier racine Drive pour le miroir de fichiers
 GoogleApiDriveSyncObjects=Synchroniser les fichiers joints vers Drive pour ces types d'objets
 GoogleApiDriveSyncEnabledObject=Type d'objet : %s

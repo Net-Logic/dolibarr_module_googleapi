@@ -829,6 +829,33 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			if ($object->insertExtraFields() < 0) {
 				throw new Exception('Could not record the Drive file id: '.$object->error);
 			}
+
+			if ($object->src_object_type === 'actioncomm') {
+				$eventobj = new ActionComm($this->db);
+				if ($eventobj->fetch((int) $object->src_object_id) > 0 && !empty($eventobj->array_options['options_googleapi_EventId'])) {
+					$owner = new User($this->db);
+					if ($owner->fetch($eventobj->userownerid) > 0) {
+						$ownerclient = getGoogleApiClient($owner);
+						if ($ownerclient !== false) {
+							$calendarId = !empty($owner->array_options['options_googleapi_calendarId']) ? $owner->array_options['options_googleapi_calendarId'] : 'primary';
+							$attacherrmsg = '';
+							$attached = googleapiAddDriveAttachmentToCalendarEvent(
+								$ownerclient,
+								$calendarId,
+								$eventobj->array_options['options_googleapi_EventId'],
+								$driveid,
+								$object->filename,
+								$mimetype,
+								$attacherrmsg
+							);
+							if (!$attached) {
+								$langs->load('googleapi@googleapi');
+								setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $attacherrmsg !== '' ? $attacherrmsg : 'unknown error'), null, 'warnings');
+							}
+						}
+					}
+				}
+			}
 		} catch (Exception $e) {
 			dol_syslog('ecmfilesCreate: '.$e->getMessage(), LOG_ERR);
 			$langs->load('googleapi@googleapi');

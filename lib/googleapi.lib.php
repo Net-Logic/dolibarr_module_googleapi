@@ -359,6 +359,45 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 }
 
 /**
+ * Append a Drive file as an attachment on an already-synced Google Calendar event.
+ *
+ * @param \Google\Client $client Google API client for the EVENT OWNER (not necessarily the uploader)
+ * @param string $calendarId Calendar id ('primary' or the owner's configured calendar)
+ * @param string $eventId Google Calendar event id (options_googleapi_EventId)
+ * @param string $drivefileid Drive file id just returned by googleapiUploadFileToDrive()
+ * @param string $filename Displayed attachment title
+ * @param string $mimetype Attachment mime type
+ * @param string $errmsg Set to the real error detail on failure (by reference)
+ * @return bool true on success, false on failure
+ */
+function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $eventId, $drivefileid, $filename, $mimetype, &$errmsg = '')
+{
+	try {
+		$service = new \Google\Service\Calendar($client);
+		$event = $service->events->get($calendarId, $eventId);
+
+		$attachments = $event->getAttachments();
+		if (!is_array($attachments)) {
+			$attachments = array();
+		}
+		$attachment = new \Google\Service\Calendar\EventAttachment();
+		$attachment->setFileId($drivefileid);
+		$attachment->setFileUrl('https://drive.google.com/file/d/'.$drivefileid.'/view');
+		$attachment->setTitle($filename);
+		$attachment->setMimeType($mimetype);
+		$attachments[] = $attachment;
+		$event->setAttachments($attachments);
+
+		$service->events->update($calendarId, $eventId, $event, array('supportsAttachments' => true));
+		return true;
+	} catch (Throwable $e) {
+		dol_syslog('googleapiAddDriveAttachmentToCalendarEvent: '.$e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
+		return false;
+	}
+}
+
+/**
  * Create agenda event from task
  *
  * @param   User    $owner          Owner of actioncomm

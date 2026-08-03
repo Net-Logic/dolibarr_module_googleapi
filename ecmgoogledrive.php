@@ -75,34 +75,10 @@ if ($action == 'upload' && $permissiontowrite) {
 	}
 }
 
-if ($action == 'renamedrivefile' && $permissiontowrite) {
-	$fileid = GETPOST('fileid', 'alpha');
-	$newname = GETPOST('newname', 'alphanohtml');
-	if ($fileid && $newname && is_object($driveservice)) {
-		try {
-			$drivefile = new \Google\Service\Drive\DriveFile();
-			$drivefile->setName($newname);
-			$driveservice->files->update($fileid, $drivefile);
-			setEventMessages($langs->trans("GoogleApiDriveFileRenamed"), null, 'mesgs');
-		} catch (Exception $e) {
-			setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
-		}
-	}
-}
-
-if ($action == 'deletedrivefile' && $permissiontodelete) {
-	$fileid = GETPOST('fileid', 'alpha');
-	if ($fileid && is_object($driveservice)) {
-		try {
-			$drivefile = new \Google\Service\Drive\DriveFile();
-			$drivefile->setTrashed(true);
-			$driveservice->files->update($fileid, $drivefile);
-			setEventMessages($langs->trans("GoogleApiDriveFileDeleted"), null, 'mesgs');
-		} catch (Exception $e) {
-			setEventMessages($langs->trans("GoogleApiErrorDriveApi", $e->getMessage()), null, 'errors');
-		}
-	}
-}
+// Rename and delete are handled by dedicated JSON AJAX endpoints
+// (core/ajax/ecmgoogledriverename.php / ecmgoogledrivedelete.php), not here: a POST to this
+// full page could never surface its setEventMessages() back to the user once the JS that
+// triggers it (jQuery.post from a prompt()/confirm() dialog) discards the response body.
 
 /*
  * View

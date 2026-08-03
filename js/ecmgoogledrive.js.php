@@ -82,20 +82,34 @@ function ecmGoogleDriveLoadList(folderid)
 	});
 }
 
+function ecmGoogleDriveNotify(message, success)
+{
+	// jQuery.jnotify is Dolibarr's own toast notification plugin, already loaded on every page
+	// by main.inc.php (see htdocs/core/lib/functions.lib.php get_htmloutput_mesg() for the same
+	// calling convention: a number is an auto-dismiss delay in ms, "error"+true is a sticky error).
+	if (success) {
+		jQuery.jnotify(message, 3000);
+	} else {
+		jQuery.jnotify(message, 'error', true);
+	}
+}
+
 function ecmGoogleDriveRename(fileid, currentname)
 {
 	var newname = prompt('<?php echo dol_escape_js($langs->trans("GoogleApiNewName")); ?>', currentname);
 	if (newname === null || newname === '' || newname === currentname) {
 		return;
 	}
-	jQuery.post('<?php echo dol_buildpath('/googleapi/ecmgoogledrive.php', 1); ?>', {
-		action: 'renamedrivefile',
-		token: '<?php echo newToken(); ?>',
+	jQuery.post('<?php echo dol_buildpath('/googleapi/core/ajax/ecmgoogledriverename.php', 1); ?>', {
+		token: '<?php echo currentToken(); ?>',
 		fileid: fileid,
 		newname: newname
-	}, function() {
-		ecmGoogleDriveLoadList(jQuery('#ecmgdrive_folderid').val());
-	});
+	}, function(response) {
+		ecmGoogleDriveNotify(response.message, response.success);
+		if (response.success) {
+			ecmGoogleDriveLoadList(jQuery('#ecmgdrive_folderid').val());
+		}
+	}, 'json');
 }
 
 function ecmGoogleDriveDelete(fileid, filename)
@@ -104,13 +118,15 @@ function ecmGoogleDriveDelete(fileid, filename)
 	if (!confirm(msgtemplate.replace('__FILENAME__', filename))) {
 		return;
 	}
-	jQuery.post('<?php echo dol_buildpath('/googleapi/ecmgoogledrive.php', 1); ?>', {
-		action: 'deletedrivefile',
-		token: '<?php echo newToken(); ?>',
+	jQuery.post('<?php echo dol_buildpath('/googleapi/core/ajax/ecmgoogledrivedelete.php', 1); ?>', {
+		token: '<?php echo currentToken(); ?>',
 		fileid: fileid
-	}, function() {
-		ecmGoogleDriveLoadList(jQuery('#ecmgdrive_folderid').val());
-	});
+	}, function(response) {
+		ecmGoogleDriveNotify(response.message, response.success);
+		if (response.success) {
+			ecmGoogleDriveLoadList(jQuery('#ecmgdrive_folderid').val());
+		}
+	}, 'json');
 }
 
 jQuery(document).ready(function() {

@@ -75,6 +75,11 @@ $arrayofparameters = [
 		'css' => 'minwidth500',
 		'default' => $urlwithroot . dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1),
 	],
+	'GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER' => [
+		'css' => 'minwidth200',
+		'type' => 'text',
+		'default' => 'Dolibarr',
+	],
 	// 'GOOGLEAPI_MYPARAM1' => [
 	//     'css' => 'minwidth500',
 	//     'type' => 'text',
@@ -106,6 +111,11 @@ if (empty($googleapicontexts)) {
 	$googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
 }
 
+$googleapidrivesyncobjects = json_decode(getDolGlobalString('GOOGLEAPI_DRIVE_SYNC_OBJECTS', '{}'), true);
+if (!is_array($googleapidrivesyncobjects)) {
+	$googleapidrivesyncobjects = [];
+}
+
 /*
  * Actions
  */
@@ -127,6 +137,15 @@ foreach ($googleapicontexts as $constant => $value) {
 		$googleapicontexts[$constant] = false;
 	}
 	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode($googleapicontexts), 'chaine', 0, '', $conf->entity);
+}
+foreach ($googleapidrivesyncobjects as $constant => $value) {
+	if ($action == 'drivesyncenable_' . strtolower($constant)) {
+		$googleapidrivesyncobjects[$constant] = true;
+	}
+	if ($action == 'drivesyncdisable_' . strtolower($constant)) {
+		$googleapidrivesyncobjects[$constant] = false;
+	}
+	dolibarr_set_const($db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($googleapidrivesyncobjects), 'chaine', 0, '', $conf->entity);
 }
 if ($action == 'update') {
 	$error = 0;
@@ -272,6 +291,34 @@ if ($action == 'edit') {
 			print '</a>';
 		} elseif ($value) {
 			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=contextdisable_' . strtolower($constant) . '&amp;token=' . $_SESSION['newtoken'] . '">';
+			print img_picto($langs->trans("Enabled"), 'switch_on');
+			print '</a>';
+		}
+		print "</td>";
+		print '</tr>';
+	}
+	print "</table>\n";
+	print "<br>\n";
+
+	// Drive sync per object type
+	print '<table class="noborder centpercent">';
+	print '<tr class="liste_titre">';
+	print '<td>' . $langs->trans("GoogleApiDriveSyncObjects") . '</td>';
+	print '<td align="center" width="100">' . $langs->trans("Action") . '</td>';
+	print "</tr>\n";
+	if (empty($googleapidrivesyncobjects)) {
+		print '<tr class="oddeven"><td colspan="2">' . $langs->trans("GoogleApiDriveSyncObjectsEmpty") . '</td></tr>';
+	}
+	foreach ($googleapidrivesyncobjects as $constant => $value) {
+		print '<tr class="oddeven">';
+		print '<td>' . $langs->trans('GoogleApiDriveSyncEnabledObject', $constant) . '</td>';
+		print '<td align="center" width="100">';
+		if (!$value) {
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=drivesyncenable_' . strtolower($constant) . '&amp;token=' . newToken() . '">';
+			print img_picto($langs->trans("Disabled"), 'switch_off');
+			print '</a>';
+		} else {
+			print '<a href="' . $_SERVER['PHP_SELF'] . '?action=drivesyncdisable_' . strtolower($constant) . '&amp;token=' . newToken() . '">';
 			print img_picto($langs->trans("Enabled"), 'switch_on');
 			print '</a>';
 		}

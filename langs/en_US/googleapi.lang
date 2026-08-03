@@ -44,3 +44,7 @@ GoogleApiDriveFileRenamed=Renamed on Google Drive
 GoogleApiDriveFileDeleted=Moved to the Google Drive trash
 GoogleApiErrorDriveApi=Google Drive API error: %s
 GoogleApiDriveSyncFailed=Could not copy "%s" to Google Drive: %s
+GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER=Root Drive folder for file mirroring
+GoogleApiDriveSyncObjects=Sync attached files to Drive for these object types
+GoogleApiDriveSyncEnabledObject=Object type: %s
+GoogleApiDriveSyncObjectsEmpty=No object type seen yet. Upload a file to any object with this module enabled and its type will appear here to enable.

@@ -831,29 +831,35 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			}
 
 			if ($object->src_object_type === 'actioncomm') {
-				$eventobj = new ActionComm($this->db);
-				if ($eventobj->fetch((int) $object->src_object_id) > 0 && !empty($eventobj->array_options['options_googleapi_EventId'])) {
-					$owner = new User($this->db);
-					if ($owner->fetch($eventobj->userownerid) > 0) {
-						$ownerclient = getGoogleApiClient($owner);
-						if ($ownerclient !== false) {
-							$calendarId = !empty($owner->array_options['options_googleapi_calendarId']) ? $owner->array_options['options_googleapi_calendarId'] : 'primary';
-							$attacherrmsg = '';
-							$attached = googleapiAddDriveAttachmentToCalendarEvent(
-								$ownerclient,
-								$calendarId,
-								$eventobj->array_options['options_googleapi_EventId'],
-								$driveid,
-								$object->filename,
-								$mimetype,
-								$attacherrmsg
-							);
-							if (!$attached) {
-								$langs->load('googleapi@googleapi');
-								setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $attacherrmsg !== '' ? $attacherrmsg : 'unknown error'), null, 'warnings');
+				try {
+					$eventobj = new ActionComm($this->db);
+					if ($eventobj->fetch((int) $object->src_object_id) > 0 && !empty($eventobj->array_options['options_googleapi_EventId'])) {
+						$owner = new User($this->db);
+						if ($owner->fetch($eventobj->userownerid) > 0) {
+							$ownerclient = getGoogleApiClient($owner);
+							if ($ownerclient !== false) {
+								$calendarId = !empty($owner->array_options['options_googleapi_calendarId']) ? $owner->array_options['options_googleapi_calendarId'] : 'primary';
+								$attacherrmsg = '';
+								$attached = googleapiAddDriveAttachmentToCalendarEvent(
+									$ownerclient,
+									$calendarId,
+									$eventobj->array_options['options_googleapi_EventId'],
+									$driveid,
+									$object->filename,
+									$mimetype,
+									$attacherrmsg
+								);
+								if (!$attached) {
+									$langs->load('googleapi@googleapi');
+									setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $attacherrmsg !== '' ? $attacherrmsg : 'unknown error'), null, 'warnings');
+								}
 							}
 						}
 					}
+				} catch (Throwable $t) {
+					dol_syslog('ecmfilesCreate calendar attach: '.$t->getMessage(), LOG_ERR);
+					$langs->load('googleapi@googleapi');
+					setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $t->getMessage()), null, 'warnings');
 				}
 			}
 		} catch (Exception $e) {

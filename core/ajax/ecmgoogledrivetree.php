@@ -51,13 +51,27 @@ print '<ul class="ecmjqft" style="display: none;">'."\n";
 if (is_object($driveservice)) {
 	try {
 		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
-		$result = $driveservice->files->listFiles(array(
-			'q' => $query,
-			'fields' => 'files(id,name)',
-			'orderBy' => 'name',
-			'pageSize' => 1000,
-		));
-		foreach ($result->getFiles() as $folder) {
+
+		// Drive caps a single response to pageSize entries: loop on nextPageToken so a folder
+		// with more than 1000 sub-folders is never silently truncated.
+		$folders = array();
+		$pagetoken = null;
+		do {
+			$optparams = array(
+				'q' => $query,
+				'fields' => 'nextPageToken,files(id,name)',
+				'orderBy' => 'name',
+				'pageSize' => 1000,
+			);
+			if (!empty($pagetoken)) {
+				$optparams['pageToken'] = $pagetoken;
+			}
+			$result = $driveservice->files->listFiles($optparams);
+			$folders = array_merge($folders, $result->getFiles());
+			$pagetoken = $result->getNextPageToken();
+		} while (!empty($pagetoken));
+
+		foreach ($folders as $folder) {
 			print '<li class="directory collapsed">';
 			// See ecmgoogledrivelist.php: the JS handler built from attacker-controlled Drive names must
 			// also be HTML-escaped as a whole, with $escapeonlyhtmltags=1 so that "&#39;" is escaped too.

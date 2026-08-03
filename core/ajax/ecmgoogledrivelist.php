@@ -60,14 +60,27 @@ print '</tr>'."\n";
 if (is_object($driveservice)) {
 	try {
 		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and trashed=false";
-		$result = $driveservice->files->listFiles(array(
-			'q' => $query,
-			'fields' => 'files(id,name,mimeType,size,modifiedTime,webViewLink)',
-			'orderBy' => 'folder,name',
-			'pageSize' => 1000,
-		));
 
-		foreach ($result->getFiles() as $file) {
+		// Drive caps a single response to pageSize entries: loop on nextPageToken so a folder
+		// with more than 1000 items is never silently truncated.
+		$files = array();
+		$pagetoken = null;
+		do {
+			$optparams = array(
+				'q' => $query,
+				'fields' => 'nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)',
+				'orderBy' => 'folder,name',
+				'pageSize' => 1000,
+			);
+			if (!empty($pagetoken)) {
+				$optparams['pageToken'] = $pagetoken;
+			}
+			$result = $driveservice->files->listFiles($optparams);
+			$files = array_merge($files, $result->getFiles());
+			$pagetoken = $result->getNextPageToken();
+		} while (!empty($pagetoken));
+
+		foreach ($files as $file) {
 			$isfolder = ($file->getMimeType() == 'application/vnd.google-apps.folder');
 			$isnativegoogletype = (!$isfolder && strpos((string) $file->getMimeType(), 'application/vnd.google-apps.') === 0);
 			$fileid = $file->getId();

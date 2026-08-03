@@ -21,18 +21,12 @@
  * \brief   JS glue for the Google Drive ECM tab
  */
 
-if (!defined('NOTOKENRENEWAL')) {
-	define('NOTOKENRENEWAL', 1);
-}
-if (!defined('NOREQUIREMENU')) {
-	define('NOREQUIREMENU', '1');
-}
-if (!defined('NOREQUIREHTML')) {
-	define('NOREQUIREHTML', '1');
-}
-if (!defined('NOREQUIREAJAX')) {
-	define('NOREQUIREAJAX', '1');
-}
+$defines = [
+	'NOTOKENRENEWAL',
+	'NOREQUIREMENU',
+	'NOREQUIREHTML',
+	'NOREQUIREAJAX',
+];
 
 include '../config.php';
 

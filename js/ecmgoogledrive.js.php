@@ -34,7 +34,7 @@ $langs->loadLangs(array('googleapi@googleapi'));
 
 top_httphead('application/javascript');
 ?>
-var ecmGoogleDriveBreadcrumb = [{id: 'root', name: '<?php echo dol_escape_js($langs->trans("Home")); ?>'}];
+var ecmGoogleDriveBreadcrumb = [{id: 'root', name: '<?php echo dol_escape_js($langs->transnoentities("Home")); ?>'}];
 
 /**
  * Escape a string so it can safely be concatenated into an HTML fragment that is later
@@ -96,7 +96,7 @@ function ecmGoogleDriveNotify(message, success)
 
 function ecmGoogleDriveRename(fileid, currentname)
 {
-	var newname = prompt('<?php echo dol_escape_js($langs->trans("GoogleApiNewName")); ?>', currentname);
+	var newname = prompt('<?php echo dol_escape_js($langs->transnoentities("GoogleApiNewName")); ?>', currentname);
 	if (newname === null || newname === '' || newname === currentname) {
 		return;
 	}
@@ -114,7 +114,7 @@ function ecmGoogleDriveRename(fileid, currentname)
 
 function ecmGoogleDriveDelete(fileid, filename)
 {
-	var msgtemplate = '<?php echo dol_escape_js($langs->trans("GoogleApiConfirmDeleteDriveFile")); ?>';
+	var msgtemplate = '<?php echo dol_escape_js($langs->transnoentities("GoogleApiConfirmDeleteDriveFile")); ?>';
 	if (!confirm(msgtemplate.replace('__FILENAME__', filename))) {
 		return;
 	}

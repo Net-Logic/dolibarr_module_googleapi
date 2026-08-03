@@ -125,11 +125,21 @@ if (!is_object($driveservice)) {
 	$urltoconnect = dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1).'?backtourl='.urlencode(dol_buildpath('/googleapi/ecmgoogledrive.php', 1));
 	print '<a class="butAction" href="'.$urltoconnect.'">'.$langs->trans("GoogleApiConnectDrive").'</a>'."\n";
 } else {
-	print '<div class="fichecenter">'."\n";
-	print '<div class="ecmgdrive-left" style="float:left; width: 30%;">'."\n";
-	print '<div id="filetree"></div>'."\n";
+	// Reuse the same layout/CSS as native ECM (core/tpl/filemanager.tpl.php): #ecm-layout-west/#ecm-layout-center
+	// are already styled by the theme (width, float, borders) so the left tree gets the same boxed
+	// "Répertoires" panel and folder icons as htdocs/ecm/index.php, with no extra CSS needed here.
+	print '<div id="containerlayout">'."\n";
+	print '<div id="ecm-layout-west" class="inline-block">'."\n";
+	print '<table class="liste centpercent noborder">'."\n";
+	print '<tr class="liste_titre">'."\n";
+	print '<th class="liste_titre left"><span style="padding-left: 5px; padding-right: 5px;">'.$langs->trans("ECMSections").'</span></th>'."\n";
+	print '</tr>'."\n";
+	print '<tr class="oddeven nohover"><td>'."\n";
+	print '<div id="filetree" class="ecmfiletree"></div>'."\n";
+	print '</td></tr>'."\n";
+	print '</table>'."\n";
 	print '</div>'."\n";
-	print '<div class="ecmgdrive-right" style="float:left; width: 68%; margin-left: 2%;">'."\n";
+	print '<div id="ecm-layout-center" class="inline-block">'."\n";
 	print '<div id="ecmgdrive-breadcrumb"></div>'."\n";
 	if ($permissiontowrite) {
 		print '<form name="formulaireecmgdriveupload" action="'.$_SERVER['PHP_SELF'].'" method="POST" enctype="multipart/form-data">'."\n";
@@ -144,7 +154,6 @@ if (!is_object($driveservice)) {
 	}
 	print '<div id="ecmgdrive-filelist"></div>'."\n";
 	print '</div>'."\n";
-	print '<div style="clear:both;"></div>'."\n";
 	print '</div>'."\n";
 }
 

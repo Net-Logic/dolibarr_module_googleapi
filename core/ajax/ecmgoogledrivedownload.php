@@ -60,12 +60,21 @@ try {
 	}
 
 	$response = $driveservice->files->get($fileid, array('alt' => 'media'));
-	$content = $response->getBody()->getContents();
+	$body = $response->getBody();
 
 	top_httphead($metadata->getMimeType() ? $metadata->getMimeType() : 'application/octet-stream');
 	header('Content-Disposition: attachment; filename="'.dol_sanitizeFileName($metadata->getName()).'"');
-	header('Content-Length: '.strlen($content));
-	print $content;
+	if ($body->getSize() !== null) {
+		header('Content-Length: '.$body->getSize());
+	}
+
+	// Stream in fixed-size chunks instead of loading the whole file into a single PHP string
+	// (getContents() would double peak memory and hold up the first byte until fully read).
+	$chunksizebytes = 65536;
+	while (!$body->eof()) {
+		print $body->read($chunksizebytes);
+		flush();
+	}
 } catch (Exception $e) {
 	dol_syslog('ecmgoogledrivedownload: '.$e->getMessage(), LOG_ERR);
 	http_response_code(500);

@@ -129,7 +129,7 @@ class ActionsGoogleApi
 		global $langs;
 
 		$contexts = explode(':', $parameters['context']);
-		if (in_array('actioncard', $contexts) && isset($parameters['TRemindTypes'])) {
+		if (array_intersect(['actioncard', 'fullcalendardao'], $contexts) && isset($parameters['TRemindTypes'])) {
 			$langs->load('googleapi@googleapi');
 			$parameters['TRemindTypes'] = array_merge(
 				$parameters['TRemindTypes'],

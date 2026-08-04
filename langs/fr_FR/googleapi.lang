@@ -68,3 +68,13 @@ GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER=Dossier racine Drive pour le miroir de fichiers
 GoogleApiDriveSyncObjects=Synchroniser les fichiers joints vers Drive pour ces types d'objets
 GoogleApiDriveSyncEnabledObject=Type d'objet : %s
 GoogleApiDriveSyncObjectsEmpty=Aucun type d'objet vu pour l'instant. Envoyez un fichier sur un objet avec ce module actif et son type apparaîtra ici pour être activé.
+
+GoogleApiFrom=De
+GoogleApiTo=À
+GoogleApiSubject=Sujet
+GoogleApiBody=Corps
+GoogleApiLinkEmail = Lier l'email
+GoogleApiConfirmLinkEMail = Voulez-vous vraiment lier les emails sélectionnés au Tiers ci-dessous ?
+GoogleApiLinkEmailSuccessful = %s emails liés
+GoogleApiPreLinkEmail = Lier les emails
+GoogleApiYourEmails = GMail

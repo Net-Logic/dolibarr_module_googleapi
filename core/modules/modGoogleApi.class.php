@@ -71,7 +71,7 @@ class modGoogleApi extends DolibarrModules
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr',
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.1.0';
+		$this->version = '1.1.1';
 
 		// Url to the file with your last numberversion of this module
 		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';
@@ -107,7 +107,7 @@ class modGoogleApi extends DolibarrModules
 			'sms' => 0,
 			// Set this to relative path of css file if module has its own css file
 			'css' => [
-				// '/googleapi/css/googleapi.css.php',
+				'/googleapi/css/googleapi.css',
 			],
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => [
@@ -125,6 +125,7 @@ class modGoogleApi extends DolibarrModules
 					'globalcard',
 					//'invoicecard',
 					'actioncard',
+					'fullcalendardao',
 					'fileslib',
 				],
 				'entity' => $conf->entity,
@@ -234,6 +235,22 @@ class modGoogleApi extends DolibarrModules
 
 		// Main menu entries
 		$this->menu = [];  // List of menus to add
+
+		$this->menu[] = [
+			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'type'=>'top', // This is a Top menu entry
+			'titre'=>'GoogleApiYourEmails',
+			'prefix' => '',
+			'mainmenu'=>'googleapi',
+			'leftmenu'=>'',
+			'url'=>'/googleapi/emails_list.php',
+			'langs'=>'googleapi@googleapi', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>1000 + $r,
+			'enabled'=>'isModEnabled("googleapi")', // Define condition to show or hide menu entry. Use 'isModEnabled("netlogicdevtoolbox")' if entry must be visible if module is enabled.
+			'perms'=>'1', // Use 'perms'=>'$user->hasRight("netlogicdevtoolbox", "myobject", "read")' if you want your menu with a permission rules
+			'target'=>'',
+			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
+		];
 	}
 
 	/**

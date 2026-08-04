@@ -324,6 +324,7 @@ if (is_object($token)) {
 	} catch (Exception $e) {
 		setEventMessage($e->getMessage());
 	}
+	// print '<pre>'.print_r($owner->toArray(), true).'</pre>';
 	if (!empty($owner)) {
 		$object->array_options['options_googleapi_Id'] = $owner->getId();
 		$object->array_options['options_googleapi_email'] = $owner->toArray()['email'];

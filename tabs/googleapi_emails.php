@@ -219,6 +219,7 @@ llxHeader('', $pagetitle, '', '', 0, 0, $arrayofjs, $arrayofcss);
 
 $form = new Form($db);
 
+$useTUIGrid = false;
 if ($id > 0 || !empty($ref)) {
 	print dol_get_fiche_head($head, 'googleapiemails', $title, -1, $picto);
 
@@ -241,79 +242,200 @@ if ($id > 0 || !empty($ref)) {
 
 	print '<br>';
 
-	$arrayfields = [
-		'rowid' => [
-			'label' => $langs->transnoentities("Id"),
-			'checked' => 1
-		],
-		'userid' => [
-			'label' => $langs->transnoentities("GoogleApiUserId"),
-			'checked' => 1
-		],
-		'fk_object' => [
-			'label' => $langs->transnoentities("ObjectId"),
-			'checked' => 1,
-		],
-		'messageid' => [
-			'label' => $langs->transnoentities("GoogleApiMessageId"),
-			'checked' => 1,
-		],
-	];
+	print '<br>';
 
-	print '<div id="grid"></div>';
-	print "<script>
-		const grid = new tui.Grid({
-			usageStatistics: false,
-			el: document.getElementById('grid'),
-			data: {
-				api: {
-					readData: { url: '" . dol_buildpath('/googleapi/core/ajax/check_emails_sent.php', 1) . "?action=getemails&id=" . $id . "&module=" . $module . "', method: 'GET' },
-					// only modified data
-					updateData: { url: '" . dol_buildpath('/googleapi/core/ajax/check_emails_sent.php', 1) . "?action=putemails&id=" . $id . "&module=" . $module . "', method: 'PUT' },
-					// all modified
-					modifyData: { url: '" . dol_buildpath('/googleapi/core/ajax/check_emails_sent.php', 1) . "?action=putemails&id=" . $id . "&module=" . $module . "', method: 'PUT' }
+
+	if (!$useTUIGrid) {
+		$resultPerPage = 50;
+		// GoogleMail API use incremental page token, but no pagination. We save pages tokens to session to be able to add previous page button.
+		$previousPageToken = null;
+		$pageToken = $currentPageToken = GETPOST('pageToken') ?: null;
+		$sessionKey = "{$object->element}_{$object->id}_pages_tokens";
+
+		// If fitst page, we unset the session stored tokens
+		if (!$currentPageToken) {
+			unset($_SESSION[$sessionKey]);
+		}
+		$pagesTokens = $_SESSION[$sessionKey] ?? [];
+		$data = [];
+		if (get_class($object) === "Societe" && $object->email) {
+			$showContactsMessages = true;
+			$listLabel = $showContactsMessages ? 'Communications du tiers et de ses contacts' : 'Communications du tiers';
+
+			$gUser = 'me';
+			$gMailFilterParts = ["(to:{$object->email} OR from:{$object->email})"];
+
+			if ($showContactsMessages) {
+				$contactsEmails = array_column($object->contact_array_objects(), 'email');
+				foreach ($contactsEmails as $contactEmail) {
+					$gMailFilterParts[] = "(to:{$contactEmail} OR from:{$contactEmail})";
 				}
-			},
-			scrollX: false,
-			scrollY: false,
-			minBodyHeight: 35,
-			rowHeaders: ['rowNum'],
-			pageOptions: {
-				perPage: 25
-			},
-			columns: [
-				{
-					header: '" . $arrayfields['rowid']['label'] . "',
-					name: 'rowid',
-					width: 100
-				},
-				{
-					header: '" . $arrayfields['userid']['label'] . "',
-					name: 'userid',
-					width: 100
-				},
-				{
-					header: '" . $arrayfields['fk_object']['label'] . "',
-					name: 'fk_object',
-					width: 100
-				},
-				{
-					header: '" . $arrayfields['messageid']['label'] . "',
-					name: 'messageid'
-				}
-			],
-			columnOptions: {
-				resizable: true
 			}
-		});
-		grid.on('click', ev => {
-			console.log('click!', ev);
-			//grid.request('modifyData');
-		});
-		grid.on('columnResize', ev => {
-			console.log('columnResize!', ev);
-		});
-	</script>";
+
+			$gMailFilter = implode(' OR ', $gMailFilterParts);
+
+			try {
+				$googleApiGmailMessages = getGoogleMailMessages($gMailFilterParts, $resultPerPage, $pageToken, null, $object->element, $object->id);
+			} catch (Exception $e) {
+				setEventMessage($e->getMessage(), 'errors');
+				$googleApiGmailMessages = [];
+			}
+
+			// $pageToken is updated by reference with the next page token
+			$nextPageToken = $pageToken;
+			if ($nextPageToken) {
+				$_SESSION[$sessionKey][] = $pageToken;
+			}
+
+			// Last page
+			if ($currentPageToken && !$nextPageToken) {
+				$currentPageKey = array_search($currentPageToken, $_SESSION[$sessionKey]);
+				$previousPageToken = $_SESSION[$sessionKey][$currentPageKey-1] ?? null;
+			}
+			ob_start()
+			?>
+			<div class="pagination">
+				<ul>
+					<?php if ($previousPageToken || $currentPageToken) : ?>
+					<li class="pagination paginationpage paginationpageleft">
+						<a class="paginationprevious reposition" href="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $object->id ?>&module=<?= $object->element ?>&pageToken=<?= $previousPageToken ?>">
+							<i class="fa fa-chevron-left" title="Précédent"></i>
+						</a>
+					</li>
+					<?php else : ?>
+						<li class="pagination paginationpage paginationpageleft">
+							<i class="fa fa-chevron-left" title="Précédent" style="opacity: 0.4"></i>
+						</li>
+					<?php endif; ?>
+					<?php if ($nextPageToken) : ?>
+						<li class="pagination paginationpage paginationpageright">
+							<a class="paginationnext reposition" href="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $object->id ?>&module=<?= $object->element ?>&pageToken=<?= $nextPageToken ?>">
+								<i class="fa fa-chevron-right" title="Suivant"></i></a>
+						</li>
+					<?php else : ?>
+						<li class="pagination paginationpage paginationpageright">
+							<i class="fa fa-chevron-right" title="Précédent" style="opacity: 0.4"></i>
+						</li>
+					<?php endif; ?>
+				</ul>
+			</div>
+			<?php
+			$moreHtml = ob_get_clean();
+			print_barre_liste("Communications Tiers et Contacts", 0, $_SERVER["PHP_SELF"], '', '', '', '', 0, 0, '', '', $moreHtml);
+		}
+
+
+		?>
+		<div class="div-table-responsive-no-min">
+			<table class="noborder centpercent nomarginbottom">
+				<tbody>
+				<tr class="liste_titre">
+					<td></td>
+					<td>Date</td>
+					<td>De</td>
+					<td>A</td>
+					<td>Sujet</td>
+					<td>Body</td>
+				</tr>
+				<?php if (!empty($googleApiGmailMessages)) : ?>
+					<?php foreach ($googleApiGmailMessages as $googleApiGmailMessage) : ?>
+						<?php
+						$backgroundColor = $googleApiGmailMessage->outgoing ? 'lightblue' : 'lightgreen';
+						?>
+						<tr class="googlemailmessage-show-details"
+							data-messageid="<?= $googleApiGmailMessage->message_id ?>"
+							data-subject="<?= $googleApiGmailMessage->subject ?>"
+							style="cursor: pointer; background: <?= $backgroundColor ?>!important;">
+							<td class="tdoverflowmax200 col_date">
+								<?php if ($googleApiGmailMessage->outgoing) : ?>
+									<i class="fa fa-upload" style="color: midnightblue"></i>
+								<?php else: ?>
+									<i class="fa fa-download" style="color: darkgreen"></i>
+								<?php endif; ?>
+							</td>
+							<td class="tdoverflowmax200 col_date">
+								<?= dol_print_date($googleApiGmailMessage->date, 'dayhour') ?>
+							</td>
+							<td class="tdoverflowmax200 col_from"><?= htmlentities($googleApiGmailMessage->email_from) ?></td>
+							<td class="tdoverflowmax200 col_to"><?= htmlentities($googleApiGmailMessage->email_to) ?></td>
+							<td class="tdoverflowmax200 col_subject"><?= $googleApiGmailMessage->subject ?></td>
+							<td class="tdoverflowmax500 col_body">
+								<span class="classfortooltip"
+									  title="<?= $googleApiGmailMessage->snippet ?>"><?= $googleApiGmailMessage->snippet ?></span>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
+				</tbody>
+			</table>
+		</div>
+
+		<?php
+	} else {
+		//TODO Remove when API data will be stored in db
+		unset($_SESSION["googleapi_page_token_{$object->element}_{$object->id}"]);
+		?>
+		<div id="grid"></div>
+		<script>
+			const grid = new tui.Grid({
+				usageStatistics: false,
+				el: document.getElementById('grid'),
+				data: {
+					api: {
+						readData: {
+							url: '<?= dol_buildpath('googleapi/core/ajax/check_object_emails.php', 1) ?>?object_type=<?= $object->element ?>&object_id=<?= $object->id ?>',
+							method: 'GET'
+						},
+					}
+				},
+				scrollX: false,
+				scrollY: false,
+				minBodyHeight: 35,
+				rowHeaders: ['rowNum'],
+				pageOptions: {
+					perPage: 25
+				},
+				columns: [
+					{
+						header: '<?= $langs->trans('Date') ?>',
+						name: 'date',
+						width: 150
+					},
+					{
+						header: '<?= $langs->trans('GoogleApiFrom') ?>',
+						name: 'from',
+						width: 150
+					},
+					{
+						header: '<?= $langs->transnoentities('GoogleApiTo') ?>',
+						name: 'to',
+						width: 150
+					},
+					{
+						header: '<?= $langs->trans('GoogleApiSubject') ?>',
+						name: 'subject',
+						width: 250
+					},
+					{
+						header: '<?= $langs->trans('GoogleApiBody') ?>',
+						name: 'body_snippet',
+					},
+				],
+				columnOptions: {
+					resizable: true
+				}
+			});
+			grid.on('click', ev => {
+				console.log('click!', ev);
+				//grid.request('modifyData');
+			});
+			grid.on('columnResize', ev => {
+				console.log('columnResize!', ev);
+			});
+		</script>
+
+		<?php
+	}
 }
 // End of page
 llxFooter();

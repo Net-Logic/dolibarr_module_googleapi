@@ -346,4 +346,157 @@ class GoogleApi
 		$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 	}
+
+	/**
+	 * @param \Google\Service\Gmail\Message $message
+	 * @param User $user
+	 * @param ?string $object_type
+	 * @param ?int $object_id
+	 * @return GoogleApiGMailMessage
+	 *
+	 * @throws Exception
+	 */
+	public function saveGoogleServiceGmailMessage(\Google\Service\Gmail\Message $message, User $user, string $object_type = null, ?int $object_id = null): GoogleApiGMailMessage
+	{
+		$headers = $message->getPayload()->getHeaders();
+
+		$subject = $from = $to = $date = '';
+		foreach ($headers as $header) {
+			if (in_array($header->getName(), ['Subject', 'From', 'To', 'Date'])) {
+				$headerName = mb_strtolower($header->getName());
+				$$headerName = $header->getValue();
+			}
+		}
+
+		if (!$from || !$to || !$date) {
+			throw new Exception('Gmail\Message is missing mandatory data');
+		}
+
+		// Date is ISO 8601
+		$date = strtotime($date);
+
+		$googleApiGMailMessage = new GoogleApiGMailMessage();
+		$googleApiGMailMessage->date = $date;
+		$googleApiGMailMessage->email_from = $from;
+		$googleApiGMailMessage->email_to = $to;
+		$googleApiGMailMessage->subject = $subject;
+		$googleApiGMailMessage->snippet = $message->getSnippet();
+		$googleApiGMailMessage->message_id = $message->getId();
+		$googleApiGMailMessage->object_type = $object_type;
+		$googleApiGMailMessage->object_id = $object_id;
+		$googleApiGMailMessage->outgoing = (int) in_array('SENT', $message->getLabelIds());
+		$googleApiGMailMessage->fk_user = $user->id;
+		return $googleApiGMailMessage->save();
+	}
+
+	/**
+	 * @param string $messageId
+	 * @return GoogleApiGMailMessage
+	 */
+	public function fetchGoogleApiGMailMessage(string $messageId): GoogleApiGMailMessage
+	{
+		$message = new GoogleApiGMailMessage();
+		$row = $this->db->getRow("SELECT * FROM llx_googleapi_email WHERE message_id = '{$messageId}'");
+		if (is_object($row)) {
+			$row->date = $this->db->jdate($row->date);
+			$message->populate($row);
+		}
+
+		return $message;
+	}
+}
+
+/**
+ * Not Dolibarresque class
+ */
+class GoogleApiGMailMessage
+{
+	public $db;
+
+	public $rowid;
+	public $date;
+	public $email_from;
+	public $email_to;
+	public $outgoing;
+	public $subject;
+	public $snippet;
+	public $object_type;
+	public $object_id;
+	public $message_id;
+	public $fk_user;
+	public $tms;
+
+	// Not saved
+	public $unread;
+
+	public function __construct()
+	{
+		global $db;
+
+		$this->db = $db;
+	}
+
+	/**
+	 * Populate object with stdClass data from db
+	 */
+	public function populate(stdClass $obj): void
+	{
+		foreach ((array) $obj as $property => $value) {
+			if (property_exists($this, $property)) {
+				$this->$property = $value;
+			}
+		}
+	}
+
+	/**
+	 * @param int $id
+	 * @return GoogleApiGMailMessage
+	 */
+	public function fetch(int $id): self
+	{
+		$row = $this->db->getRow("SELECT * FROM llx_googleapi_email WHERE rowid = {$id}");
+		if (is_object($row)) {
+			$row->date = $this->db->jdate($row->date);
+			$this->populate($row);
+		}
+
+		return $this;
+	}
+
+	static public function fetchInstance(int $id)
+	{
+		global $db;
+		$instance = new self($db);
+		return $instance->fetch($id);
+	}
+
+	/**
+	 * @return $this
+	 * @throws Exception
+	 */
+	public function save(): self
+	{
+
+		$object_type = $this->object_type ? "'{$this->object_type}'" : 'NULL';
+		$object_id = $this->object_id ? (int) $this->object_id : 'NULL';
+
+		if ($this->rowid) {
+			$sql = "UPDATE {$this->db->prefix()}googleapi_email SET date = '{$this->db->idate($this->date)}',
+					email_from = '{$this->db->escape($this->email_from)}', email_to = '{$this->db->escape($this->email_to)}',
+					subject = '{$this->db->escape($this->subject)}', snippet = '{$this->db->escape($this->snippet)}',
+					outgoing = {$this->db->escape($this->outgoing)}, object_type = {$object_type}, object_id = {$object_id},
+					message_id = '{$this->message_id}', fk_user = {$this->fk_user} WHERE rowid = {$this->rowid}";
+		} else {
+			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, subject, snippet, object_type, object_id, message_id, fk_user)
+				VALUE ('{$this->db->idate($this->date)}', '{$this->db->escape($this->email_from)}', '{$this->db->escape($this->email_to)}',
+				       {$this->db->escape($this->outgoing)}, '{$this->db->escape($this->subject)}',
+				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$this->fk_user})";
+		}
+
+		if (!$this->db->query($sql)) {
+			throw new Exception("DB ERROR: {$this->db->lasterror()}");
+		}
+		$this->rowid = $this->db->last_insert_id("{$this->db->prefix()}googleapi_email");
+		return $this;
+	}
 }

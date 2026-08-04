@@ -599,3 +599,113 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
 			throw new \InvalidArgumentException("Unsupported or invalid signing algorithm.");
 	}
 }
+
+/**
+ * Get the Gmail Messages. Automatically save / get the full record from database to avoid API request
+ *
+ *  For more informations about query :
+ *  https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list?hl=fr
+ * @param array $query Google Mail API query
+ * @param int $maxResults
+ * @param string|null $pageToken Page token. If new next token is received, new value will be passed by reference
+ * @param User|null $user
+ * @param string|null $object_type
+ * @param int|null $object_id
+ * @return GoogleApiGMailMessage[]
+ * @throws \Google\Service\Exception
+ * @throws Exception
+ */
+function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null): array
+{
+	global $db;
+	require_once __DIR__ . '/../class/googleapi.class.php';
+
+	// Use connected user if not defined
+	if (!$user) {
+		global $user;
+	}
+
+	$gUser = 'me';
+	$client = getGoogleApiClient($user);
+	$gMailService = new Google_Service_Gmail($client);
+	$filters = ['q' => implode(' OR ', $query)];
+	if ($maxResults) {
+		$filters['maxResults'] = $maxResults;
+	}
+	if ($pageToken) {
+		$filters['pageToken'] = $pageToken;
+	}
+
+	$messagesResponse = $gMailService->users_messages->listUsersMessages($gUser, $filters);
+	$googleApi = new GoogleApi($db);
+	$googleApiGmailMessages = [];
+	foreach ($messagesResponse->getMessages() as $message) {
+		$gMailMessage = $googleApi->fetchGoogleApiGMailMessage($message->getId());
+//		$gMailMessage->unread = in_array('UNREAD', $message->getLabelIds());
+		if ($gMailMessage->message_id) {
+			if (!$gMailMessage->object_type && $object_type && $object_id) {
+				$gMailMessage->object_type = $object_type;
+				$gMailMessage->object_id = $object_id;
+				$gMailMessage->save();
+			}
+			$googleApiGmailMessages[] = $gMailMessage;
+		} else {
+			$fullMessage = $gMailService->users_messages->get($gUser, $message->getId(), ['format' => 'full']);
+			$googleApiGmailMessages[] = $googleApi->saveGoogleServiceGmailMessage($fullMessage, $user, $object_type, $object_id);
+		}
+	}
+
+	$pageToken = $messagesResponse->getNextPageToken()?: null;
+	return $googleApiGmailMessages;
+}
+
+function getGoogleMailMessageAndBody(string $messageId, ?User $user = null): array
+{
+	// Use connected user if not defined
+	if (!$user) {
+		global $user;
+	}
+
+	$client = getGoogleApiClient($user);
+	$gMailService = new Google_Service_Gmail($client);
+
+	$gUser = 'me';
+
+	$fullMessage = $gMailService->users_messages->get($gUser, $messageId, ['format' => 'full']);
+
+	$payload = $fullMessage->getPayload();
+
+	$body['html'] = $payload->getParts() ? getPartBody($payload->getParts()) : '';
+	$body['plain'] = $payload->getParts() ? getPartBody($payload->getParts(), 'text/plain') : '';
+
+	if (!dol_textishtml($body['plain'])) {
+		$body['plain'] = nl2br($body['plain']);
+	}
+	return ['message' => $fullMessage, 'body' => $body];
+}
+
+
+/**
+ * Recursive function to get the whole body (Message parts may have sub parts !)
+ * @param \Google\Service\Gmail\MessagePart[] $parts
+ * @param string $type
+ * @return string
+ */
+function getPartBody(array $parts, $type = 'text/html'): string
+{
+	$body = '';
+	foreach ($parts as $part) {
+		$mimeType = $part->getMimeType();
+		if ($mimeType === 'multipart/alternative' && $part->getParts()) {
+			$body .= getPartBody($part->getParts());
+		}
+		if ($mimeType === $type) {
+			$mailData = $part->getBody()->getData();
+			if ($mailData) {
+				$body .= base64_decode(str_replace(['-', '_'], ['+', '/'], $mailData));
+			}
+		}
+	}
+
+	return $body;
+}

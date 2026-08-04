@@ -35,6 +35,7 @@
 require '../../config.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formactions.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formprojet.class.php';
@@ -162,16 +163,31 @@ $hookmanager->initHooks(['actioncard', 'globalcard']);
 
 $TRemindTypes = [];
 if (getDolGlobalString('AGENDA_REMINDER_BROWSER')) {
-	$TRemindTypes['browser'] = ['label' => $langs->trans('BrowserPush'), 'disabled' => (getDolGlobalString('AGENDA_REMINDER_BROWSER') ? 0 : 1)];
+	$TRemindTypes['browser'] = [
+		'label' => $langs->trans('BrowserPush'),
+		'disabled' => (getDolGlobalString('AGENDA_REMINDER_BROWSER') ? 0 : 1),
+		'type' => ActionCommReminder::TYPE_USER,
+		'mode' => 'browser',
+		'data-html' => img_picto('', 'globe', 'class="pictofixedwidth"') . $langs->trans('BrowserPush'),
+	];
 }
 if (getDolGlobalString('AGENDA_REMINDER_EMAIL')) {
-	$TRemindTypes['email'] = ['label' => $langs->trans('EMail'), 'disabled' => (getDolGlobalString('AGENDA_REMINDER_EMAIL') ? 0 : 1)];
+	$TRemindTypes['email'] = [
+		'label' => $langs->trans('EMail'),
+		'disabled' => (getDolGlobalString('AGENDA_REMINDER_EMAIL') ? 0 : 1),
+		'type' => ActionCommReminder::TYPE_USER,
+		'mode' => 'email',
+		'data-html' => img_picto('', 'email', 'class="pictofixedwidth"') . $langs->trans('EMail'),
+	];
 }
 if (getDolGlobalString('AGENDA_REMINDER_SMS')) {
 	$langs->load('sms');
 	$TRemindTypes['sms'] = [
 		'label' => $langs->trans('Sms'),
 		'disabled' => (getDolGlobalString('MAIN_SMS_SENDMODE') ? 0 : 1),
+		'type' => ActionCommReminder::TYPE_USER,
+		'mode' => 'sms',
+		'data-html' => img_picto('', 'phoning_mobile', 'class="pictofixedwidth"') . $langs->trans('Sms'),
 	];
 }
 $TDurationTypes = [
@@ -674,13 +690,26 @@ if (empty($reshook) && $action == 'add' && $usercancreate) {
 					$actionCommReminder->offsetvalue = $offsetvalue;
 					$actionCommReminder->status = $actionCommReminder::STATUS_TODO;
 					$actionCommReminder->fk_actioncomm = $object->id;
-					if ($remindertype == 'email') {
-						$actionCommReminder->fk_email_template = $modelmail;
-					}
+					$actionCommReminder->fk_email_template = $modelmail;
+					if ($TRemindTypes[$remindertype]['type'] == ActionCommReminder::TYPE_USER) {
+						// the notification must be created for every user assigned to the event
+						foreach ($object->userassigned as $userassigned) {
+							$actionCommReminder->fk_user = $userassigned['id'];
+							$res = $actionCommReminder->create($user);
 
-					// the notification must be created for every user assigned to the event
-					foreach ($object->userassigned as $userassigned) {
-						$actionCommReminder->fk_user = $userassigned['id'];
+							if ($res <= 0) {
+								// If error
+								$db->rollback();
+								$langs->load("errors");
+								$error = $langs->trans('ErrorReminderActionCommCreation');
+								setEventMessages($error, null, 'errors');
+								$action = 'create';
+								$donotclearsession = 1;
+								break;
+							}
+						}
+					} else {
+						$actionCommReminder->fk_soc = $socid;
 						$res = $actionCommReminder->create($user);
 
 						if ($res <= 0) {
@@ -691,7 +720,6 @@ if (empty($reshook) && $action == 'add' && $usercancreate) {
 							setEventMessages($error, null, 'errors');
 							$action = 'create';
 							$donotclearsession = 1;
-							break;
 						}
 					}
 				}
@@ -794,13 +822,26 @@ if (empty($reshook) && $action == 'add' && $usercancreate) {
 							$actionCommReminder->offsetvalue = $offsetvalue;
 							$actionCommReminder->status = $actionCommReminder::STATUS_TODO;
 							$actionCommReminder->fk_actioncomm = $finalobject->id;
-							if ($remindertype == 'email') {
-								$actionCommReminder->fk_email_template = $modelmail;
-							}
+							$actionCommReminder->fk_email_template = $modelmail;
+							if ($TRemindTypes[$remindertype]['type'] == ActionCommReminder::TYPE_USER) {
+								// the notification must be created for every user assigned to the event
+								foreach ($finalobject->userassigned as $userassigned) {
+									$actionCommReminder->fk_user = $userassigned['id'];
+									$res = $actionCommReminder->create($user);
 
-							// the notification must be created for every user assigned to the event
-							foreach ($finalobject->userassigned as $userassigned) {
-								$actionCommReminder->fk_user = $userassigned['id'];
+									if ($res <= 0) {
+										// If error
+										$db->rollback();
+										$langs->load("errors");
+										$error = $langs->trans('ErrorReminderActionCommCreation');
+										setEventMessages($error, null, 'errors');
+										$action = 'create';
+										$donotclearsession = 1;
+										break;
+									}
+								}
+							} else {
+								$actionCommReminder->fk_soc = $socid;
 								$res = $actionCommReminder->create($user);
 
 								if ($res <= 0) {
@@ -811,7 +852,6 @@ if (empty($reshook) && $action == 'add' && $usercancreate) {
 									setEventMessages($error, null, 'errors');
 									$action = 'create';
 									$donotclearsession = 1;
-									break;
 								}
 							}
 						}
@@ -1113,7 +1153,9 @@ if (empty($reshook) && $action == 'update' && $usercancreate) {
 				$categories = GETPOST('categories', 'array');
 				$object->setCategories($categories);
 
-				$object->loadReminders($remindertype, 0, false);
+				if ($object->loadReminders($remindertype, 0, false) < 0) {
+					setEventMessages($object->error, $object->errors, 'errors');
+				}
 
 				// If there is reminders, we remove them
 				if (!empty($object->reminders)) {
@@ -1127,40 +1169,61 @@ if (empty($reshook) && $action == 'update' && $usercancreate) {
 
 				// Create reminders for every assigned user if reminder is on
 				if ($addreminder == 'on') {
-					$actionCommReminder = new ActionCommReminder($db);
+					for ($i = 0; $i < 3; $i++) {
+						if (!GETPOSTISSET('addreminder_'.$i)) {
+							continue;
+						}
+						$offsetvalue = GETPOSTINT('offsetvalue_'.$i);
+						$offsetunit = GETPOST('offsetunit_'.$i.'_type_duration', 'aZ09');
+						$remindertype = GETPOST('selectremindertype_'.$i, 'aZ09');
+						$modelmail = GETPOSTINT('actioncommsend_'.$i.'_model_mail');
+						$actionCommReminder = new ActionCommReminder($db);
 
-					$dateremind = dol_time_plus_duree($datep, -1 * $offsetvalue, $offsetunit);
+						$dateremind = dol_time_plus_duree($datep, -1 * $offsetvalue, $offsetunit);
 
-					$actionCommReminder->dateremind = $dateremind;
-					$actionCommReminder->typeremind = $remindertype;
-					$actionCommReminder->offsetunit = $offsetunit;
-					$actionCommReminder->offsetvalue = $offsetvalue;
-					$actionCommReminder->status = $actionCommReminder::STATUS_TODO;
-					$actionCommReminder->fk_actioncomm = $object->id;
-					if ($remindertype == 'email') {
+						$actionCommReminder->dateremind = $dateremind;
+						$actionCommReminder->typeremind = $remindertype;
+						$actionCommReminder->offsetunit = $offsetunit;
+						$actionCommReminder->offsetvalue = $offsetvalue;
+						$actionCommReminder->status = $actionCommReminder::STATUS_TODO;
+						$actionCommReminder->fk_actioncomm = $object->id;
 						$actionCommReminder->fk_email_template = $modelmail;
-					}
+						if ($TRemindTypes[$remindertype]['type'] == ActionCommReminder::TYPE_USER) {
+							// the notification must be created for every user assigned to the event
+							foreach ($object->userassigned as $userassigned) {
+								$actionCommReminder->fk_user = $userassigned['id'];
 
-					// the notification must be created for every user assigned to the event
-					foreach ($object->userassigned as $userassigned) {
-						$actionCommReminder->fk_user = $userassigned['id'];
+								// We update the event, so we recreate the notification event.
+								// First we delete all reminders for the user and the type of reminding (all offset dates).
+								$sqldelete = "DELETE FROM " . MAIN_DB_PREFIX . "actioncomm_reminder";
+								$sqldelete .= " WHERE fk_user = " . ((int) $actionCommReminder->fk_user) . " AND fk_actioncomm = " . ((int) $object->id) . " AND typeremind = '" . $db->escape($remindertype) . "'";
+								$resqldelete = $db->query($sqldelete);
 
-						// We update the event, so we recreate the notification event.
-						// First we delete all reminders for the user and the type of reminding (all offset dates).
-						$sqldelete = "DELETE FROM " . MAIN_DB_PREFIX . "actioncomm_reminder";
-						$sqldelete .= " WHERE fk_user = " . ((int) $actionCommReminder->fk_user) . " AND fk_actioncomm = " . ((int) $object->id) . " AND typeremind = '" . $db->escape($remindertype) . "'";
-						$resqldelete = $db->query($sqldelete);
+								$res = $actionCommReminder->create($user);
 
-						$res = $actionCommReminder->create($user);
+								if ($res <= 0) {
+									// If error
+									$langs->load("errors");
+									$error = $langs->trans('ErrorReminderActionCommCreation');
+									setEventMessages($error, null, 'errors');
+									$action = 'create';
+									$donotclearsession = 1;
+									break;
+								}
+							}
+						} else {
+							$actionCommReminder->fk_soc = $socid;
+							$res = $actionCommReminder->create($user);
 
-						if ($res <= 0) {
-							// If error
-							$langs->load("errors");
-							$error = $langs->trans('ErrorReminderActionCommCreation');
-							setEventMessages($error, null, 'errors');
-							$action = 'create';
-							$donotclearsession = 1;
-							break;
+							if ($res <= 0) {
+								// If error
+								$db->rollback();
+								$langs->load("errors");
+								$error = $langs->trans('ErrorReminderActionCommCreation');
+								setEventMessages($error, null, 'errors');
+								$action = 'create';
+								$donotclearsession = 1;
+							}
 						}
 					}
 				}
@@ -1204,7 +1267,7 @@ if (empty($reshook) && $action == 'confirm_delete' && GETPOST("confirm") == 'yes
 		$result = $object->delete($user);
 
 		if ($result >= 0) {
-			header("Location: index.php");
+			header("Location: " . DOL_URL_ROOT . '/comm/action/index.php');
 			exit;
 		} else {
 			setEventMessages($object->error, $object->errors, 'errors');
@@ -1329,6 +1392,7 @@ if (empty($reshook)) {
  */
 
 $form = new Form($db);
+$formother = new FormOther($db);
 $formproject = new FormProjets($db);
 
 $arrayrecurrulefreq = [
@@ -1356,85 +1420,86 @@ if ($action == 'create') {
 	dol_set_focus("#label");
 
 	if (!empty($conf->use_javascript_ajax)) {
-		print "\n" . '<script type="text/javascript">';
-		print '$(document).ready(function () {
-        			function setdatefields()
-	            	{
-	            		if ($("#fullday:checked").val() == null) {
-	            			$(".fulldaystarthour").removeAttr("disabled");
-	            			$(".fulldaystartmin").removeAttr("disabled");
-	            			$(".fulldayendhour").removeAttr("disabled");
-	            			$(".fulldayendmin").removeAttr("disabled");
-	            			$("#p2").removeAttr("disabled");
-	            		} else {
-							$(".fulldaystarthour").prop("disabled", true).val("00");
-							$(".fulldaystartmin").prop("disabled", true).val("00");
-							$(".fulldayendhour").prop("disabled", true).val("23");
-							$(".fulldayendmin").prop("disabled", true).val("59");
-							$("#p2").removeAttr("disabled");
-	            		}
-	            	}
-                    $("#fullday").change(function() {
-						console.log("setdatefields");
-                        setdatefields();
-                    });
-					var old_startdate = null;
-					$("#ap").focus(function() {
-						old_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
-					});
-					$("#ap").next(".ui-datepicker-trigger").click(function() {
-						old_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
-					});
-					$("#ap").change(function() {
-						setTimeout(function() {
-							if ($("#p2").val() !== "") {
-								var new_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
-								var old_enddate = new Date($("#p2year").val(), $("#p2month").val() - 1, $("#p2day").val());
-								if (new_startdate > old_enddate) {
-									var timeDiff = old_enddate - old_startdate;
-									var new_enddate = new Date(new_startdate.getTime() + timeDiff);
-									$("#p2").val(formatDate(new_enddate, "' . $langs->trans('FormatDateShortJavaInput') . '"));
-									$("#p2day").val(new_enddate.getDate());
-									$("#p2month").val(new_enddate.getMonth() + 1);
-									$("#p2year").val(new_enddate.getFullYear());
-								}
+?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				function setdatefields() {
+					if ($("#fullday:checked").val() == null) {
+						$(".fulldaystarthour").removeAttr("disabled");
+						$(".fulldaystartmin").removeAttr("disabled");
+						$(".fulldayendhour").removeAttr("disabled");
+						$(".fulldayendmin").removeAttr("disabled");
+						$("#p2").removeAttr("disabled");
+					} else {
+						$(".fulldaystarthour").prop("disabled", true).val("00");
+						$(".fulldaystartmin").prop("disabled", true).val("00");
+						$(".fulldayendhour").prop("disabled", true).val("23");
+						$(".fulldayendmin").prop("disabled", true).val("59");
+						$("#p2").removeAttr("disabled");
+					}
+				}
+				$("#fullday").change(function() {
+					console.log("setdatefields");
+					setdatefields();
+				});
+				var old_startdate = null;
+				$("#ap").focus(function() {
+					old_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
+				});
+				$("#ap").next(".ui-datepicker-trigger").click(function() {
+					old_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
+				});
+				$("#ap").change(function() {
+					setTimeout(function() {
+						if ($("#p2").val() !== "") {
+							var new_startdate = new Date($("#apyear").val(), $("#apmonth").val() - 1, $("#apday").val());
+							var old_enddate = new Date($("#p2year").val(), $("#p2month").val() - 1, $("#p2day").val());
+							if (new_startdate > old_enddate) {
+								var timeDiff = old_enddate - old_startdate;
+								var new_enddate = new Date(new_startdate.getTime() + timeDiff);
+								$("#p2").val(formatDate(new_enddate, "<?php echo $langs->trans('FormatDateShortJavaInput'); ?>"));
+								$("#p2day").val(new_enddate.getDate());
+								$("#p2month").val(new_enddate.getMonth() + 1);
+								$("#p2year").val(new_enddate.getFullYear());
 							}
-						}, 0);
-					});
-                    $("#actioncode").change(function() {
-                        if ($("#actioncode").val() == \'AC_RDV\') $("#dateend").addClass("fieldrequired");
-                        else $("#dateend").removeClass("fieldrequired");
-                    });
-					$("#aphour,#apmin").change(function() {
-						if ($("#actioncode").val() == \'AC_RDV\') {
-							var oldhour = parseInt($("#aphour").val());
-							var oldmin = parseInt($("#apmin").val());
-							var oldday = parseInt($("#apday").val());
-							var oldmonth = $("#apmonth").val();
-							var oldyear = $("#apyear").val();
-
-							var newhour = oldhour + 1;
-							var newday = oldday;
-							var newmonth = oldmonth;
-							var newyear = oldyear;
-							if (newhour >= 24) {
-								newhour = 0;
-								newday = oldday + 1;
-							}
-							console.log("Start date was changed, we modify end date "+oldhour+" "+oldmin+" -> "+newhour+" "+oldmin);
-							$("#p2hour").val(("00" + newhour).substr(-2,2));
-							$("#p2min").val(("00" + oldmin).substr(-2,2));
-							$("#p2day").val(newday);
-							$("#p2month").val(newmonth);
-							$("#p2year").val(newyear);
-							$("#p2").val($("#ap").val());
 						}
-					});
-                    if ($("#actioncode").val() == \'AC_RDV\') $("#dateend").addClass("fieldrequired");
-                    else $("#dateend").removeClass("fieldrequired");
-                    setdatefields();
-               })';
-		print '</script>' . "\n";
+					}, 0);
+				});
+				$("#actioncode").change(function() {
+					if ($("#actioncode").val() == "AC_RDV") $("#dateend").addClass("fieldrequired");
+					else $("#dateend").removeClass("fieldrequired");
+				});
+				$("#aphour,#apmin").change(function() {
+					if ($("#actioncode").val() == "AC_RDV") {
+						var oldhour = parseInt($("#aphour").val());
+						var oldmin = parseInt($("#apmin").val());
+						var oldday = parseInt($("#apday").val());
+						var oldmonth = $("#apmonth").val();
+						var oldyear = $("#apyear").val();
+
+						var newhour = oldhour + 1;
+						var newday = oldday;
+						var newmonth = oldmonth;
+						var newyear = oldyear;
+						if (newhour >= 24) {
+							newhour = 0;
+							newday = oldday + 1;
+						}
+						console.log("Start date was changed, we modify end date " + oldhour + " " + oldmin + " -> " + newhour + " " + oldmin);
+						$("#p2hour").val(("00" + newhour).substr(-2, 2));
+						$("#p2min").val(("00" + oldmin).substr(-2, 2));
+						$("#p2day").val(newday);
+						$("#p2month").val(newmonth);
+						$("#p2year").val(newyear);
+						$("#p2").val($("#ap").val());
+					}
+				});
+				if ($("#actioncode").val() == "AC_RDV") $("#dateend").addClass("fieldrequired");
+				else $("#dateend").removeClass("fieldrequired");
+				setdatefields();
+			});
+		</script>
+	<?php
 	}
 
 	print '<form name="formaction" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
@@ -1632,7 +1697,9 @@ if ($action == 'create') {
 	if (isModEnabled('category')) {
 		// Categories
 		print '<tr><td>' . $langs->trans("Categories") . '</td><td>';
-		print $form->selectCategories(Categorie::TYPE_ACTIONCOMM, 'categories', $object);
+		// print $form->selectCategories(Categorie::TYPE_ACTIONCOMM, 'categories', $object);
+		$cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 3);
+		print img_picto('', 'category') . $form->multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), 0, 0, 'minwidth300 quatrevingtpercent widthcentpercentminusx', 0, 0);
 		print "</td></tr>";
 	}
 
@@ -1762,18 +1829,20 @@ if ($action == 'create') {
 		$url = dol_buildpath('comm/action/card.php', 2) . $urloption;
 
 		// update task list
-		print "\n" . '<script type="text/javascript">';
-		print '$(document).ready(function () {
-	               $("#projectid").change(function () {
-                        var url = "' . DOL_URL_ROOT . '/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
-						console.log("Call url to get the new list of tasks: "+url);
-                        $.get(url, function(data) {
-                            console.log(data);
-                            if (data) $("#taskid").html(data).select2();
-                        })
-                  });
-               })';
-		print '</script>' . "\n";
+		?>
+		<script type="text/javascript">
+			$(document).ready(function () {
+				$("#projectid").change(function () {
+					var url = "<?php echo DOL_URL_ROOT; ?>/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
+					console.log("Call url to get the new list of tasks: "+url);
+					$.get(url, function(data) {
+						console.log(data);
+						if (data) $("#taskid").html(data).select2();
+					})
+				});
+			});
+		</script>
+		<?php
 
 		print '</td></tr>';
 
@@ -1889,10 +1958,11 @@ if ($action == 'create') {
 		$reminderDefaultUnit = getDolGlobalString('AGENDA_DEFAULT_REMINDER_OFFSET_UNIT');
 		$reminderDefaultEmailModel = getDolGlobalInt('AGENDA_DEFAULT_REMINDER_EMAIL_MODEL');
 
-		print "\n" . '<script type="text/javascript">';
-		print '$(document).ready(function () {
-				const reminderDefaultEventTypes = \'' . dol_escape_js($reminderDefaultEventTypes) . '\';
-				$("#actioncode").change(function(){
+		?>
+		<script>
+			$(document).ready(function() {
+				const reminderDefaultEventTypes = "<?php echo dol_escape_js($reminderDefaultEventTypes); ?> ";
+				$("#actioncode").change(function() {
 					var selected_event_type = $("#actioncode option:selected").val();
 
 					if (reminderDefaultEventTypes.includes(selected_event_type)) {
@@ -1900,9 +1970,9 @@ if ($action == 'create') {
 						$("#addreminder").prop("checked", true);
 
 						// Set period with default reminder period
-						$("[name=\"offsetvalue\"]").val(\'' . dol_escape_js((string) $reminderDefaultOffset) . '\');
+						$("[name='offsetvalue']").val("<?php echo dol_escape_js((string) $reminderDefaultOffset); ?>");
 						$("#select_offsetunittype_duration").select2("destroy");
-						$("#select_offsetunittype_duration").val(\'' . dol_escape_js($reminderDefaultUnit) . '\');
+						$("#select_offsetunittype_duration").val("<?php echo dol_escape_js($reminderDefaultUnit); ?>");
 						$("#select_offsetunittype_duration").select2();
 
 						$("#selectremindertype").select2("destroy");
@@ -1912,45 +1982,44 @@ if ($action == 'create') {
 						// Set default reminder mail model
 						$("#select_actioncommsendmodel_mail").closest("tr").show();
 						$("#select_actioncommsendmodel_mail").select2("destroy");
-						$("#select_actioncommsendmodel_mail").val(\'' . dol_escape_js((string) $reminderDefaultEmailModel) . '\');
+						$("#select_actioncommsendmodel_mail").val("<?php echo dol_escape_js((string) $reminderDefaultEmailModel); ?>");
 						$("#select_actioncommsendmodel_mail").select2();
 					}
 				});
-		   })';
-		print '</script>' . "\n";
+			});
+		</script>
+		<script>
+			$(document).ready(function() {
+				$("#addreminder").click(function() {
+					console.log("Click on addreminder");
+					if (this.checked) {
+						$(".reminderparameters").show();
+					} else {
+						$(".reminderparameters").hide();
+					}
+					$("#selectremindertype").select2("destroy");
+					$("#selectremindertype").select2();
+					$("#select_offsetunittype_duration").select2("destroy");
+					$("#select_offsetunittype_duration").select2();
+					selectremindertype();
+				});
 
-		print "\n" . '<script type="text/javascript">';
-		print '$(document).ready(function () {
-	            		$("#addreminder").click(function(){
-							console.log("Click on addreminder");
-	            		    if (this.checked) {
-	            		    	$(".reminderparameters").show();
-                            } else {
-                            	$(".reminderparameters").hide();
-                            }
-							$("#selectremindertype").select2("destroy");
-							$("#selectremindertype").select2();
-							$("#select_offsetunittype_duration").select2("destroy");
-							$("#select_offsetunittype_duration").select2();
-							selectremindertype();
-	            		 });
+				$("#selectremindertype").change(function() {
+					selectremindertype();
+				});
 
-	            		$("#selectremindertype").change(function(){
-							selectremindertype();
-	            		});
-
-						function selectremindertype() {
-							console.log("Call selectremindertype");
-	            	        var selected_option = $("#selectremindertype option:selected").val();
-	            		    if(selected_option == "email") {
-	            		        $("#select_actioncommsendmodel_mail").closest("tr").show();
-	            		    } else {
-	            			    $("#select_actioncommsendmodel_mail").closest("tr").hide();
-	            		    }
-						}
-
-                   })';
-		print '</script>' . "\n";
+				function selectremindertype() {
+					console.log("Call selectremindertype");
+					var selected_option = $("#selectremindertype option:selected").val();
+					// if (selected_option == "email") {
+					// 	$("#select_actioncommsendmodel_mail").closest("tr").show();
+					// } else {
+					// 	$("#select_actioncommsendmodel_mail").closest("tr").hide();
+					// }
+				}
+			});
+		</script>
+		<?php
 	}
 
 	print dol_get_fiche_end();
@@ -1979,16 +2048,16 @@ if ($id > 0 && $action != 'create') {
 		$datep = dol_mktime($fulldayevent ? 0 : $aphour, $fulldayevent ? 0 : $apmin, 0, GETPOSTINT("apmonth"), GETPOSTINT("apday"), GETPOSTINT("apyear"), 'tzuserrel');
 		$datef = dol_mktime($fulldayevent ? 23 : $p2hour, $fulldayevent ? 59 : $p2min, $fulldayevent ? 59 : 0, GETPOSTINT("p2month"), GETPOSTINT("p2day"), GETPOSTINT("p2year"), 'tzuserrel');
 
-		$object->type_id     = dol_getIdFromCode($db, GETPOST("actioncode", 'aZ09'), 'c_actioncomm');
-		$object->label       = GETPOST("label", "alphanohtml");
-		$object->datep       = $datep;
-		$object->datef       = $datef;
-		$object->percentage  = $percentage;
+		$object->type_id = dol_getIdFromCode($db, GETPOST("actioncode", 'aZ09'), 'c_actioncomm');
+		$object->label = GETPOST("label", "alphanohtml");
+		$object->datep = $datep;
+		$object->datef = $datef;
+		$object->percentage = $percentage;
 		$object->priority = GETPOSTINT("priority");
 		$object->fulldayevent = GETPOST("fullday") ? 1 : 0;
-		$object->location    = GETPOST('location', "alphanohtml");
-		$object->socid       = GETPOSTINT("socid");
-		$socpeopleassigned   = GETPOST("socpeopleassigned", 'array');
+		$object->location = GETPOST('location', "alphanohtml");
+		$object->socid = GETPOSTINT("socid");
+		$socpeopleassigned = GETPOST("socpeopleassigned", 'array');
 		foreach ($socpeopleassigned as $tmpid) {
 			$object->socpeopleassigned[$id] = ['id' => $tmpid];
 		}
@@ -2254,7 +2323,14 @@ if ($id > 0 && $action != 'create') {
 		// Tags-Categories
 		if (isModEnabled('category')) {
 			print '<tr><td>' . $langs->trans("Categories") . '</td><td>';
-			print $form->selectCategories(Categorie::TYPE_ACTIONCOMM, 'categories', $object);
+			$cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 3);
+			$c = new Categorie($db);
+			$cats = $c->containing($object->id, Categorie::TYPE_ACTIONCOMM);
+			$arrayselected = array();
+			foreach ($cats as $cat) {
+				$arrayselected[] = $cat->id;
+			}
+			print img_picto('', 'category') . $form->multiselectarray('categories', $cate_arbo, $arrayselected, 0, 0, 'quatrevingtpercent widthcentpercentminusx', 0, 0);
 			print "</td></tr>";
 		}
 
@@ -2359,18 +2435,20 @@ if ($id > 0 && $action != 'create') {
 					print '<td id="project-task-input-container" >';
 
 					// update task list
-					print "\n" . '<script type="text/javascript">';
-					print '$(document).ready(function () {
+					?>
+					<script type="text/javascript">
+						$(document).ready(function () {
 							$("#projectid").change(function () {
-									var url = "' . DOL_URL_ROOT . '/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
-									console.log("Call url to get new list of tasks: "+url);
-									$.get(url, function(data) {
-										console.log(data);
-										if (data) $("#taskid").html(data).select2();
-									})
+								var url = "<?php echo DOL_URL_ROOT; ?> . '/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
+								console.log("Call url to get new list of tasks: "+url);
+								$.get(url, function(data) {
+									console.log(data);
+									if (data) $("#taskid").html(data).select2();
+								})
 							});
-						})';
-					print '</script>' . "\n";
+						});
+					</script>
+					<?php
 
 					$tid = '';
 					if (GETPOSTISSET("projecttaskid") && GETPOSTINT("projecttaskid") > 0) {
@@ -2418,22 +2496,29 @@ if ($id > 0 && $action != 'create') {
 			if ($user->hasRight('agenda', 'allactions', 'read')) {
 				$filteruserid = 0;
 			}
-			$object->loadReminders('', $filteruserid, false);
+			if ($object->loadReminders('', $filteruserid, false) < 0) {
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
 
 			print '<hr>';
-
+			$arrayOfReminders = [];
 			if (count($object->reminders) > 0) {
 				$checked = 'checked';
-				$keys = array_keys($object->reminders);
-				$firstreminderId = array_shift($keys);
-
-				$actionCommReminder = $object->reminders[$firstreminderId];
+				foreach ($object->reminders as $reminder) {
+					$arrayOfReminders[$reminder->typeremind] = $reminder;
+				}
+				$actionCommReminder = new stdClass($db);
+				$actionCommReminder->offsetvalue = getDolGlobalInt('AGENDA_REMINDER_DEFAULT_OFFSET', 30);
+				$actionCommReminder->offsetunit = 'i';
+				$actionCommReminder->typeremind = 'email';
+				$arrayOfReminders[] = $actionCommReminder;
 			} else {
 				$checked = '';
 				$actionCommReminder = new ActionCommReminder($db);
 				$actionCommReminder->offsetvalue = getDolGlobalInt('AGENDA_REMINDER_DEFAULT_OFFSET', 30);
 				$actionCommReminder->offsetunit = 'i';
 				$actionCommReminder->typeremind = 'email';
+				$arrayOfReminders[] = $actionCommReminder;
 			}
 			$disabled = '';
 			/*
@@ -2448,63 +2533,71 @@ if ($id > 0 && $action != 'create') {
 
 			print '<br>';
 
-			print '<table class="border centpercent">';
-
-			// Reminder
-			print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderTime") . '</td><td colspan="3">';
-			print '<input type="number" name="offsetvalue" class="width50" value="' . $actionCommReminder->offsetvalue . '"> ';
-			print $form->selectTypeDuration('offsetunit', $actionCommReminder->offsetunit, $TDurationTypesExcluded);
-			print '</td></tr>';
-
-			// Reminder Type
-			print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderType") . '</td><td colspan="3">';
-			print $form->selectarray('selectremindertype', $TRemindTypes, $actionCommReminder->typeremind, 0, 0, 0, '', 0, 0, 0, '', 'minwidth200', 1);
-			print '</td></tr>';
-
-			$hide = '';
-			if ($actionCommReminder->typeremind == 'browser') {
-				$hide = 'style="display:none;"';
-			}
-
-			// Mail Model
-			if (getDolGlobalString('AGENDA_REMINDER_EMAIL')) {
-				print '<tr ' . $hide . '><td class="titlefieldcreate nowrap">' . $langs->trans("EMailTemplates") . '</td><td colspan="3">';
-				print $form->selectModelMail('actioncommsend', 'actioncomm_send', 1, 1, (string) $actionCommReminder->fk_email_template);
+			$i = 0;
+			foreach ($arrayOfReminders as $actionCommReminder) {
+				print '<table class="border centpercent">';
+				// Reminder
+				print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderTime") . '</td><td colspan="3">';
+				print '<input type="number" name="offsetvalue_'.$i.'" class="width50" value="' . $actionCommReminder->offsetvalue . '"> ';
+				print $form->selectTypeDuration('offsetunit_'.$i.'_', $actionCommReminder->offsetunit, $TDurationTypesExcluded);
+				$checked = '';
+				if ($actionCommReminder instanceof ActionCommReminder) {
+					$checked = 'checked';
+				}
+				print '<input type="checkbox" name="addreminder_'.$i.'" ' . $checked.'>';
 				print '</td></tr>';
+
+				// Reminder Type
+				print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderType") . '</td><td colspan="3">';
+				print $form->selectarray('selectremindertype_'.$i, $TRemindTypes, $actionCommReminder->typeremind, 0, 0, 0, '', 0, 0, 0, '', 'minwidth200', 1);
+				print '</td></tr>';
+
+				$hide = '';
+				if ($actionCommReminder->typeremind == 'browser') {
+					$hide = 'style="display:none;"';
+				}
+				// Mail Model
+				if (getDolGlobalString('AGENDA_REMINDER_EMAIL')) {
+					print '<tr ' . $hide . '><td class="titlefieldcreate nowrap">' . $langs->trans("EMailTemplates") . '</td><td colspan="3">';
+					print $form->selectModelMail('actioncommsend_'.$i.'_', 'actioncomm_send', 1, 1, (string) $actionCommReminder->fk_email_template);
+					print '</td></tr>';
+				}
+				print '</table>';
+				$i++;
 			}
 
-			print '</table>';
+			?>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					$("#addreminder").click(function() {
+						if (this.checked) {
+							$(".reminderparameters").show();
+						} else {
+							$(".reminderparameters").hide();
+						}
+					});
 
-			print "\n" . '<script type="text/javascript">';
-			print '$(document).ready(function () {
-	            		$("#addreminder").click(function(){
-	            		    if (this.checked) {
-	            		      	$(".reminderparameters").show();
-                            } else {
-                            	$(".reminderparameters").hide();
-                            }
-	            		 });
+					$("#selectremindertype").change(function() {
+						var selected_option = $("#selectremindertype option:selected").val();
+						// if (selected_option == "email") {
+						// 	$("#select_actioncommsendmodel_mail").closest("tr").show();
+						// } else {
+						// 	$("#select_actioncommsendmodel_mail").closest("tr").hide();
+						// }
+					});
 
-	            		$("#selectremindertype").change(function(){
-	            	        var selected_option = $("#selectremindertype option:selected").val();
-	            		    if(selected_option == "email") {
-	            		        $("#select_actioncommsendmodel_mail").closest("tr").show();
-	            		    } else {
-	            			    $("#select_actioncommsendmodel_mail").closest("tr").hide();
-	            		    }
-	            		});
-
-                   })';
-			print '</script>' . "\n";
+				});
+			</script>
+			<?php
 
 			$reminderDefaultEventTypes = getDolGlobalString('AGENDA_DEFAULT_REMINDER_EVENT_TYPES', '');
 			$reminderDefaultOffset = getDolGlobalString('AGENDA_DEFAULT_REMINDER_OFFSET', 30);
 			$reminderDefaultUnit = getDolGlobalString('AGENDA_DEFAULT_REMINDER_OFFSET_UNIT');
 			$reminderDefaultEmailModel = getDolGlobalString('AGENDA_DEFAULT_REMINDER_EMAIL_MODEL');
-
-			print "\n" . '<script type="text/javascript">';
-			print '$(document).ready(function () {
-					const reminderDefaultEventTypes = \'' . dol_escape_js($reminderDefaultEventTypes) . '\';
+			?>
+			<script type="text/javascript">
+				$(document).ready(function () {
+					const reminderDefaultEventTypes = '<?php echo dol_escape_js($reminderDefaultEventTypes); ?>';
 					$("#actioncode").change(function(){
 						var selected_event_type = $("#actioncode option:selected").val();
 
@@ -2513,9 +2606,9 @@ if ($id > 0 && $action != 'create') {
 							$("#addreminder").prop("checked", true);
 
 							// Set period with default reminder period
-							$("#offsetvalue").val(\'' . dol_escape_js($reminderDefaultOffset) . '\');
+							$("#offsetvalue").val('<?php echo dol_escape_js($reminderDefaultOffset); ?>');
 							$("#select_offsetunittype_duration").select2("destroy");
-							$("#select_offsetunittype_duration").val(\'' . dol_escape_js($reminderDefaultUnit) . '\');
+							$("#select_offsetunittype_duration").val('<?php echo dol_escape_js($reminderDefaultUnit); ?>');
 							$("#select_offsetunittype_duration").select2();
 
 							$("#selectremindertype").select2("destroy");
@@ -2525,12 +2618,13 @@ if ($id > 0 && $action != 'create') {
 							// Set default reminder mail model
 							$("#select_actioncommsendmodel_mail").closest("tr").show();
 							$("#select_actioncommsendmodel_mail").select2("destroy");
-							$("#select_actioncommsendmodel_mail").val(\'' . dol_escape_js($reminderDefaultEmailModel) . '\');
+							$("#select_actioncommsendmodel_mail").val('<?php echo dol_escape_js($reminderDefaultEmailModel); ?>');
 							$("#select_actioncommsendmodel_mail").select2();
 						}
 					});
-			   })';
-			print '</script>' . "\n";
+				});
+			</script>
+			<?php
 			print '</div>';		// End of div for reminderparameters
 		}
 
@@ -2857,38 +2951,55 @@ if ($id > 0 && $action != 'create') {
 			if ($user->hasRight('agenda', 'allactions', 'read')) {
 				$filteruserid = 0;
 			}
-			$object->loadReminders('', $filteruserid, false);
+			if ($object->loadReminders('', $filteruserid, false) < 0) {
+				setEventMessages($object->error, $object->errors, 'errors');
+			}
 
 			print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("Reminders") . '</td><td>';
+			print '<table class="centpercent nobordernopadding">';
 
 			if (count($object->reminders) > 0) {
 				$tmpuserstatic = new User($db);
+				$tmpthirdpartystatic = new Societe($db);
 
 				foreach ($object->reminders as $actioncommreminderid => $actioncommreminder) {
+					print '<tr>';
+					print '<td class="nowrap left">';
 					print $TRemindTypes[$actioncommreminder->typeremind]['label'];
 					if ($actioncommreminder->fk_user > 0) {
 						$tmpuserstatic->fetch($actioncommreminder->fk_user);
-						print ' (' . $tmpuserstatic->getNomUrl(0, '', 0, 0, 16) . ')';
+						print ' (' . $tmpuserstatic->getNomUrl(1) . ')';
 					}
-					print ' - ' . $actioncommreminder->offsetvalue . ' ' . $TDurationTypes[$actioncommreminder->offsetunit];
+					if ($actioncommreminder->fk_soc > 0) {
+						$tmpthirdpartystatic->fetch($actioncommreminder->fk_soc);
+						print ' (' . $tmpthirdpartystatic->getNomUrl(1) . ')';
+					}
+					print '</td>';
+					print '<td>';
 
+					print $actioncommreminder->offsetvalue . ' ' . $TDurationTypes[$actioncommreminder->offsetunit] . '&nbsp;' . $langs->trans('Before');
+					print '<br>' . dol_print_date($actioncommreminder->dateremind, 'dayhour', 'tzuserrel');
+					print '</td>';
+					print '<td class="right">';
 					if ($actioncommreminder->status == $actioncommreminder::STATUS_TODO) {
-						print ' - <span class="opacitymedium">';
-						print $langs->trans("NotSent");
+						print '<span class="orange">';
+						print img_picto($langs->trans("NotSent"), 'clock');
 						print ' </span>';
 					} elseif ($actioncommreminder->status == $actioncommreminder::STATUS_DONE) {
-						print ' - <span class="opacitymedium">';
-						print $langs->trans("Done");
+						print '<span class="green">';
+						print img_picto($langs->trans("Done"), 'tick');
 						print ' </span>';
 					} elseif ($actioncommreminder->status == $actioncommreminder::STATUS_ERROR) {
-						print ' - <span class="opacitymedium">';
+						print '<span class="red">';
 						print $form->textwithpicto($langs->trans("Error"), $actioncommreminder->lasterror);
 						print ' </span>';
 					}
-					print '<br>';
+					print '</td>';
+					print '</tr>';
 				}
 			}
 
+			print '</table>';
 			print '</td></tr>';
 		}
 
@@ -2958,7 +3069,7 @@ if ($id > 0 && $action != 'create') {
 
 			if (getDolGlobalString('AGENDA_ENABLE_LINKED_ELEMENTS')) {
 				// Show links to link elements
-				$tmparray = $form->showLinkToObjectBlock($object, [], ['myobject'], 1);
+				$tmparray = $form->showLinkToObjectBlock($object, [], ['agenda'], 1);
 				if (is_array($tmparray)) {
 					$linktoelem = $tmparray['linktoelem'];
 					$htmltoenteralink = $tmparray['htmltoenteralink'];

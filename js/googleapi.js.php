@@ -103,3 +103,57 @@ $(window).focus(function() {
 		refresh_work = setInterval(check_googleapiemail, time_auto_update * 1000);
 	}
 });
+
+$(document).ready(function () {
+	$('.googlemailmessage-show-details').click(function () {
+		//$.ajax({
+		//	url: '<?php //= dol_buildpath('googleapi/core/ajax/get_google_mail_message.php', 1) ?>//?message_id=' + $(this).data('messageid'),
+		//	type: 'GET',
+		//	success: function (data) {
+		//		console.log(data);
+		//
+		//		let body = data.body['html'] || data.body['plain'] || 'No content';
+		//
+		//		let $dialog = $("#dialogforpopup");
+		//		$dialog.html(body);
+		//
+		//		var width = '60%';
+		//		var height = ($(window).height() - 60) * 0.90;
+		//
+		//		$dialog.dialog({
+		//			closeOnEscape: true,
+		//			resizable: true,
+		//			width: width,
+		//			maxHeight: height,
+		//			modal: true,
+		//			title: 'Email : ' + data.subject,
+		//			buttons: {}
+		//		});
+		//
+		//	},
+		//	error: function (output) {
+		//		console.error("Error on fetching Google Mail API");
+		//	}
+		//});
+		let $parent = $(this.closest('tr'));
+		let $dialog = $("#dialogforpopup");
+		$dialog.html(`<iframe style="width:100%; height:100%; border-width: 0;" src="<?= dol_buildpath('googleapi/core/ajax/get_google_mail_message_html.php', 1) ?>?message_id=${$parent.data('messageid')}"></iframe>`);
+		let width = '60%';
+		let height = ($(window).height() - 60) * 0.9;
+
+		$dialog.dialog({
+			closeOnEscape: true,
+			resizable: true,
+			width: width,
+			height: height,
+			modal: true,
+			title: 'Email : ' + $parent.data('subject'),
+			buttons: {},
+			open: function() {
+				$('.ui-dialog-content').css('overflow', 'hidden');
+			}
+		});
+
+		return false;
+	});
+});

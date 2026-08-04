@@ -252,7 +252,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		$staticuser = new User($this->db);
 		$staticuser->fetch($object->userownerid);
 		// on complete ou pas?
-
 		$client = getGoogleApiClient($staticuser);
 		if ($client === false) {
 			return 0;

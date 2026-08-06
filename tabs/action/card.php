@@ -1170,13 +1170,13 @@ if (empty($reshook) && $action == 'update' && $usercancreate) {
 				// Create reminders for every assigned user if reminder is on
 				if ($addreminder == 'on') {
 					for ($i = 0; $i < 3; $i++) {
-						if (!GETPOSTISSET('addreminder_'.$i)) {
+						if (!GETPOSTISSET('addreminder_' . $i)) {
 							continue;
 						}
-						$offsetvalue = GETPOSTINT('offsetvalue_'.$i);
-						$offsetunit = GETPOST('offsetunit_'.$i.'_type_duration', 'aZ09');
-						$remindertype = GETPOST('selectremindertype_'.$i, 'aZ09');
-						$modelmail = GETPOSTINT('actioncommsend_'.$i.'_model_mail');
+						$offsetvalue = GETPOSTINT('offsetvalue_' . $i);
+						$offsetunit = GETPOST('offsetunit_' . $i . '_type_duration', 'aZ09');
+						$remindertype = GETPOST('selectremindertype_' . $i, 'aZ09');
+						$modelmail = GETPOSTINT('actioncommsend_' . $i . '_model_mail');
 						$actionCommReminder = new ActionCommReminder($db);
 
 						$dateremind = dol_time_plus_duree($datep, -1 * $offsetvalue, $offsetunit);
@@ -1829,12 +1829,12 @@ if ($action == 'create') {
 		$url = dol_buildpath('comm/action/card.php', 2) . $urloption;
 
 		// update task list
-		?>
+	?>
 		<script type="text/javascript">
-			$(document).ready(function () {
-				$("#projectid").change(function () {
-					var url = "<?php echo DOL_URL_ROOT; ?>/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
-					console.log("Call url to get the new list of tasks: "+url);
+			$(document).ready(function() {
+				$("#projectid").change(function() {
+					var url = "<?php echo DOL_URL_ROOT; ?>/projet/ajax/projects.php?mode=gettasks&socid=" + $("#search_socid").val() + "&projectid=" + $("#projectid").val();
+					console.log("Call url to get the new list of tasks: " + url);
 					$.get(url, function(data) {
 						console.log(data);
 						if (data) $("#taskid").html(data).select2();
@@ -2435,12 +2435,12 @@ if ($id > 0 && $action != 'create') {
 					print '<td id="project-task-input-container" >';
 
 					// update task list
-					?>
+		?>
 					<script type="text/javascript">
-						$(document).ready(function () {
-							$("#projectid").change(function () {
-								var url = "<?php echo DOL_URL_ROOT; ?> . '/projet/ajax/projects.php?mode=gettasks&socid="+$("#search_socid").val()+"&projectid="+$("#projectid").val();
-								console.log("Call url to get new list of tasks: "+url);
+						$(document).ready(function() {
+							$("#projectid").change(function() {
+								var url = "<?php echo DOL_URL_ROOT; ?> . '/projet/ajax/projects.php?mode=gettasks&socid=" + $("#search_socid").val() + "&projectid=" + $("#projectid").val();
+								console.log("Call url to get new list of tasks: " + url);
 								$.get(url, function(data) {
 									console.log(data);
 									if (data) $("#taskid").html(data).select2();
@@ -2448,7 +2448,7 @@ if ($id > 0 && $action != 'create') {
 							});
 						});
 					</script>
-					<?php
+			<?php
 
 					$tid = '';
 					if (GETPOSTISSET("projecttaskid") && GETPOSTINT("projecttaskid") > 0) {
@@ -2538,18 +2538,18 @@ if ($id > 0 && $action != 'create') {
 				print '<table class="border centpercent">';
 				// Reminder
 				print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderTime") . '</td><td colspan="3">';
-				print '<input type="number" name="offsetvalue_'.$i.'" class="width50" value="' . $actionCommReminder->offsetvalue . '"> ';
-				print $form->selectTypeDuration('offsetunit_'.$i.'_', $actionCommReminder->offsetunit, $TDurationTypesExcluded);
+				print '<input type="number" name="offsetvalue_' . $i . '" class="width50" value="' . $actionCommReminder->offsetvalue . '"> ';
+				print $form->selectTypeDuration('offsetunit_' . $i . '_', $actionCommReminder->offsetunit, $TDurationTypesExcluded);
 				$checked = '';
 				if ($actionCommReminder instanceof ActionCommReminder) {
 					$checked = 'checked';
 				}
-				print '<input type="checkbox" name="addreminder_'.$i.'" ' . $checked.'>';
+				print '<input type="checkbox" name="addreminder_' . $i . '" ' . $checked . '>';
 				print '</td></tr>';
 
 				// Reminder Type
 				print '<tr><td class="titlefieldcreate nowrap">' . $langs->trans("ReminderType") . '</td><td colspan="3">';
-				print $form->selectarray('selectremindertype_'.$i, $TRemindTypes, $actionCommReminder->typeremind, 0, 0, 0, '', 0, 0, 0, '', 'minwidth200', 1);
+				print $form->selectarray('selectremindertype_' . $i, $TRemindTypes, $actionCommReminder->typeremind, 0, 0, 0, '', 0, 0, 0, '', 'minwidth200', 1);
 				print '</td></tr>';
 
 				$hide = '';
@@ -2559,7 +2559,7 @@ if ($id > 0 && $action != 'create') {
 				// Mail Model
 				if (getDolGlobalString('AGENDA_REMINDER_EMAIL')) {
 					print '<tr ' . $hide . '><td class="titlefieldcreate nowrap">' . $langs->trans("EMailTemplates") . '</td><td colspan="3">';
-					print $form->selectModelMail('actioncommsend_'.$i.'_', 'actioncomm_send', 1, 1, (string) $actionCommReminder->fk_email_template);
+					print $form->selectModelMail('actioncommsend_' . $i . '_', 'actioncomm_send', 1, 1, (string) $actionCommReminder->fk_email_template);
 					print '</td></tr>';
 				}
 				print '</table>';
@@ -2596,9 +2596,9 @@ if ($id > 0 && $action != 'create') {
 			$reminderDefaultEmailModel = getDolGlobalString('AGENDA_DEFAULT_REMINDER_EMAIL_MODEL');
 			?>
 			<script type="text/javascript">
-				$(document).ready(function () {
+				$(document).ready(function() {
 					const reminderDefaultEventTypes = '<?php echo dol_escape_js($reminderDefaultEventTypes); ?>';
-					$("#actioncode").change(function(){
+					$("#actioncode").change(function() {
 						var selected_event_type = $("#actioncode option:selected").val();
 
 						if (reminderDefaultEventTypes.includes(selected_event_type)) {
@@ -2624,7 +2624,7 @@ if ($id > 0 && $action != 'create') {
 					});
 				});
 			</script>
-			<?php
+<?php
 			print '</div>';		// End of div for reminderparameters
 		}
 

@@ -23,7 +23,7 @@
 
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
-require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 use League\OAuth2\Client\Provider\Google;
 use League\OAuth2\Client\Grant\RefreshToken;
@@ -240,12 +240,12 @@ function googleapiDriveEscapeId($id)
 function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid, &$errmsg = '')
 {
 	try {
-		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false and name='".googleapiDriveEscapeId($name)."'";
-		$result = $driveservice->files->listFiles(array(
+		$query = "'" . googleapiDriveEscapeId($parentid) . "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false and name='" . googleapiDriveEscapeId($name) . "'";
+		$result = $driveservice->files->listFiles([
 			'q' => $query,
 			'fields' => 'files(id)',
 			'pageSize' => 1,
-		));
+		]);
 		$existing = $result->getFiles();
 		if (!empty($existing)) {
 			return $existing[0]->getId();
@@ -255,10 +255,10 @@ function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid, &$errm
 		$folder->setName($name);
 		$folder->setMimeType('application/vnd.google-apps.folder');
 		$folder->setParents(array($parentid));
-		$created = $driveservice->files->create($folder, array('fields' => 'id'));
+		$created = $driveservice->files->create($folder, ['fields' => 'id']);
 		return $created->getId();
 	} catch (Throwable $e) {
-		dol_syslog('googleapiGetOrCreateDriveFolder: '.$e->getMessage(), LOG_ERR);
+		dol_syslog('googleapiGetOrCreateDriveFolder: ' . $e->getMessage(), LOG_ERR);
 		$errmsg = $e->getMessage();
 		return false;
 	}
@@ -329,8 +329,8 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 
 		$handle = fopen($localpath, 'rb');
 		if ($handle === false) {
-			dol_syslog('googleapiUploadFileToDrive: cannot open '.$localpath, LOG_ERR);
-			$errmsg = 'Cannot open '.$localpath;
+			dol_syslog('googleapiUploadFileToDrive: cannot open ' . $localpath, LOG_ERR);
+			$errmsg = 'Cannot open ' . $localpath;
 			return false;
 		}
 		$status = false;
@@ -347,7 +347,7 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 
 		return $status->getId();
 	} catch (Throwable $e) {
-		dol_syslog('googleapiUploadFileToDrive: '.$e->getMessage(), LOG_ERR);
+		dol_syslog('googleapiUploadFileToDrive: ' . $e->getMessage(), LOG_ERR);
 		$errmsg = $e->getMessage();
 		return false;
 	} finally {
@@ -382,7 +382,7 @@ function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $event
 		}
 		$attachment = new \Google\Service\Calendar\EventAttachment();
 		$attachment->setFileId($drivefileid);
-		$attachment->setFileUrl('https://drive.google.com/file/d/'.$drivefileid.'/view');
+		$attachment->setFileUrl('https://drive.google.com/file/d/' . $drivefileid . '/view');
 		$attachment->setTitle($filename);
 		$attachment->setMimeType($mimetype);
 		$attachments[] = $attachment;
@@ -391,7 +391,7 @@ function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $event
 		$service->events->update($calendarId, $eventId, $event, array('supportsAttachments' => true));
 		return true;
 	} catch (Throwable $e) {
-		dol_syslog('googleapiAddDriveAttachmentToCalendarEvent: '.$e->getMessage(), LOG_ERR);
+		dol_syslog('googleapiAddDriveAttachmentToCalendarEvent: ' . $e->getMessage(), LOG_ERR);
 		$errmsg = $e->getMessage();
 		return false;
 	}
@@ -581,10 +581,10 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
 {
 	// use constants when possible, for HipHop support
 	switch ($algo) {
-			// case'HS256':
-			// case'HS384':
-			// case'HS512':
-			//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
+		// case'HS256':
+		// case'HS384':
+		// case'HS512':
+		//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
 
 		case 'RS256':
 			return @openssl_verify($input, $signature, $key, defined('OPENSSL_ALGO_SHA256') ? OPENSSL_ALGO_SHA256 : 'sha256')  === 1;
@@ -641,7 +641,7 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 	$googleApiGmailMessages = [];
 	foreach ($messagesResponse->getMessages() as $message) {
 		$gMailMessage = $googleApi->fetchGoogleApiGMailMessage($message->getId());
-//		$gMailMessage->unread = in_array('UNREAD', $message->getLabelIds());
+		//		$gMailMessage->unread = in_array('UNREAD', $message->getLabelIds());
 		if ($gMailMessage->message_id) {
 			if (!$gMailMessage->object_type && $object_type && $object_id) {
 				$gMailMessage->object_type = $object_type;
@@ -655,7 +655,7 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 		}
 	}
 
-	$pageToken = $messagesResponse->getNextPageToken()?: null;
+	$pageToken = $messagesResponse->getNextPageToken() ?: null;
 	return $googleApiGmailMessages;
 }
 

@@ -370,11 +370,11 @@ if ($id > 0 || !empty($ref)) {
 			</table>
 		</div>
 
-	<?php
+		<?php
 	} else {
 		//TODO Remove when API data will be stored in db
 		unset($_SESSION["googleapi_page_token_{$object->element}_{$object->id}"]);
-	?>
+		?>
 		<div id="grid"></div>
 		<script>
 			const grid = new tui.Grid({
@@ -433,7 +433,7 @@ if ($id > 0 || !empty($ref)) {
 			});
 		</script>
 
-<?php
+		<?php
 	}
 }
 // End of page

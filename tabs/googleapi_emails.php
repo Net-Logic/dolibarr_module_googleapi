@@ -293,7 +293,7 @@ if ($id > 0 || !empty($ref)) {
 				$previousPageToken = $_SESSION[$sessionKey][$currentPageKey - 1] ?? null;
 			}
 			ob_start()
-?>
+			?>
 			<div class="pagination">
 				<ul>
 					<?php if ($previousPageToken || $currentPageToken) : ?>
@@ -319,7 +319,7 @@ if ($id > 0 || !empty($ref)) {
 					<?php endif; ?>
 				</ul>
 			</div>
-		<?php
+			<?php
 			$moreHtml = ob_get_clean();
 			print_barre_liste("Communications Tiers et Contacts", 0, $_SERVER["PHP_SELF"], '', '', '', '', 0, 0, '', '', $moreHtml);
 		}

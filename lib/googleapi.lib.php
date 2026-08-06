@@ -150,9 +150,10 @@ function googleapi_complete_label_and_note($object, $langs)
 /**
  * Get GoogleApi Client
  * @param   User    $fuser  propriétaire du token
+ * @param string $email if we need to retrieve a token with just email
  * @return  Google_Client|bool
  */
-function getGoogleApiClient($fuser)
+function getGoogleApiClient($fuser, $email)
 {
 	global $conf;
 
@@ -165,8 +166,12 @@ function getGoogleApiClient($fuser)
 		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType' => 'offline',
 	]);
-
-	$token = retrieveAccessToken('GoogleApi', $fuser->id);
+	if (empty($fuser->id)) {
+		$userid = 0;
+	} else {
+		$userid = $fuser->id;
+	}
+	$token = retrieveAccessToken('GoogleApi', $userid, $email);
 	// Is token expired or will token expire in the next 60 seconds
 	if (is_object($token)) {
 		$expire = time() > ($token->getExpires() - 60);
@@ -174,14 +179,14 @@ function getGoogleApiClient($fuser)
 			try {
 				// il faut sauvegarder le refresh token car google ne le donne qu'une seule fois
 				$refreshtoken = $token->getRefreshToken();
-				$refreshtokenbackup = retrieveRefreshTokenBackup('GoogleApi', $fuser->id);
+				$refreshtokenbackup = retrieveRefreshTokenBackup('GoogleApi', $userid, $email);
 				if (empty($refreshtoken) && !empty($refreshtokenbackup)) {
 					$refreshtoken = $refreshtokenbackup;
 				}
 				$grant = new RefreshToken();
 				$token = $provider->getAccessToken($grant, ['refresh_token' => $refreshtoken]);
 				//$token->setRefreshToken($refreshtoken);
-				storeAccessToken('GoogleApi', $token, $refreshtoken, $fuser->id);
+				storeAccessToken('GoogleApi', $token, $refreshtoken, $userid, $email);
 			} catch (Throwable $t) {
 				dol_syslog($t->getMessage(), LOG_ERR);
 				// Refresh failed: $token is still the stale, expired token fetched above. Do not

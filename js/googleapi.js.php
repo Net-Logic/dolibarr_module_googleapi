@@ -62,98 +62,99 @@ print "var time_auto_update = " . $conf->global->MAIN_BROWSER_NOTIFICATION_FREQU
 var refresh_work;
 /* Launch timer */
 // We set a delay before launching first test so next check will arrive after the time_auto_update compared to previous one.
-var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000;   //need milliseconds
+var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000; //need milliseconds
 if (login != '') {
-	console.log("Launch GoogleApi Email check: ")
-	console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
-	setTimeout(first_execution, time_first_execution);
+console.log("Launch GoogleApi Email check: ")
+console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
+setTimeout(first_execution, time_first_execution);
 }
 
 function first_execution() {
-	console.log("Call first_execution time_auto_update (MAIN_BROWSER_NOTIFICATION_FREQUENCY) = " + time_auto_update);
-	check_googleapiemail();    //one check before launching timer to launch other checks
-	setInterval(check_googleapiemail, time_auto_update * 1000); //program time to run next check googleapiemail
+console.log("Call first_execution time_auto_update (MAIN_BROWSER_NOTIFICATION_FREQUENCY) = " + time_auto_update);
+check_googleapiemail(); //one check before launching timer to launch other checks
+setInterval(check_googleapiemail, time_auto_update * 1000); //program time to run next check googleapiemail
 }
 
 function check_googleapiemail() {
-	console.log("Call check_googleapiemail time_js_next_check = date we are looking for event after = "+time_js_next_check);
-	$.ajax("<?php echo dol_buildpath('/googleapi/core/ajax/check_email.php', 1); ?>", {
-		type: "post",
-		async: true,
-		data: {
-			time: time_js_next_check
-		},
-		success: function (result) {
-			// console.log(result);
-			$('#googleapicounter').attr('data-count', result.unread);
-			$('.googleapicounterinfo').attr('title', result.info);
-		}
-	});
-	time_js_next_check += time_auto_update;
-	console.log('Updated time_js_next_check. New value is '+time_js_next_check);
+console.log("Call check_googleapiemail time_js_next_check = date we are looking for event after = "+time_js_next_check);
+$.ajax("<?php echo dol_buildpath('/googleapi/core/ajax/check_email.php', 1); ?>", {
+type: "post",
+async: true,
+data: {
+time: time_js_next_check
+},
+success: function (result) {
+// console.log(result);
+$('#googleapicounter').attr('data-count', result.unread);
+$('.googleapicounterinfo').attr('title', result.info);
+}
+});
+time_js_next_check += time_auto_update;
+console.log('Updated time_js_next_check. New value is '+time_js_next_check);
 }
 $(window).blur(function() {
-	console.log('Clear google check mail refresh');
-	clearInterval(refresh_work);
-	refresh_work = 0;
+console.log('Clear google check mail refresh');
+clearInterval(refresh_work);
+refresh_work = 0;
 });
 $(window).focus(function() {
-	console.log('Enable google check mail refresh');
-	if (!refresh_work) {
-		refresh_work = setInterval(check_googleapiemail, time_auto_update * 1000);
-	}
+console.log('Enable google check mail refresh');
+if (!refresh_work) {
+refresh_work = setInterval(check_googleapiemail, time_auto_update * 1000);
+}
 });
 
 $(document).ready(function () {
-	$('.googlemailmessage-show-details').click(function () {
-		//$.ajax({
-		//	url: '<?php //= dol_buildpath('googleapi/core/ajax/get_google_mail_message.php', 1) ?>//?message_id=' + $(this).data('messageid'),
-		//	type: 'GET',
-		//	success: function (data) {
-		//		console.log(data);
-		//
-		//		let body = data.body['html'] || data.body['plain'] || 'No content';
-		//
-		//		let $dialog = $("#dialogforpopup");
-		//		$dialog.html(body);
-		//
-		//		var width = '60%';
-		//		var height = ($(window).height() - 60) * 0.90;
-		//
-		//		$dialog.dialog({
-		//			closeOnEscape: true,
-		//			resizable: true,
-		//			width: width,
-		//			maxHeight: height,
-		//			modal: true,
-		//			title: 'Email : ' + data.subject,
-		//			buttons: {}
-		//		});
-		//
-		//	},
-		//	error: function (output) {
-		//		console.error("Error on fetching Google Mail API");
-		//	}
-		//});
-		let $parent = $(this.closest('tr'));
-		let $dialog = $("#dialogforpopup");
-		$dialog.html(`<iframe style="width:100%; height:100%; border-width: 0;" src="<?= dol_buildpath('googleapi/core/ajax/get_google_mail_message_html.php', 1) ?>?message_id=${$parent.data('messageid')}"></iframe>`);
-		let width = '60%';
-		let height = ($(window).height() - 60) * 0.9;
+$('.googlemailmessage-show-details').click(function () {
+//$.ajax({
+// url: '<?php //= dol_buildpath('googleapi/core/ajax/get_google_mail_message.php', 1)
+			?>//?message_id=' + $(this).data('messageid'),
+// type: 'GET',
+// success: function (data) {
+// console.log(data);
+//
+// let body = data.body['html'] || data.body['plain'] || 'No content';
+//
+// let $dialog = $("#dialogforpopup");
+// $dialog.html(body);
+//
+// var width = '60%';
+// var height = ($(window).height() - 60) * 0.90;
+//
+// $dialog.dialog({
+// closeOnEscape: true,
+// resizable: true,
+// width: width,
+// maxHeight: height,
+// modal: true,
+// title: 'Email : ' + data.subject,
+// buttons: {}
+// });
+//
+// },
+// error: function (output) {
+// console.error("Error on fetching Google Mail API");
+// }
+//});
+let $parent = $(this.closest('tr'));
+let $dialog = $("#dialogforpopup");
+$dialog.html(`<iframe style="width:100%; height:100%; border-width: 0;" src="<?= dol_buildpath('googleapi/core/ajax/get_google_mail_message_html.php', 1) ?>?message_id=${$parent.data('messageid')}"></iframe>`);
+let width = '60%';
+let height = ($(window).height() - 60) * 0.9;
 
-		$dialog.dialog({
-			closeOnEscape: true,
-			resizable: true,
-			width: width,
-			height: height,
-			modal: true,
-			title: 'Email : ' + $parent.data('subject'),
-			buttons: {},
-			open: function() {
-				$('.ui-dialog-content').css('overflow', 'hidden');
-			}
-		});
+$dialog.dialog({
+closeOnEscape: true,
+resizable: true,
+width: width,
+height: height,
+modal: true,
+title: 'Email : ' + $parent.data('subject'),
+buttons: {},
+open: function() {
+$('.ui-dialog-content').css('overflow', 'hidden');
+}
+});
 
-		return false;
-	});
+return false;
+});
 });

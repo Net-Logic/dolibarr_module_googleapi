@@ -57,16 +57,16 @@ print "var nowtime = " . $nowtime . ";\n";
 print "var login = '" . $_SESSION['dol_login'] . "';\n";
 print "var auto_check_googleapiemail_not_before = " . $_SESSION['auto_check_googleapiemail_not_before'] . ";\n";
 print "var time_js_next_check = Math.max(nowtime, auto_check_googleapiemail_not_before);\n";
-print "var time_auto_update = " . $conf->global->MAIN_BROWSER_NOTIFICATION_FREQUENCY . ";\n";
 ?>
+var time_auto_update = "<?php echo getDolGlobalInt('MAIN_BROWSER_NOTIFICATION_FREQUENCY', 300); ?> . ";
 var refresh_work;
 /* Launch timer */
 // We set a delay before launching first test so next check will arrive after the time_auto_update compared to previous one.
 var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000; //need milliseconds
 if (login != '') {
-console.log("Launch GoogleApi Email check: ")
-console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
-setTimeout(first_execution, time_first_execution);
+	console.log("Launch GoogleApi Email check: ")
+	console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution="+time_first_execution+". nowtime (time php page generation) = "+nowtime+" auto_check_googleapiemail_not_before (val in session)= "+auto_check_googleapiemail_not_before+" time_js_next_check (max now,auto_check_googleapiemail_not_before) = "+time_js_next_check+" time_auto_update="+time_auto_update);
+	setTimeout(first_execution, time_first_execution);
 }
 
 function first_execution() {

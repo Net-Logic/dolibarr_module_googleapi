@@ -290,18 +290,18 @@ if ($id > 0 || !empty($ref)) {
 			// Last page
 			if ($currentPageToken && !$nextPageToken) {
 				$currentPageKey = array_search($currentPageToken, $_SESSION[$sessionKey]);
-				$previousPageToken = $_SESSION[$sessionKey][$currentPageKey-1] ?? null;
+				$previousPageToken = $_SESSION[$sessionKey][$currentPageKey - 1] ?? null;
 			}
 			ob_start()
-			?>
+?>
 			<div class="pagination">
 				<ul>
 					<?php if ($previousPageToken || $currentPageToken) : ?>
-					<li class="pagination paginationpage paginationpageleft">
-						<a class="paginationprevious reposition" href="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $object->id ?>&module=<?= $object->element ?>&pageToken=<?= $previousPageToken ?>">
-							<i class="fa fa-chevron-left" title="Précédent"></i>
-						</a>
-					</li>
+						<li class="pagination paginationpage paginationpageleft">
+							<a class="paginationprevious reposition" href="<?= $_SERVER['PHP_SELF'] ?>?id=<?= $object->id ?>&module=<?= $object->element ?>&pageToken=<?= $previousPageToken ?>">
+								<i class="fa fa-chevron-left" title="Précédent"></i>
+							</a>
+						</li>
 					<?php else : ?>
 						<li class="pagination paginationpage paginationpageleft">
 							<i class="fa fa-chevron-left" title="Précédent" style="opacity: 0.4"></i>
@@ -319,7 +319,7 @@ if ($id > 0 || !empty($ref)) {
 					<?php endif; ?>
 				</ul>
 			</div>
-			<?php
+		<?php
 			$moreHtml = ob_get_clean();
 			print_barre_liste("Communications Tiers et Contacts", 0, $_SERVER["PHP_SELF"], '', '', '', '', 0, 0, '', '', $moreHtml);
 		}
@@ -329,52 +329,52 @@ if ($id > 0 || !empty($ref)) {
 		<div class="div-table-responsive-no-min">
 			<table class="noborder centpercent nomarginbottom">
 				<tbody>
-				<tr class="liste_titre">
-					<td></td>
-					<td>Date</td>
-					<td>De</td>
-					<td>A</td>
-					<td>Sujet</td>
-					<td>Body</td>
-				</tr>
-				<?php if (!empty($googleApiGmailMessages)) : ?>
-					<?php foreach ($googleApiGmailMessages as $googleApiGmailMessage) : ?>
-						<?php
-						$backgroundColor = $googleApiGmailMessage->outgoing ? 'lightblue' : 'lightgreen';
-						?>
-						<tr class="googlemailmessage-show-details"
-							data-messageid="<?= $googleApiGmailMessage->message_id ?>"
-							data-subject="<?= $googleApiGmailMessage->subject ?>"
-							style="cursor: pointer; background: <?= $backgroundColor ?>!important;">
-							<td class="tdoverflowmax200 col_date">
-								<?php if ($googleApiGmailMessage->outgoing) : ?>
-									<i class="fa fa-upload" style="color: midnightblue"></i>
-								<?php else: ?>
-									<i class="fa fa-download" style="color: darkgreen"></i>
-								<?php endif; ?>
-							</td>
-							<td class="tdoverflowmax200 col_date">
-								<?= dol_print_date($googleApiGmailMessage->date, 'dayhour') ?>
-							</td>
-							<td class="tdoverflowmax200 col_from"><?= htmlentities($googleApiGmailMessage->email_from) ?></td>
-							<td class="tdoverflowmax200 col_to"><?= htmlentities($googleApiGmailMessage->email_to) ?></td>
-							<td class="tdoverflowmax200 col_subject"><?= $googleApiGmailMessage->subject ?></td>
-							<td class="tdoverflowmax500 col_body">
-								<span class="classfortooltip"
-									  title="<?= $googleApiGmailMessage->snippet ?>"><?= $googleApiGmailMessage->snippet ?></span>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				<?php endif; ?>
+					<tr class="liste_titre">
+						<td></td>
+						<td>Date</td>
+						<td>De</td>
+						<td>A</td>
+						<td>Sujet</td>
+						<td>Body</td>
+					</tr>
+					<?php if (!empty($googleApiGmailMessages)) : ?>
+						<?php foreach ($googleApiGmailMessages as $googleApiGmailMessage) : ?>
+							<?php
+							$backgroundColor = $googleApiGmailMessage->outgoing ? 'lightblue' : 'lightgreen';
+							?>
+							<tr class="googlemailmessage-show-details"
+								data-messageid="<?= $googleApiGmailMessage->message_id ?>"
+								data-subject="<?= $googleApiGmailMessage->subject ?>"
+								style="cursor: pointer; background: <?= $backgroundColor ?>!important;">
+								<td class="tdoverflowmax200 col_date">
+									<?php if ($googleApiGmailMessage->outgoing) : ?>
+										<i class="fa fa-upload" style="color: midnightblue"></i>
+									<?php else: ?>
+										<i class="fa fa-download" style="color: darkgreen"></i>
+									<?php endif; ?>
+								</td>
+								<td class="tdoverflowmax200 col_date">
+									<?= dol_print_date($googleApiGmailMessage->date, 'dayhour') ?>
+								</td>
+								<td class="tdoverflowmax200 col_from"><?= htmlentities($googleApiGmailMessage->email_from) ?></td>
+								<td class="tdoverflowmax200 col_to"><?= htmlentities($googleApiGmailMessage->email_to) ?></td>
+								<td class="tdoverflowmax200 col_subject"><?= $googleApiGmailMessage->subject ?></td>
+								<td class="tdoverflowmax500 col_body">
+									<span class="classfortooltip"
+										title="<?= $googleApiGmailMessage->snippet ?>"><?= $googleApiGmailMessage->snippet ?></span>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					<?php endif; ?>
 				</tbody>
 			</table>
 		</div>
 
-		<?php
+	<?php
 	} else {
 		//TODO Remove when API data will be stored in db
 		unset($_SESSION["googleapi_page_token_{$object->element}_{$object->id}"]);
-		?>
+	?>
 		<div id="grid"></div>
 		<script>
 			const grid = new tui.Grid({
@@ -395,8 +395,7 @@ if ($id > 0 || !empty($ref)) {
 				pageOptions: {
 					perPage: 25
 				},
-				columns: [
-					{
+				columns: [{
 						header: '<?= $langs->trans('Date') ?>',
 						name: 'date',
 						width: 150
@@ -434,7 +433,7 @@ if ($id > 0 || !empty($ref)) {
 			});
 		</script>
 
-		<?php
+<?php
 	}
 }
 // End of page

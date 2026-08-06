@@ -388,6 +388,93 @@ class ActionsGoogleApi
 	}
 
 	/**
+	 * Execute printFieldListOption
+	 *
+	 * @param   array           $parameters     Array of parameters
+	 * @param   CommonObject    $object         Object
+	 * @param   string          $action         'add', 'update', 'view'
+	 * @return  int                             <0 if KO,
+	 *                                          =0 if OK but we want to process standard actions too,
+	 *                                          >0 if OK and we want to replace standard actions.
+	 */
+	public function printFieldListOption($parameters, $object, &$action)
+	{
+		global $conf, $langs;
+
+		$ret = 0;
+
+		dol_syslog(get_class($this) . '::executeHooks action=' . $action, LOG_DEBUG);
+
+		$contexts = explode(':', $parameters['context']);
+		if (in_array('emailsenderprofilelist', $contexts)) {
+			$langs->load('googleapi@googleapi');
+			$this->resprints = '<td class="center">' . img_picto($langs->trans('GoogleApiSenderProfile'), 'object_googleapi@googleapi') . '</td>';
+		}
+
+		return $ret;
+	}
+
+	/**
+	 * Execute printFieldListTitle
+	 *
+	 * @param   array   $parameters     Array of parameters
+	 * @param   Object  $object         Object
+	 * @param   string  $action         'add', 'update', 'view'
+	 * @return  int                     <0 if KO,
+	 *                                  =0 if OK but we want to process standard actions too,
+	 *                                  >0 if OK and we want to replace standard actions.
+	 */
+	public function printFieldListTitle($parameters, $object, &$action)
+	{
+		global $conf, $langs;
+
+		$ret = 0;
+
+		dol_syslog(get_class($this) . '::executeHooks action=' . $action, LOG_DEBUG);
+
+		$contexts = explode(':', $parameters['context']);
+		if (in_array('emailsenderprofilelist', $contexts)) {
+			$this->resprints = '<td class="center">Token ' . img_warning($langs->trans('GoogleApiDisconnectWarning')) . '</td>';
+		}
+
+		return $ret;
+	}
+
+	/**
+	 * Execute printFieldListValue
+	 *
+	 * @param   array   $parameters     Array of parameters
+	 * @param   Object  $object         Object
+	 * @param   string  $action         'add', 'update', 'view'
+	 * @return  int                     <0 if KO,
+	 *                                  =0 if OK but we want to process standard actions too,
+	 *                                  >0 if OK and we want to replace standard actions.
+	 */
+	public function printFieldListValue($parameters, $object, &$action)
+	{
+		global $langs;
+
+		$ret = 0;
+
+		dol_syslog(get_class($this) . '::executeHooks action=' . $action, LOG_DEBUG);
+
+		$contexts = explode(':', $parameters['context']);
+		if (in_array('emailsenderprofilelist', $contexts)) {
+			$token = retrieveAccessToken('GoogleApi', 0, $parameters['object']->email);
+			$oauthcallbackurl = dol_buildpath('googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1);
+			$urltorenew = $oauthcallbackurl . '?mode=emailsenderprofile&emailprofile=' . $parameters['object']->email . '&backtourl=' . rawurlencode(dol_buildpath('/admin/mails_senderprofile_list.php', 1));
+			$urltodelete = $oauthcallbackurl . '?action=deletetoken&emailprofile=' . $parameters['object']->email . '&backtourl=' . rawurlencode(dol_buildpath('/admin/mails_senderprofile_list.php', 1));
+			if (empty($token)) {
+				$this->resprints = '<td class="center nowrap"><a class="button" href="' . $urltorenew . '">' . $langs->trans('GoogleApiRequestAccess') . '</a></td>';
+			} else {
+				$this->resprints = '<td class="center nowrap"><a class="button butAction butActionDelete" href="' . $urltodelete  . '">' . $langs->trans('GoogleApiDeleteAccess') . '</a></td>';
+			}
+		}
+
+		return $ret;
+	}
+
+	/**
 	 * Overloading the sendMailAfter function : replacing the parent's function with the one below
 	 *
 	 * @param   array           $parameters     Hook metadatas (context, etc...)

@@ -329,6 +329,18 @@ if (is_object($token)) {
 		$object->array_options['options_googleapi_Id'] = $owner->getId();
 		$object->array_options['options_googleapi_email'] = $owner->toArray()['email'];
 		$object->update($user, 1);
+		print '<table class="noborder" width="100%">' . PHP_EOL;
+		print '<tr class="liste_titre">';
+		print '<th width="40%">' . $langs->trans('GoogleApiUserName') . '</th>';
+		print '<th width="30%">' . $langs->trans('GoogleApiUserPicture') . '</th>';
+		print '<th width="30%">' . $langs->trans('GoogleApiUserEmail') . '</th>';
+		print "</tr>\n";
+		print '<tr class="oddeven">';
+		print '<td>' . $owner->toArray()['name'] . '</td>';
+		print '<td><img src="' . $owner->toArray()['picture'] . '"></td>';
+		print '<td>' . $owner->toArray()['email'] . '</td>';
+		print '</tr>';
+		print '</table>';
 	}
 }
 

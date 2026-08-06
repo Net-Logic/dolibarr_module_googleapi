@@ -14,6 +14,7 @@
 -- along with this program.  If not, see http://www.gnu.org/licenses/.
 
 -- TO FIX PHP WARNINGS
+UPDATE llx_extrafields SET list = '(getDolGlobalInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0)' WHERE list = '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)';
 UPDATE llx_extrafields SET enabled='isModEnabled("googleapi")' WHERE enabled='!empty($conf->googleapi->enabled)';
 UPDATE llx_extrafields SET enabled = 'isModEnabled("googleapi")' WHERE enabled = '$conf->googleapi->enabled';
 UPDATE llx_c_actioncomm SET type='module', module='googleapi@googleapi' WHERE type='system' AND module='googleapi';

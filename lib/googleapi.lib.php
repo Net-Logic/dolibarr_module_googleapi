@@ -150,10 +150,10 @@ function googleapi_complete_label_and_note($object, $langs)
 /**
  * Get GoogleApi Client
  * @param   User    $fuser  propriétaire du token
- * @param string $email if we need to retrieve a token with just email
+ * @param ?string $email if we need to retrieve a token with just email
  * @return  Google_Client|bool
  */
-function getGoogleApiClient($fuser, $email)
+function getGoogleApiClient($fuser, $email = null)
 {
 	global $conf;
 

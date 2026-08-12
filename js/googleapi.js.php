@@ -56,7 +56,7 @@ print "/* Javascript library of module GoogleApi */\n";
 print "var nowtime = " . $nowtime . ";\n";
 print "var login = '" . $_SESSION['dol_login'] . "';\n";
 ?>
-// IDE Hack <script type="application/javascript">
+// IDE Hack <script type="text/javascript">
 	var auto_check_googleapiemail_not_before = "<?php echo $_SESSION['auto_check_googleapiemail_not_before']; ?>";
 	var time_js_next_check = Math.max(nowtime, auto_check_googleapiemail_not_before);
 	var time_auto_update = "<?php echo getDolGlobalInt('MAIN_BROWSER_NOTIFICATION_FREQUENCY', 300); ?>";

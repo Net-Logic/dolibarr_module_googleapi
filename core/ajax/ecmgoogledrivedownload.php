@@ -51,7 +51,7 @@ if (!is_object($driveservice)) {
 }
 
 try {
-	$metadata = $driveservice->files->get($fileid, array('fields' => 'name,mimeType,size'));
+	$metadata = $driveservice->files->get($fileid, ['fields' => 'name,mimeType,size']);
 	if (strpos((string) $metadata->getMimeType(), 'application/vnd.google-apps.') === 0) {
 		// Native Google file (Docs/Sheets/Slides/...) has no direct binary content to stream
 		http_response_code(400);
@@ -59,13 +59,13 @@ try {
 		exit;
 	}
 
-	$response = $driveservice->files->get($fileid, array('alt' => 'media'));
+	$response = $driveservice->files->get($fileid, ['alt' => 'media']);
 	$body = $response->getBody();
 
 	top_httphead($metadata->getMimeType() ? $metadata->getMimeType() : 'application/octet-stream');
-	header('Content-Disposition: attachment; filename="'.dol_sanitizeFileName($metadata->getName()).'"');
+	header('Content-Disposition: attachment; filename="' . dol_sanitizeFileName($metadata->getName()) . '"');
 	if ($body->getSize() !== null) {
-		header('Content-Length: '.$body->getSize());
+		header('Content-Length: ' . $body->getSize());
 	}
 
 	// Stream in fixed-size chunks instead of loading the whole file into a single PHP string
@@ -76,7 +76,7 @@ try {
 		flush();
 	}
 } catch (Exception $e) {
-	dol_syslog('ecmgoogledrivedownload: '.$e->getMessage(), LOG_ERR);
+	dol_syslog('ecmgoogledrivedownload: ' . $e->getMessage(), LOG_ERR);
 	http_response_code(500);
 	print dol_escape_htmltag($e->getMessage());
 }

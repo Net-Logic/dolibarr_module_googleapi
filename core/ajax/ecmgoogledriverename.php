@@ -35,9 +35,9 @@ require_once '../../lib/googleapi.lib.php';
 
 top_httphead('application/json');
 
-$langs->loadLangs(array('googleapi@googleapi'));
+$langs->loadLangs(['googleapi@googleapi']);
 
-$response = array('success' => false, 'message' => '');
+$response = ['success' => false, 'message' => ''];
 
 if (!$user->hasRight('googleapi', 'write')) {
 	$response['message'] = $langs->trans("NotEnoughPermissions");

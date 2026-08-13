@@ -361,8 +361,8 @@ class ActionsGoogleApi
 			$subjecttouse = CMailFile::encodetorfc2822($subjecttouse);
 		}
 
-		$headers = "To: ".CMailFile::getValidAddress($object->addr_to, 0, 1).$object->eol2;
-		$headers .= "Subject: ".$subjecttouse.$object->eol2;
+		$headers = "To: " . CMailFile::getValidAddress($object->addr_to, 0, 1) . $object->eol2;
+		$headers .= "Subject: " . $subjecttouse . $object->eol2;
 		$headers .= $object->write_smtpheaders();
 		$headers .= $object->write_mimeheaders($object->filename_list, $object->mimefilename_list);
 		$headers = preg_replace("/([\r\n]+)$/i", "", $headers);
@@ -380,9 +380,9 @@ class ActionsGoogleApi
 			}
 		}
 
-		$rawmessage = $headers.$object->eol.$object->eol; // Blank line to separate headers from body
-		$rawmessage .= $body.$filesencoded;
-		$rawmessage .= "--".$object->mixed_boundary."--".$object->eol;
+		$rawmessage = $headers . $object->eol . $object->eol; // Blank line to separate headers from body
+		$rawmessage .= $body . $filesencoded;
+		$rawmessage .= "--" . $object->mixed_boundary . "--" . $object->eol;
 
 		return $rawmessage;
 	}

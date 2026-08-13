@@ -1420,7 +1420,7 @@ if ($action == 'create') {
 	dol_set_focus("#label");
 
 	if (!empty($conf->use_javascript_ajax)) {
-?>
+		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
 				function setdatefields() {
@@ -1499,7 +1499,7 @@ if ($action == 'create') {
 				setdatefields();
 			});
 		</script>
-	<?php
+		<?php
 	}
 
 	print '<form name="formaction" action="' . $_SERVER['PHP_SELF'] . '" method="POST">';
@@ -1829,7 +1829,7 @@ if ($action == 'create') {
 		$url = dol_buildpath('comm/action/card.php', 2) . $urloption;
 
 		// update task list
-	?>
+		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$("#projectid").change(function() {
@@ -2326,7 +2326,7 @@ if ($id > 0 && $action != 'create') {
 			$cate_arbo = $form->select_all_categories(Categorie::TYPE_ACTIONCOMM, '', 'parent', 64, 0, 3);
 			$c = new Categorie($db);
 			$cats = $c->containing($object->id, Categorie::TYPE_ACTIONCOMM);
-			$arrayselected = array();
+			$arrayselected = [];
 			foreach ($cats as $cat) {
 				$arrayselected[] = $cat->id;
 			}
@@ -2435,7 +2435,7 @@ if ($id > 0 && $action != 'create') {
 					print '<td id="project-task-input-container" >';
 
 					// update task list
-		?>
+					?>
 					<script type="text/javascript">
 						$(document).ready(function() {
 							$("#projectid").change(function() {
@@ -2448,7 +2448,7 @@ if ($id > 0 && $action != 'create') {
 							});
 						});
 					</script>
-			<?php
+					<?php
 
 					$tid = '';
 					if (GETPOSTISSET("projecttaskid") && GETPOSTINT("projecttaskid") > 0) {
@@ -2624,7 +2624,7 @@ if ($id > 0 && $action != 'create') {
 					});
 				});
 			</script>
-<?php
+			<?php
 			print '</div>';		// End of div for reminderparameters
 		}
 

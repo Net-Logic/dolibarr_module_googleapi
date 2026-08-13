@@ -30,7 +30,7 @@ $defines = [
 
 include '../config.php';
 
-$langs->loadLangs(array('googleapi@googleapi'));
+$langs->loadLangs(['googleapi@googleapi']);
 
 top_httphead('application/javascript');
 ?>

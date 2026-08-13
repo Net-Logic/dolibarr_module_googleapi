@@ -463,7 +463,7 @@ class GoogleApiGMailMessage
 		return $this;
 	}
 
-	static public function fetchInstance(int $id)
+	public static function fetchInstance(int $id)
 	{
 		global $db;
 		$instance = new self($db);

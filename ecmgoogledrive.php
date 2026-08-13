@@ -82,10 +82,10 @@ if ($action == 'upload' && $permissiontowrite) {
 
 // The jqueryFileTree plugin is not loaded globally by Dolibarr core: each page using it must load it
 // itself (same as htdocs/ecm/index.php does). It must come before our own JS, which calls .fileTree().
-$morejs = array(
+$morejs = [
 	'public/includes/jquery/plugins/jqueryFileTree/jqueryFileTree.js',
 	'/googleapi/js/ecmgoogledrive.js.php',
-);
+];
 
 llxHeader('', $langs->trans("ECMArea"), '', '', 0, 0, $morejs, '', '', 'mod-googleapi page-ecmgoogledrive');
 

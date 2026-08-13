@@ -349,7 +349,7 @@ if ($id > 0 || !empty($ref)) {
 								<td class="tdoverflowmax200 col_date">
 									<?php if ($googleApiGmailMessage->outgoing) : ?>
 										<i class="fa fa-upload" style="color: midnightblue"></i>
-									<?php else: ?>
+									<?php else : ?>
 										<i class="fa fa-download" style="color: darkgreen"></i>
 									<?php endif; ?>
 								</td>

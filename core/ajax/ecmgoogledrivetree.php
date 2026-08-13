@@ -46,23 +46,23 @@ if ($parentid == '') {
 
 $driveservice = getGoogleDriveService($user);
 
-print '<ul class="ecmjqft" style="display: none;">'."\n";
+print '<ul class="ecmjqft" style="display: none;">' . "\n";
 
 if (is_object($driveservice)) {
 	try {
-		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+		$query = "'" . googleapiDriveEscapeId($parentid) . "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
 
 		// Drive caps a single response to pageSize entries: loop on nextPageToken so a folder
 		// with more than 1000 sub-folders is never silently truncated.
-		$folders = array();
+		$folders = [];
 		$pagetoken = null;
 		do {
-			$optparams = array(
+			$optparams = [
 				'q' => $query,
 				'fields' => 'nextPageToken,files(id,name)',
 				'orderBy' => 'name',
 				'pageSize' => 1000,
-			);
+			];
 			if (!empty($pagetoken)) {
 				$optparams['pageToken'] = $pagetoken;
 			}
@@ -75,15 +75,15 @@ if (is_object($driveservice)) {
 			print '<li class="directory collapsed">';
 			// See ecmgoogledrivelist.php: the JS handler built from attacker-controlled Drive names must
 			// also be HTML-escaped as a whole, with $escapeonlyhtmltags=1 so that "&#39;" is escaped too.
-			$onclick = "ecmGoogleDriveNavigate('".dol_escape_js($folder->getId())."', '".dol_escape_js($folder->getName())."');";
-			print '<a class="jqft ecmjqft" href="#" rel="'.dol_escape_htmltag($folder->getId()).'/" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'">';
+			$onclick = "ecmGoogleDriveNavigate('" . dol_escape_js($folder->getId()) . "', '" . dol_escape_js($folder->getName()) . "');";
+			print '<a class="jqft ecmjqft" href="#" rel="' . dol_escape_htmltag($folder->getId()) . '/" onclick="' . dol_escape_htmltag($onclick, 0, 0, '', 1) . '">';
 			print dol_escape_htmltag($folder->getName());
 			print '</a>';
-			print '</li>'."\n";
+			print '</li>' . "\n";
 		}
 	} catch (Exception $e) {
-		dol_syslog('ecmgoogledrivetree: '.$e->getMessage(), LOG_ERR);
+		dol_syslog('ecmgoogledrivetree: ' . $e->getMessage(), LOG_ERR);
 	}
 }
 
-print '</ul>'."\n";
+print '</ul>' . "\n";

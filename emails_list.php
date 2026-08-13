@@ -130,7 +130,7 @@ if (!$useTUIGrid) {
 	}
 	$pagesTokens = $_SESSION[$sessionKey] ?? [];
 	$data = [];
-	$listLabel ='Vos emails Gmail';
+	$listLabel = 'Vos emails Gmail';
 
 	$gUser = 'me';
 	$gMailFilterParts = [];
@@ -153,7 +153,7 @@ if (!$useTUIGrid) {
 	// Last page
 	if ($currentPageToken && !$nextPageToken) {
 		$currentPageKey = array_search($currentPageToken, $_SESSION[$sessionKey]);
-		$previousPageToken = $_SESSION[$sessionKey][$currentPageKey-1] ?? null;
+		$previousPageToken = $_SESSION[$sessionKey][$currentPageKey - 1] ?? null;
 	}
 
 	ob_start()
@@ -186,7 +186,7 @@ if (!$useTUIGrid) {
 	<?php
 	$moreHtml = ob_get_clean();
 	$arrayofmassactions = [];
-	$arrayofmassactions['prelinkemail'] = '<span class="fa fa-link paddingrightonly"></span>'.$langs->trans("GoogleApiPreLinkEmail");
+	$arrayofmassactions['prelinkemail'] = '<span class="fa fa-link paddingrightonly"></span>' . $langs->trans("GoogleApiPreLinkEmail");
 
 	$massactionbutton = $form->selectMassAction($massaction, $arrayofmassactions);
 
@@ -238,23 +238,24 @@ if (!$useTUIGrid) {
 
 							$sourceObject = null;
 							$elementProperties = getElementProperties($googleApiGmailMessage->object_type);
-							if (!empty($elementProperties['classname']) && !empty($elementProperties['classpath']) && !empty($elementProperties['classfile'])) {
-								require_once DOL_DOCUMENT_ROOT . '/' . $elementProperties['classpath'] . '/' . $elementProperties['classfile'] . '.class.php';
-								$sourceObject = new $elementProperties['classname']($db);
-								$sourceObject->fetch($googleApiGmailMessage->object_id);
-							}
-							switch ($googleApiGmailMessage->object_type) {
-								case 'societe':
-
-							}
+						if (!empty($elementProperties['classname']) && !empty($elementProperties['classpath']) && !empty($elementProperties['classfile'])) {
+							require_once DOL_DOCUMENT_ROOT . '/' . $elementProperties['classpath'] . '/' . $elementProperties['classfile'] . '.class.php';
+							$sourceObject = new $elementProperties['classname']($db);
+							$sourceObject->fetch($googleApiGmailMessage->object_id);
+						}
+						switch ($googleApiGmailMessage->object_type) {
+							case 'societe':
+						}
 						?>
 						<tr data-messageid="<?= $googleApiGmailMessage->message_id ?>"
 							data-subject="<?= $googleApiGmailMessage->subject ?>"
-							style="cursor: pointer; background: <?= $backgroundColor ?>!important;<?php if ($googleApiGmailMessage->unread) : ?>font-weight: bold; <?php endif; ?>">
+							style="cursor: pointer; background: <?= $backgroundColor ?>!important;<?php if ($googleApiGmailMessage->unread) :
+								?>font-weight: bold; <?php
+																endif; ?>">
 							<td class="tdoverflowmax200 col_date">
 								<?php if ($googleApiGmailMessage->outgoing) : ?>
 									<i class="fa fa-upload" style="color: midnightblue"></i>
-								<?php else: ?>
+								<?php else : ?>
 									<i class="fa fa-download" style="color: darkgreen"></i>
 								<?php endif; ?>
 							</td>
@@ -270,7 +271,9 @@ if (!$useTUIGrid) {
 							</td>
 							<td><?= !empty($sourceObject) && is_object($sourceObject) && method_exists($sourceObject, 'getNomUrl') ? $sourceObject->getNomUrl(1) : '' ?></td>
 							<td>
-								<input id="gm<?= $googleApiGmailMessage->rowid ?>" class="flat checkforselect" type="checkbox" name="toselect[]" value="<?= $googleApiGmailMessage->rowid ?>" <?php if (in_array($googleApiGmailMessage->rowid, $toselect)) : ?>checked <?php endif; ?>>
+								<input id="gm<?= $googleApiGmailMessage->rowid ?>" class="flat checkforselect" type="checkbox" name="toselect[]" value="<?= $googleApiGmailMessage->rowid ?>" <?php if (in_array($googleApiGmailMessage->rowid, $toselect)) :
+									?>checked <?php
+											 endif; ?>>
 							</td>
 						</tr>
 					<?php endforeach; ?>

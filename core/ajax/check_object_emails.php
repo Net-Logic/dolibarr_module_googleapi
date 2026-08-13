@@ -51,7 +51,7 @@ if ($user->socid > 0) {
 
 $objectType = GETPOST('object_type');
 $objectId = GETPOSTINT('object_id');
-$page= GETPOSTINT('page') ?: 1;
+$page = GETPOSTINT('page') ?: 1;
 $perPage = GETPOSTINT('perPage') ?: 25;
 
 //TODO Add in configuration

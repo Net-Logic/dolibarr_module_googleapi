@@ -259,7 +259,7 @@ function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid, &$errm
 		$folder = new \Google\Service\Drive\DriveFile();
 		$folder->setName($name);
 		$folder->setMimeType('application/vnd.google-apps.folder');
-		$folder->setParents(array($parentid));
+		$folder->setParents([$parentid]);
 		$created = $driveservice->files->create($folder, ['fields' => 'id']);
 		return $created->getId();
 	} catch (Throwable $e) {
@@ -320,7 +320,7 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 
 		$drivefile = new \Google\Service\Drive\DriveFile();
 		$drivefile->setName($drivefilename);
-		$drivefile->setParents(array($parentfolderid));
+		$drivefile->setParents([$parentfolderid]);
 
 		// 1 MB chunks: avoids loading the whole file in memory at once, matching the same
 		// approach already used by the manual "Google Drive" ECM tab upload.
@@ -328,7 +328,7 @@ function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parent
 
 		$client->setDefer(true);
 		$uploadservice = new \Google\Service\Drive($client);
-		$request = $uploadservice->files->create($drivefile, array('mimeType' => $mimetype));
+		$request = $uploadservice->files->create($drivefile, ['mimeType' => $mimetype]);
 		$media = new \Google\Http\MediaFileUpload($client, $request, $mimetype, null, true, $chunksizebytes);
 		$media->setFileSize($filesize);
 
@@ -383,7 +383,7 @@ function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $event
 
 		$attachments = $event->getAttachments();
 		if (!is_array($attachments)) {
-			$attachments = array();
+			$attachments = [];
 		}
 		$attachment = new \Google\Service\Calendar\EventAttachment();
 		$attachment->setFileId($drivefileid);
@@ -393,7 +393,7 @@ function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $event
 		$attachments[] = $attachment;
 		$event->setAttachments($attachments);
 
-		$service->events->update($calendarId, $eventId, $event, array('supportsAttachments' => true));
+		$service->events->update($calendarId, $eventId, $event, ['supportsAttachments' => true]);
 		return true;
 	} catch (Throwable $e) {
 		dol_syslog('googleapiAddDriveAttachmentToCalendarEvent: ' . $e->getMessage(), LOG_ERR);

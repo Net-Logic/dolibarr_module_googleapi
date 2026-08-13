@@ -176,7 +176,7 @@ class modGoogleApi extends DolibarrModules
 
 		// Array to add new pages in new tabs
 		$this->tabs = [
-			array('data' => 'ecm:+googledrive:GoogleApiDriveTab:googleapi@googleapi:$user->rights->googleapi->read:/googleapi/ecmgoogledrive.php'),
+			['data' => 'ecm:+googledrive:GoogleApiDriveTab:googleapi@googleapi:$user->rights->googleapi->read:/googleapi/ecmgoogledrive.php'],
 		];
 
 		// Dictionaries
@@ -237,19 +237,19 @@ class modGoogleApi extends DolibarrModules
 		$this->menu = [];  // List of menus to add
 
 		$this->menu[] = [
-			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'top', // This is a Top menu entry
-			'titre'=>'GoogleApiYourEmails',
+			'fk_menu' => '', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'type' => 'top', // This is a Top menu entry
+			'titre' => 'GoogleApiYourEmails',
 			'prefix' => '',
-			'mainmenu'=>'googleapi',
-			'leftmenu'=>'',
-			'url'=>'/googleapi/emails_list.php',
-			'langs'=>'googleapi@googleapi', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>1000 + $r,
-			'enabled'=>'isModEnabled("googleapi")', // Define condition to show or hide menu entry. Use 'isModEnabled("netlogicdevtoolbox")' if entry must be visible if module is enabled.
-			'perms'=>'1', // Use 'perms'=>'$user->hasRight("netlogicdevtoolbox", "myobject", "read")' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
+			'mainmenu' => 'googleapi',
+			'leftmenu' => '',
+			'url' => '/googleapi/emails_list.php',
+			'langs' => 'googleapi@googleapi', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("googleapi")', // Define condition to show or hide menu entry. Use 'isModEnabled("netlogicdevtoolbox")' if entry must be visible if module is enabled.
+			'perms' => '1', // Use 'perms'=>'$user->hasRight("netlogicdevtoolbox", "myobject", "read")' if you want your menu with a permission rules
+			'target' => '',
+			'user' => 2, // 0=Menu for internal users, 1=external users, 2=both
 		];
 	}
 

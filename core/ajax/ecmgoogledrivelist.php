@@ -31,7 +31,7 @@ $defines = [
 // Load Dolibarr environment
 include '../../config.php';
 require_once '../../lib/googleapi.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 top_httphead();
 
@@ -45,33 +45,33 @@ $permissiontodelete = $user->hasRight('googleapi', 'delete');
 $dir = GETPOST('dir', 'alpha');
 $parentid = ($dir == '' ? 'root' : $dir);
 
-$langs->loadLangs(array('googleapi@googleapi'));
+$langs->loadLangs(['googleapi@googleapi']);
 
 $driveservice = getGoogleDriveService($user);
 
-print '<table class="border centpercent">'."\n";
+print '<table class="border centpercent">' . "\n";
 print '<tr class="liste_titre">';
-print '<td>'.$langs->trans("Name").'</td>';
-print '<td class="right">'.$langs->trans("Size").'</td>';
-print '<td class="center">'.$langs->trans("DateModification").'</td>';
+print '<td>' . $langs->trans("Name") . '</td>';
+print '<td class="right">' . $langs->trans("Size") . '</td>';
+print '<td class="center">' . $langs->trans("DateModification") . '</td>';
 print '<td class="right"></td>';
-print '</tr>'."\n";
+print '</tr>' . "\n";
 
 if (is_object($driveservice)) {
 	try {
-		$query = "'".googleapiDriveEscapeId($parentid)."' in parents and trashed=false";
+		$query = "'" . googleapiDriveEscapeId($parentid) . "' in parents and trashed=false";
 
 		// Drive caps a single response to pageSize entries: loop on nextPageToken so a folder
 		// with more than 1000 items is never silently truncated.
-		$files = array();
+		$files = [];
 		$pagetoken = null;
 		do {
-			$optparams = array(
+			$optparams = [
 				'q' => $query,
 				'fields' => 'nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink)',
 				'orderBy' => 'folder,name',
 				'pageSize' => 1000,
-			);
+			];
 			if (!empty($pagetoken)) {
 				$optparams['pageToken'] = $pagetoken;
 			}
@@ -96,8 +96,8 @@ if (is_object($driveservice)) {
 				// such as &#39; would become a real quote and break out of the JS string. The whole handler
 				// is therefore also HTML-escaped. $escapeonlyhtmltags=1 is required: the default mode of
 				// dol_escape_htmltag() re-emits the literal sequence "&#39;" untouched.
-				$onclick = "ecmGoogleDriveNavigate('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
-				print '<a href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'">';
+				$onclick = "ecmGoogleDriveNavigate('" . dol_escape_js($fileid) . "', '" . dol_escape_js($filename) . "'); return false;";
+				print '<a href="#" onclick="' . dol_escape_htmltag($onclick, 0, 0, '', 1) . '">';
 				print dol_escape_htmltag($filename);
 				print '</a>';
 			} else {
@@ -120,27 +120,27 @@ if (is_object($driveservice)) {
 
 			print '<td class="right nowraponall">';
 			if (!$isfolder && !$isnativegoogletype) {
-				$downloadurl = dol_buildpath('/googleapi/core/ajax/ecmgoogledrivedownload.php', 1).'?token='.currentToken().'&fileid='.urlencode($fileid);
-				print '<a class="editfielda marginleftonly" href="'.$downloadurl.'" title="'.dol_escape_htmltag($langs->trans("Download")).'">'.img_picto($langs->trans("Download"), 'download').'</a>';
+				$downloadurl = dol_buildpath('/googleapi/core/ajax/ecmgoogledrivedownload.php', 1) . '?token=' . currentToken() . '&fileid=' . urlencode($fileid);
+				print '<a class="editfielda marginleftonly" href="' . $downloadurl . '" title="' . dol_escape_htmltag($langs->trans("Download")) . '">' . img_picto($langs->trans("Download"), 'download') . '</a>';
 			} elseif ($isnativegoogletype && $file->getWebViewLink()) {
-				print '<a class="editfielda marginleftonly" href="'.dol_escape_htmltag($file->getWebViewLink()).'" target="_blank" rel="noopener noreferrer" title="'.dol_escape_htmltag($langs->trans("GoogleApiOpenInDrive")).'">'.img_picto($langs->trans("GoogleApiOpenInDrive"), 'globe').'</a>';
+				print '<a class="editfielda marginleftonly" href="' . dol_escape_htmltag($file->getWebViewLink()) . '" target="_blank" rel="noopener noreferrer" title="' . dol_escape_htmltag($langs->trans("GoogleApiOpenInDrive")) . '">' . img_picto($langs->trans("GoogleApiOpenInDrive"), 'globe') . '</a>';
 			}
 			if ($permissiontowrite) {
-				$onclick = "ecmGoogleDriveRename('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
-				print ' <a class="editfielda marginleftonly" href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'" title="'.dol_escape_htmltag($langs->trans("GoogleApiRename")).'">'.img_picto($langs->trans("GoogleApiRename"), 'edit').'</a>';
+				$onclick = "ecmGoogleDriveRename('" . dol_escape_js($fileid) . "', '" . dol_escape_js($filename) . "'); return false;";
+				print ' <a class="editfielda marginleftonly" href="#" onclick="' . dol_escape_htmltag($onclick, 0, 0, '', 1) . '" title="' . dol_escape_htmltag($langs->trans("GoogleApiRename")) . '">' . img_picto($langs->trans("GoogleApiRename"), 'edit') . '</a>';
 			}
 			if ($permissiontodelete) {
-				$onclick = "ecmGoogleDriveDelete('".dol_escape_js($fileid)."', '".dol_escape_js($filename)."'); return false;";
-				print ' <a class="deletefilelink marginleftonly" href="#" onclick="'.dol_escape_htmltag($onclick, 0, 0, '', 1).'" title="'.dol_escape_htmltag($langs->trans("Delete")).'">'.img_picto($langs->trans("Delete"), 'delete').'</a>';
+				$onclick = "ecmGoogleDriveDelete('" . dol_escape_js($fileid) . "', '" . dol_escape_js($filename) . "'); return false;";
+				print ' <a class="deletefilelink marginleftonly" href="#" onclick="' . dol_escape_htmltag($onclick, 0, 0, '', 1) . '" title="' . dol_escape_htmltag($langs->trans("Delete")) . '">' . img_picto($langs->trans("Delete"), 'delete') . '</a>';
 			}
 			print '</td>';
 
-			print '</tr>'."\n";
+			print '</tr>' . "\n";
 		}
 	} catch (Exception $e) {
-		print '<tr><td colspan="4">'.dol_escape_htmltag($e->getMessage()).'</td></tr>'."\n";
-		dol_syslog('ecmgoogledrivelist: '.$e->getMessage(), LOG_ERR);
+		print '<tr><td colspan="4">' . dol_escape_htmltag($e->getMessage()) . '</td></tr>' . "\n";
+		dol_syslog('ecmgoogledrivelist: ' . $e->getMessage(), LOG_ERR);
 	}
 }
 
-print '</table>'."\n";
+print '</table>' . "\n";

@@ -118,7 +118,7 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 		$('.googlemailmessage-show-details').click(function() {
 			//$.ajax({
 			// url: '<?php //= dol_buildpath('googleapi/core/ajax/get_google_mail_message.php', 1)
-						?>//?message_id=' + $(this).data('messageid'),
+			?>//?message_id=' + $(this).data('messageid'),
 			// type: 'GET',
 			// success: function (data) {
 			// console.log(data);

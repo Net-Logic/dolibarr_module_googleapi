@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2019-2021  Frédéric France         <frederic.france@netlogic.fr>
+/* Copyright (C) 2019-2026  Frédéric France         <frederic.france@netlogic.fr>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 	var time_js_next_check = Math.max(nowtime, auto_check_googleapiemail_not_before);
 	var time_auto_update = "<?php echo getDolGlobalInt('MAIN_BROWSER_NOTIFICATION_FREQUENCY', 300); ?>";
 	var refresh_work;
+	var check_googleapiemail_inprogress = false;
 	/* Launch timer */
 	// We set a delay before launching first test so next check will arrive after the time_auto_update compared to previous one.
 	var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000; //need milliseconds
@@ -77,6 +78,11 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 	}
 
 	function check_googleapiemail() {
+		if (check_googleapiemail_inprogress) {
+			console.log("check_googleapiemail: previous request still in progress, skipping this call");
+			return;
+		}
+		check_googleapiemail_inprogress = true;
 		console.log("Call check_googleapiemail time_js_next_check = date we are looking for event after = " + time_js_next_check);
 		$.ajax("<?php echo dol_buildpath('/googleapi/core/ajax/check_email.php', 1); ?>", {
 			type: "post",
@@ -88,6 +94,9 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 				// console.log(result);
 				$('#googleapicounter').attr('data-count', result.unread);
 				$('.googleapicounterinfo').attr('title', result.info);
+			},
+			complete: function() {
+				check_googleapiemail_inprogress = false;
 			}
 		});
 		time_js_next_check += time_auto_update;

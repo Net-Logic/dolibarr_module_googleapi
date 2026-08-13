@@ -36,7 +36,7 @@ use League\OAuth2\Client\Grant\RefreshToken;
 use League\OAuth2\Client\Provider\GoogleUser;
 
 // Load translation files required by the page
-$langs->loadLangs(["errors","admin","googleapi@googleapi"]);
+$langs->loadLangs(['errors', 'oauth', 'admin', 'googleapi@googleapi']);
 
 if (!$user->admin) {
 	accessforbidden();
@@ -107,7 +107,7 @@ $urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '
 // This is to use external domain name found into config file
 $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT;
 // This is to use same domain name than current
-//$urlwithroot=DOL_MAIN_URL_ROOT;
+// $urlwithroot=DOL_MAIN_URL_ROOT;
 
 $form = new Form($db);
 
@@ -119,7 +119,6 @@ print load_fiche_titre($langs->trans('GoogleApiConfigOAuth'), $linkback, 'object
 $head = googleapiAdminPrepareHead();
 
 print dol_get_fiche_head($head, 'tokengeneration', '', -1, 'technic');
-
 
 if ($user->admin) {
 	print $langs->trans("OAuthSetupForLogin") . "<br><br>\n";
@@ -142,26 +141,30 @@ if ($user->admin) {
 	$expiredat = '';
 
 
-	// Is token expired or will token expire in the next 30 seconds
+	// Is token expired or will token expire in the next 60 seconds
 	if (is_object($token)) {
 		$expire = $token->hasExpired();
-		$isgoingtoexpire = (time() > ($token->getExpires() - 30));
-		if ($isgoingtoexpire) {
+		$isgoingtoexpire = (time() > ($token->getExpires() - 60));
+		if ($isgoingtoexpire || $expire) {
 			$provider = new Google([
 				'clientId'     => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
 				'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
 				'redirectUri'  => dol_buildpath('/googleapi/core/modules/oauth/googleapi_oauthcallback.php', 2),
 			]);
 			$grant = new RefreshToken();
-			$token = $provider->getAccessToken($grant, ['refresh_token' => $tokenrefreshbackup]);
-			$expire = $token->hasExpired();
-			storeAccessToken('GoogleApi', $token, $tokenrefreshbackup, $user->id);
-			setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
+			try {
+				$token = $provider->getAccessToken($grant, ['refresh_token' => $tokenrefreshbackup]);
+				$expire = $token->hasExpired();
+				storeAccessToken('GoogleApi', $token, $tokenrefreshbackup, $user->id);
+				setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
+			} catch (Exception $e) {
+				setEventMessages($e->getMessage(), null, 'errors');
+			}
 		}
 		$refreshtoken = $token->getRefreshToken();
 
 		$endoflife = $token->getExpires();
-		$expiredat = dol_print_date($endoflife, "dayhour");
+		$expiredat = dol_print_date($endoflife, "dayhour", "tzuser");
 	}
 
 	print '<form method="post" action="' . $_SERVER["PHP_SELF"] . '" autocomplete="off">';

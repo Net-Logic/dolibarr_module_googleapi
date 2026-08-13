@@ -34,6 +34,8 @@
 
 require_once DOL_DOCUMENT_ROOT . '/core/triggers/dolibarrtriggers.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 dol_include_once('/googleapi/lib/googleapi.lib.php');
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
@@ -119,7 +121,7 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			// object comes from api googleapi
 			return 0;
 		}
-		if ($object instanceof Contact && !empty($object->context['googleapi'])) {
+		if (get_class($object) == 'Contact' && !empty($object->context['googleapi'])) {
 			// object comes from api googleapi
 			return 0;
 		}
@@ -250,7 +252,6 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		$staticuser = new User($this->db);
 		$staticuser->fetch($object->userownerid);
 		// on complete ou pas?
-
 		$client = getGoogleApiClient($staticuser);
 		if ($client === false) {
 			return 0;
@@ -766,6 +767,107 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 		}
 
 		return (!$error ? 0 : -1);
+	}
+
+	/**
+	 * Trigger ECMFILES_CREATE
+	 *
+	 * @param string        $action     Event action code
+	 * @param EcmFiles      $object     Object
+	 * @param User          $user       Object user
+	 * @param Translate     $langs      Object langs
+	 * @param Conf          $conf       Object conf
+	 * @return int                      <0 if KO, 0 if no triggered ran, >0 if OK
+	 */
+	public function ecmfilesCreate($action, EcmFiles $object, User $user, Translate $langs, Conf $conf)
+	{
+		if (empty($object->src_object_type)) {
+			return 0;
+		}
+
+		$syncobjects = json_decode(getDolGlobalString('GOOGLEAPI_DRIVE_SYNC_OBJECTS', '{}'), true);
+		if (!is_array($syncobjects)) {
+			$syncobjects = [];
+		}
+		if (!array_key_exists($object->src_object_type, $syncobjects)) {
+			$syncobjects[$object->src_object_type] = false;
+			dolibarr_set_const($this->db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($syncobjects), 'chaine', 0, '', $conf->entity);
+		}
+		if (empty($syncobjects[$object->src_object_type])) {
+			return 0;
+		}
+
+		$client = getGoogleApiClient($user);
+		if ($client === false) {
+			return 0;
+		}
+
+		$localpath = DOL_DATA_ROOT . '/' . $object->filepath . '/' . $object->filename;
+		if (!dol_is_file($localpath)) {
+			return 0;
+		}
+
+		$rootfoldername = getDolGlobalString('GOOGLEAPI_DRIVE_SYNC_ROOT_FOLDER', 'Dolibarr');
+
+		try {
+			$driveservice = new \Google\Service\Drive($client);
+			$foldererrmsg = '';
+			$parentfolderid = googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $object->filepath, $foldererrmsg);
+			if ($parentfolderid === false) {
+				throw new Exception($foldererrmsg !== '' ? $foldererrmsg : 'Could not resolve/create the Drive folder path for ' . $object->filepath);
+			}
+
+			$mimetype = dol_mimetype($object->filename, 'application/octet-stream', 0);
+			$uploaderrmsg = '';
+			$driveid = googleapiUploadFileToDrive($client, $localpath, $object->filename, $parentfolderid, $mimetype, $uploaderrmsg);
+			if ($driveid === false) {
+				throw new Exception($uploaderrmsg !== '' ? $uploaderrmsg : 'Drive upload failed');
+			}
+
+			$object->array_options['options_googleapiId'] = $driveid;
+			if ($object->insertExtraFields() < 0) {
+				throw new Exception('Could not record the Drive file id: ' . $object->error);
+			}
+
+			if ($object->src_object_type === 'actioncomm') {
+				try {
+					$eventobj = new ActionComm($this->db);
+					if ($eventobj->fetch((int) $object->src_object_id) > 0 && !empty($eventobj->array_options['options_googleapi_EventId'])) {
+						$owner = new User($this->db);
+						if ($owner->fetch($eventobj->userownerid) > 0) {
+							$ownerclient = getGoogleApiClient($owner);
+							if ($ownerclient !== false) {
+								$calendarId = !empty($owner->array_options['options_googleapi_calendarId']) ? $owner->array_options['options_googleapi_calendarId'] : 'primary';
+								$attacherrmsg = '';
+								$attached = googleapiAddDriveAttachmentToCalendarEvent(
+									$ownerclient,
+									$calendarId,
+									$eventobj->array_options['options_googleapi_EventId'],
+									$driveid,
+									$object->filename,
+									$mimetype,
+									$attacherrmsg
+								);
+								if (!$attached) {
+									$langs->load('googleapi@googleapi');
+									setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $attacherrmsg !== '' ? $attacherrmsg : 'unknown error'), null, 'warnings');
+								}
+							}
+						}
+					}
+				} catch (Throwable $t) {
+					dol_syslog('ecmfilesCreate calendar attach: ' . $t->getMessage(), LOG_ERR);
+					$langs->load('googleapi@googleapi');
+					setEventMessages($langs->trans('GoogleApiCalendarAttachFailed', $object->filename, $t->getMessage()), null, 'warnings');
+				}
+			}
+		} catch (Exception $e) {
+			dol_syslog('ecmfilesCreate: ' . $e->getMessage(), LOG_ERR);
+			$langs->load('googleapi@googleapi');
+			setEventMessages($langs->trans('GoogleApiDriveSyncFailed', $object->filename, $e->getMessage()), null, 'warnings');
+		}
+
+		return 0;
 	}
 
 	/**

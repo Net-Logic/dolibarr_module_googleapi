@@ -21,9 +21,16 @@
  *      \ingroup    oauth
  *      \brief      Page to get oauth callback
  */
-
+$defines = [
+	'NOCSRFCHECK',
+	'NOTOKENRENEWAL'
+];
+// Load Dolibarr environment
 include '../../../config.php';
-dol_include_once('prune/lib/prune.lib.php');
+/**
+ * @var Translate $langs
+ */
+dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
 require_once '../../../lib/googleapi.lib.php';
 
@@ -37,7 +44,7 @@ $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT; // This is to use external dom
 
 $action = GETPOST('action', 'aZ09');
 $backtourl = GETPOST('backtourl', 'alpha');
-
+$emailprofile = GETPOST('emailprofile', 'email');
 $langs->load("oauth");
 
 /*
@@ -59,7 +66,14 @@ if ($action == 'delete' && !empty($user->id)) {
 	header('Location: ' . $backtourl);
 	exit();
 }
+if ($action == 'deletetoken' && !empty($emailprofile)) {
+	clearToken('GoogleApi', 0, $emailprofile);
 
+	setEventMessages($langs->trans('TokenDeleted'), null, 'mesgs');
+
+	header('Location: ' . $backtourl);
+	exit();
+}
 $provider = new Google([
 	'clientId' => getDolGlobalString('OAUTH_GOOGLEAPI_ID'),
 	'clientSecret' => getDolGlobalString('OAUTH_GOOGLEAPI_SECRET'),
@@ -81,8 +95,8 @@ if (!empty($_GET['error'])) {
 		'https://www.googleapis.com/auth/contacts',
 	];
 	// https://developers.google.com/identity/protocols/oauth2/scopes#docs
-	// $scopes[] = 'https://www.googleapis.com/auth/documents';
-	// $scopes[] = 'https://www.googleapis.com/auth/drive';
+	$scopes[] = 'https://www.googleapis.com/auth/documents';
+	$scopes[] = 'https://www.googleapis.com/auth/drive';
 	// $scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
 	$authUrl = $provider->getAuthorizationUrl([
 		'prompt' => 'consent',
@@ -90,10 +104,22 @@ if (!empty($_GET['error'])) {
 		'scope' => $scopes,
 	]);
 	$_SESSION['oauth2state'] = $provider->getState();
+	$_SESSION["backtourlsavedbeforeoauthjump"] = $backtourl;
+	unset($_SESSION["emailprofile"]);
+	$mode = GETPOST('mode', 'alpha');
+	if ($mode == 'emailcompany') {
+		$_SESSION["typetokenrequested"] = 'emailcompany';
+	} elseif ($mode == 'emailsenderprofile') {
+		$_SESSION["typetokenrequested"] = 'emailsenderprofile';
+		$_SESSION["emailprofile"] = GETPOST('emailprofile', 'alpha');
+	} else {
+		$_SESSION["typetokenrequested"] = 'user';
+	}
+	// var_dump($_SESSION, $authUrl);exit;
 	header('Location: ' . $authUrl);
 	exit;
 } elseif (empty($_GET['state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
-	// State is invalid, possible CSRF attack in progress
+	// Check given state against previously stored one to mitigate CSRF attack
 	unset($_SESSION['oauth2state']);
 	exit('Invalid state');
 } else {
@@ -117,7 +143,13 @@ if (!empty($_GET['error'])) {
 		if (empty($refreshtoken) && !empty($tokenrefreshbackup)) {
 			$refreshtoken = $tokenrefreshbackup;
 		}
-		storeAccessToken('GoogleApi', $token, $refreshtoken, $user->id);
+		if ($_SESSION["typetokenrequested"] == 'emailcompany') {
+			storeAccessToken('GoogleApi', $token, $refreshtoken, 0, getDolGlobalString("MAIN_INFO_SOCIETE_MAIL"));
+		} elseif ($_SESSION["typetokenrequested"] == 'emailsenderprofile' && !empty($_SESSION["emailprofile"])) {
+			storeAccessToken('GoogleApi', $token, $refreshtoken, 0, $_SESSION["emailprofile"]);
+		} else {
+			storeAccessToken('GoogleApi', $token, $refreshtoken, $user->id);
+		}
 		setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
 	} catch (Exception $e) {
 		setEventMessage($e->getMessage(), 'errors');
@@ -125,16 +157,8 @@ if (!empty($_GET['error'])) {
 
 	$backtourl = $_SESSION["backtourlsavedbeforeoauthjump"];
 	unset($_SESSION["backtourlsavedbeforeoauthjump"]);
-
+	// redirect to relative url due to getpost cleaning url
 	header('Location: ' . $backtourl);
+	$db->close();
 	exit();
 }
-
-
-/*
- * View
- */
-
-// No view at all, just actions
-
-$db->close();

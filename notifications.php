@@ -36,6 +36,7 @@ $defines = [
 
 // Load Dolibarr environment
 include 'config.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 
 dol_include_once('/prune/vendor/autoload.php');
 dol_include_once('/googleapi/lib/googleapi.lib.php');
@@ -203,8 +204,16 @@ if ($row) {
 					$evt->context['googleapi'] = $db->escape($item->getId());
 					$res = $evt->update($fuser, 0);
 					if ($res < 0) {
-						dol_syslog("googleapi notifications update actioncomm " . $evt->error, LOG_ERR);
+						dol_syslog("googleapi notifications update actioncomm FAILED " . $evt->error, LOG_ERR);
 					} else {
+						$evt->loadReminders('', 0, false);
+						foreach ($evt->reminders as $reminder) {
+							if ($reminder->status != 0) {
+								continue;
+							}
+							$reminder->dateremind = dol_time_plus_duree($evt->datep, -$reminder->offsetvalue, $reminder->offsetunit);
+							$reminder->update($fuser);
+						}
 						dol_syslog("googleapi notifications update actioncomm OK", LOG_NOTICE);
 					}
 				}

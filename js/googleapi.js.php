@@ -92,7 +92,11 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 			},
 			success: function(result) {
 				// console.log(result);
-				$('#googleapicounter').attr('data-count', result.unread);
+				if (parseInt(result.unread, 10) > 0) {
+					$('#googleapicounter').attr('data-count', result.unread);
+				} else {
+					$('#googleapicounter').removeAttr('data-count');
+				}
 				$('.googleapicounterinfo').attr('title', result.info);
 			},
 			complete: function() {

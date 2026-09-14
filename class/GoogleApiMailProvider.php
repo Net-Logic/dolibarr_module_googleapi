@@ -14,12 +14,12 @@
  *
  * Deliberately not implemented (return false, per the interface's own
  * documented convention for "Extended actions" providers don't support):
- * getAttachments(), getAttachmentData(), moveMessage(), setKeyword(),
- * clearKeyword(), appendMessage(). The Gmail API could support all of these
- * (message parts / attachments, labels-as-folders-and-keywords,
- * users.messages.insert) but that's follow-up work, not part of this
- * feature — see docs/superpowers/specs/2026-09-14-external-provider-hook-design.md
- * in the unifiedinbox repo, section "Non-goals".
+ * getAttachments(), getAttachmentData(), setKeyword(), clearKeyword(),
+ * appendMessage(). The Gmail API could support all of these (message parts /
+ * attachments, labels-as-keywords, users.messages.insert) but that's
+ * follow-up work, not part of this feature — see
+ * docs/superpowers/specs/2026-09-14-external-provider-hook-design.md in the
+ * unifiedinbox repo, section "Non-goals".
  */
 
 require_once DOL_DOCUMENT_ROOT.'/custom/unifiedinbox/class/UnifiedInboxProviderInterface.php';
@@ -380,7 +380,30 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function moveMessage($messageId, $targetFolder)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		// Gmail's Trash is a first-class action (also excludes the message from
+		// IMAP/POP and schedules permanent deletion after 30 days) — reuse it
+		// instead of a plain label swap so trashing behaves like real Gmail.
+		if ($targetFolder === 'TRASH') {
+			return $this->deleteMessage($messageId);
+		}
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$modifyRequest = new \Google\Service\Gmail\ModifyMessageRequest();
+			$modifyRequest->setAddLabelIds([$targetFolder]);
+			if (!empty($this->folder) && $this->folder !== $targetFolder) {
+				$modifyRequest->setRemoveLabelIds([$this->folder]);
+			}
+			$gMailService->users_messages->modify('me', $messageId, $modifyRequest);
+		} catch (\Exception $e) {
+			$this->error = 'Gmail move failed: '.$e->getMessage();
+			return false;
+		}
+
+		return true;
 	}
 
 	public function deleteMessage($messageId)

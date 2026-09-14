@@ -204,7 +204,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$item->answered = 0;
 		$item->deleted = 0;
 		$item->keywords = '';
-		$item->date = $row->date;
+		$item->date = date('Y-m-d H:i:s', (int) $row->date);
 		$item->cc = '';
 		$item->from = $row->email_from;
 		$item->to = $row->email_to;

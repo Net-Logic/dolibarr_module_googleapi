@@ -599,6 +599,107 @@ class ActionsGoogleApi
 	}
 
 	/**
+	 * unifiedinbox hook: register Gmail as a selectable provider type.
+	 *
+	 * @param  array   $parameters  Unused
+	 * @param  Object  $account     UnifiedInboxAccount being created/edited
+	 * @param  string  $action      Unused
+	 * @param  HookManager $hookmanager
+	 * @return int
+	 */
+	public function unifiedinboxListProviderTypes($parameters, $account, &$action, $hookmanager)
+	{
+		global $langs;
+
+		if (!isModEnabled('googleapi')) return 0;
+
+		$langs->load('googleapi@googleapi');
+		$this->results['unifiedinboxprovidertypes'][] = [
+			'value' => 'googleapi',
+			'label' => $langs->trans('GoogleApiGmailProviderLabel'),
+			'desc'  => $langs->trans('GoogleApiGmailProviderDesc'),
+		];
+		return 0;
+	}
+
+	/**
+	 * unifiedinbox hook: render (mode=render) or collect (mode=collect) the
+	 * Gmail-specific account config — here, just a picker for which Dolibarr
+	 * user's Google connection to use (stored in UnifiedInboxAccount::$fk_user,
+	 * not in the config JSON — see the unifiedinbox implementation plan, Task 2).
+	 *
+	 * @param  array   $parameters  ['mode' => 'render'|'collect', 'provider_type' => string, 'config' => array]
+	 * @param  Object  $account     UnifiedInboxAccount being created/edited
+	 * @param  string  $action      Unused
+	 * @param  HookManager $hookmanager
+	 * @return int
+	 */
+	public function unifiedinboxAccountConfig($parameters, $account, &$action, $hookmanager)
+	{
+		global $langs, $db;
+
+		if (($parameters['provider_type'] ?? '') !== 'googleapi') {
+			return 0;
+		}
+		$langs->load('googleapi@googleapi');
+
+		if (($parameters['mode'] ?? '') === 'render') {
+			$sql = 'SELECT u.rowid, u.login, u.lastname, u.firstname'
+				.' FROM '.MAIN_DB_PREFIX.'user as u'
+				.' INNER JOIN '.MAIN_DB_PREFIX.'user_extrafields as ue ON ue.fk_object = u.rowid'
+				.' WHERE ue.googleapi_email IS NOT NULL AND ue.googleapi_email != \'\''
+				.' ORDER BY u.login';
+			$res = $db->query($sql);
+			$options = '';
+			$currentFkUser = is_object($account) && !empty($account->fk_user) ? (int) $account->fk_user : 0;
+			if ($res) {
+				while ($obj = $db->fetch_object($res)) {
+					$label = trim($obj->firstname.' '.$obj->lastname).' ('.$obj->login.')';
+					$options .= '<option value="'.(int) $obj->rowid.'"'.($currentFkUser == $obj->rowid ? ' selected' : '').'>'.dol_escape_htmltag($label).'</option>';
+				}
+			}
+
+			$html  = '<tbody id="section_googleapi" data-provider="googleapi" style="display:none">';
+			$html .= '<tr><td colspan="2" class="liste_titre">Gmail (GoogleApi)</td></tr>';
+			$html .= '<tr><td class="fieldrequired">'.$langs->trans('GoogleApiUnifiedInboxSelectUser').'</td><td>';
+			if ($options === '') {
+				$html .= '<span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxNoConnectedUser').'</span>';
+			} else {
+				$html .= '<select name="fk_user"><option value=""></option>'.$options.'</select>';
+			}
+			$html .= ' <span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxSelectUserHelp').'</span>';
+			$html .= '</td></tr>';
+			$html .= '</tbody>';
+
+			$this->resprints = $html;
+		} elseif (($parameters['mode'] ?? '') === 'collect') {
+			// Nothing beyond fk_user (handled generically by unifiedinbox itself) is needed for Gmail.
+			$this->results['unifiedinboxconfig'] = [];
+		}
+
+		return 0;
+	}
+
+	/**
+	 * unifiedinbox hook: return a GoogleApiMailProvider for provider_type='googleapi'.
+	 *
+	 * @param  array   $parameters  ['provider_type' => string]
+	 * @param  Object  $account     UnifiedInboxAccount to connect
+	 * @param  string  $action      Unused
+	 * @param  HookManager $hookmanager
+	 * @return int
+	 */
+	public function unifiedinboxGetProvider($parameters, $account, &$action, $hookmanager)
+	{
+		if (($parameters['provider_type'] ?? '') !== 'googleapi') {
+			return 0;
+		}
+		require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/class/GoogleApiMailProvider.php';
+		$this->results['unifiedinboxprovider'] = new GoogleApiMailProvider();
+		return 0;
+	}
+
+	/**
 	 * Return a formatted array of address string for SMTP protocol
 	 *
 	 * @param   string  $address    Example: 'John Doe <john@doe.com>, Alan Smith <alan@smith.com>'

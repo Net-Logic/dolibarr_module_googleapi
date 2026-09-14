@@ -127,6 +127,7 @@ class modGoogleApi extends DolibarrModules
 					'actioncard',
 					'fullcalendardao',
 					'fileslib',
+					'unifiedinboxaccount',
 				],
 				'entity' => $conf->entity,
 			],

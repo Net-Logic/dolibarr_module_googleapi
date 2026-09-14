@@ -123,20 +123,25 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$totalSeen = 0;
 		$query = ['newer_than:'.(int) $limitDays.'d'];
 
-		do {
-			$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser);
-			if (empty($batch)) break;
-			foreach ($batch as $row) {
-				$totalSeen++;
-				if ($skipped < $offset) {
-					$skipped++;
-					continue;
+		try {
+			do {
+				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser);
+				if (empty($batch)) break;
+				foreach ($batch as $row) {
+					$totalSeen++;
+					if ($skipped < $offset) {
+						$skipped++;
+						continue;
+					}
+					if (count($collected) < $pageSize) {
+						$collected[] = $this->rowToMessage($row);
+					}
 				}
-				if (count($collected) < $pageSize) {
-					$collected[] = $this->rowToMessage($row);
-				}
-			}
-		} while ($pageToken && $totalSeen < $limitNb && count($collected) < $pageSize);
+			} while ($pageToken && $totalSeen < $limitNb && count($collected) < $pageSize);
+		} catch (\Exception $e) {
+			$this->error = 'Failed to list messages: '.$e->getMessage();
+			return false;
+		}
 
 		return [
 			'messages' => $collected,

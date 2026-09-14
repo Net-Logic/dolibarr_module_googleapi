@@ -177,6 +177,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$pageToken = null;
 		$skipped = 0;
 		$collected = [];
+		$collectedRows = [];
 		$totalSeen = 0;
 		$query = ['newer_than:'.(int) $limitDays.'d'];
 
@@ -192,6 +193,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 					}
 					if (count($collected) < $pageSize) {
 						$collected[] = $this->rowToMessage($row);
+						$collectedRows[] = $row;
 					}
 				}
 			} while ($pageToken && $totalSeen < $limitNb && count($collected) < $pageSize);
@@ -200,11 +202,72 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			return false;
 		}
 
+		// The cached `unread` flag (llx_googleapi_email.unread) is only ever set once,
+		// at first ingestion, and only refreshed afterward if the user marks the
+		// message seen/unseen through unifiedinbox itself — reading a message directly
+		// in Gmail (app, web, another client) never updates it, so it silently goes
+		// stale. Re-check the real state for exactly what's on this page with a single
+		// extra Gmail API call (not one per message) and reconcile both the in-memory
+		// result and the local cache.
+		$this->refreshUnreadStatus($collected, $collectedRows, $limitDays);
+
 		return [
 			'messages' => $collected,
 			'total'    => $totalSeen,
 			'has_more' => (bool) $pageToken,
 		];
+	}
+
+	/**
+	 * Re-check which of the given messages are genuinely unread in Gmail right now,
+	 * via a single `labelIds=[$this->folder, 'UNREAD']` list call, and correct both
+	 * the in-memory stdClass items (`->seen`) and the local cache
+	 * (`llx_googleapi_email.unread`) wherever they disagree with Gmail's real state.
+	 * Best-effort: on any API failure, silently keeps the (possibly stale) cached
+	 * values rather than breaking the message list.
+	 *
+	 * @param  stdClass[]             $items ->uid-keyed items from rowToMessage(), updated in place
+	 * @param  GoogleApiGMailMessage[] $rows  Same order as $items, for DB rowid access
+	 * @param  int                     $limitDays
+	 */
+	private function refreshUnreadStatus(array $items, array $rows, $limitDays)
+	{
+		if (empty($items)) return;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$unreadIds = [];
+			$pageToken = null;
+			do {
+				$filters = [
+					'q'          => 'newer_than:'.(int) $limitDays.'d',
+					'labelIds'   => [$this->folder, 'UNREAD'],
+					'maxResults' => 500,
+				];
+				if ($pageToken) $filters['pageToken'] = $pageToken;
+				$response = $gMailService->users_messages->listUsersMessages('me', $filters);
+				foreach ($response->getMessages() as $m) {
+					$unreadIds[$m->getId()] = true;
+				}
+				$pageToken = $response->getNextPageToken() ?: null;
+			} while ($pageToken);
+		} catch (\Exception $e) {
+			// Best-effort — keep whatever the cache already said.
+			return;
+		}
+
+		global $db;
+		foreach ($items as $i => $item) {
+			$reallyUnread = isset($unreadIds[$item->message_id]);
+			$cachedUnread = ($item->seen == 0);
+			if ($reallyUnread === $cachedUnread) continue;
+
+			$item->seen = $reallyUnread ? 0 : 1;
+			if (isset($rows[$i]->rowid) && $rows[$i]->rowid) {
+				$db->query('UPDATE '.MAIN_DB_PREFIX.'googleapi_email SET unread='.($reallyUnread ? 1 : 0).' WHERE rowid='.(int) $rows[$i]->rowid);
+			}
+		}
 	}
 
 	public function getThreadedMessages($limitDays, $offset, $pageSize)

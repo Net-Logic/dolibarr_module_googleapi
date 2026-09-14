@@ -648,6 +648,8 @@ class ActionsGoogleApi
 				.' FROM '.MAIN_DB_PREFIX.'user as u'
 				.' INNER JOIN '.MAIN_DB_PREFIX.'user_extrafields as ue ON ue.fk_object = u.rowid'
 				.' WHERE ue.googleapi_email IS NOT NULL AND ue.googleapi_email != \'\''
+				.' AND u.entity IN ('.getEntity('user').')'
+				.' AND u.statut = 1'
 				.' ORDER BY u.login';
 			$res = $db->query($sql);
 			$options = '';
@@ -659,7 +661,7 @@ class ActionsGoogleApi
 				}
 			}
 
-			$html  = '<tbody id="section_googleapi" data-provider="googleapi" style="display:none">';
+			$html  = '<tbody id="section_googleapi" data-provider-section="googleapi" style="display:none">';
 			$html .= '<tr><td colspan="2" class="liste_titre">Gmail (GoogleApi)</td></tr>';
 			$html .= '<tr><td class="fieldrequired">'.$langs->trans('GoogleApiUnifiedInboxSelectUser').'</td><td>';
 			if ($options === '') {

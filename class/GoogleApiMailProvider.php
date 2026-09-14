@@ -87,8 +87,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	{
 		return [
 			[
-				'name'   => 'INBOX',
+				'id'     => 'INBOX',
+				'name'   => 'Gmail',
 				'label'  => 'Gmail',
+				'type'   => 'inbox',
 				'unseen' => $this->getUnseenCount(),
 			],
 		];
@@ -343,7 +345,11 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function supportsCompose()
 	{
-		return true;
+		// No Gmail-send implementation yet (would need MIME construction + a
+		// users.messages.send call) — report false rather than let the UI
+		// offer a reply/compose action that always fails. Real IMAP/SMTP and
+		// WhatsApp accounts are unaffected.
+		return false;
 	}
 
 	public function supportsThreads()

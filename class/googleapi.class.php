@@ -385,6 +385,7 @@ class GoogleApi
 		$googleApiGMailMessage->object_type = $object_type;
 		$googleApiGMailMessage->object_id = $object_id;
 		$googleApiGMailMessage->outgoing = (int) in_array('SENT', $message->getLabelIds());
+		$googleApiGMailMessage->unread = (int) in_array('UNREAD', $message->getLabelIds());
 		$googleApiGMailMessage->fk_user = $user->id;
 		return $googleApiGMailMessage->save();
 	}
@@ -426,8 +427,8 @@ class GoogleApiGMailMessage
 	public $fk_user;
 	public $tms;
 
-	// Not saved
-	public $unread;
+	/** @var int 1 = unread, 0 = read — mirrors Gmail's UNREAD label as of ingestion time */
+	public $unread = 1;
 
 	public function __construct()
 	{
@@ -484,12 +485,12 @@ class GoogleApiGMailMessage
 			$sql = "UPDATE {$this->db->prefix()}googleapi_email SET date = '{$this->db->idate($this->date)}',
 					email_from = '{$this->db->escape($this->email_from)}', email_to = '{$this->db->escape($this->email_to)}',
 					subject = '{$this->db->escape($this->subject)}', snippet = '{$this->db->escape($this->snippet)}',
-					outgoing = {$this->db->escape($this->outgoing)}, object_type = {$object_type}, object_id = {$object_id},
+					outgoing = {$this->db->escape($this->outgoing)}, unread = {$this->db->escape((int) $this->unread)}, object_type = {$object_type}, object_id = {$object_id},
 					message_id = '{$this->message_id}', fk_user = {$this->fk_user} WHERE rowid = {$this->rowid}";
 		} else {
-			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, subject, snippet, object_type, object_id, message_id, fk_user)
+			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, unread, subject, snippet, object_type, object_id, message_id, fk_user)
 				VALUE ('{$this->db->idate($this->date)}', '{$this->db->escape($this->email_from)}', '{$this->db->escape($this->email_to)}',
-				       {$this->db->escape($this->outgoing)}, '{$this->db->escape($this->subject)}',
+				       {$this->db->escape($this->outgoing)}, {$this->db->escape((int) $this->unread)}, '{$this->db->escape($this->subject)}',
 				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$this->fk_user})";
 		}
 

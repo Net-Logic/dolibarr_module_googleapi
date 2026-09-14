@@ -646,7 +646,6 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 	$googleApiGmailMessages = [];
 	foreach ($messagesResponse->getMessages() as $message) {
 		$gMailMessage = $googleApi->fetchGoogleApiGMailMessage($message->getId());
-		//		$gMailMessage->unread = in_array('UNREAD', $message->getLabelIds());
 		if ($gMailMessage->message_id) {
 			if (!$gMailMessage->object_type && $object_type && $object_id) {
 				$gMailMessage->object_type = $object_type;

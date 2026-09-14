@@ -230,7 +230,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			return false;
 		}
 
-		return ['html' => $result['body']['html'], 'plain' => $result['body']['plain']];
+		// The interface docblock says this should return ['html'=>..,'plain'=>..], but the
+		// only genuinely-working implementation (ImapProvider, via IMAPClient::getMessageBody())
+		// returns a plain HTML string, which is what js/app.js actually consumes — match reality.
+		return $result['body']['html'] ?: $result['body']['plain'];
 	}
 
 	public function getAttachments($messageId)

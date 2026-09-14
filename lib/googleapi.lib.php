@@ -23,6 +23,7 @@
 
 dol_include_once('/prune/lib/prune.lib.php');
 dol_include_once('/prune/vendor/autoload.php');
+require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 use League\OAuth2\Client\Provider\Google;
 use League\OAuth2\Client\Grant\RefreshToken;
@@ -68,15 +69,16 @@ function googleapiAdminPrepareHead()
 /**
  * Complete $object to change ->label and ->note before pushing event to Google Calendar.
  *
- * @param   Object      $object     Object event to complete
+ * @param   ActionComm  $object     Object event to complete
  * @param   Translate   $langs      Language object
  * @return  void
  */
-function googleapi_complete_label_and_note(&$object, $langs)
+function googleapi_complete_label_and_note($object, $langs)
 {
 	global $conf, $db, $langs;
 	global $dolibarr_main_url_root;
 
+	$langs->load('googleapi@googleapi');
 	$eventlabel = trim($object->label);
 	// Define $urlwithroot
 	$urlwithouturlroot = preg_replace('/' . preg_quote(DOL_URL_ROOT, '/') . '$/i', '', trim($dolibarr_main_url_root));
@@ -148,9 +150,10 @@ function googleapi_complete_label_and_note(&$object, $langs)
 /**
  * Get GoogleApi Client
  * @param   User    $fuser  propriétaire du token
+ * @param ?string $email if we need to retrieve a token with just email
  * @return  Google_Client|bool
  */
-function getGoogleApiClient($fuser)
+function getGoogleApiClient($fuser, $email = null)
 {
 	global $conf;
 
@@ -163,32 +166,240 @@ function getGoogleApiClient($fuser)
 		//'hostedDomain' => 'example.com', // optional; used to restrict access to users on your G Suite/Google Apps for Business accounts
 		'accessType' => 'offline',
 	]);
-
-	$token = retrieveAccessToken('GoogleApi', $fuser->id);
-	// Is token expired or will token expire in the next 30 seconds
+	if (empty($fuser->id)) {
+		$userid = 0;
+	} else {
+		$userid = $fuser->id;
+	}
+	$token = retrieveAccessToken('GoogleApi', $userid, $email);
+	// Is token expired or will token expire in the next 60 seconds
 	if (is_object($token)) {
-		$expire = time() > ($token->getExpires() - 30);
+		$expire = time() > ($token->getExpires() - 60);
 		if ($expire) {
 			try {
 				// il faut sauvegarder le refresh token car google ne le donne qu'une seule fois
 				$refreshtoken = $token->getRefreshToken();
-				$refreshtokenbackup = retrieveRefreshTokenBackup('GoogleApi', $fuser->id);
+				$refreshtokenbackup = retrieveRefreshTokenBackup('GoogleApi', $userid, $email);
 				if (empty($refreshtoken) && !empty($refreshtokenbackup)) {
 					$refreshtoken = $refreshtokenbackup;
 				}
 				$grant = new RefreshToken();
 				$token = $provider->getAccessToken($grant, ['refresh_token' => $refreshtoken]);
 				//$token->setRefreshToken($refreshtoken);
-				storeAccessToken('GoogleApi', $token, $refreshtoken, $fuser->id);
+				storeAccessToken('GoogleApi', $token, $refreshtoken, $userid, $email);
+			} catch (Throwable $t) {
+				dol_syslog($t->getMessage(), LOG_ERR);
+				// Refresh failed: $token is still the stale, expired token fetched above. Do not
+				// hand back a client built from it (the caller would get a raw 401 from the API
+				// instead of correctly treating this as "not connected, please reconnect").
+				$token = false;
 			} catch (Exception $e) {
 				dol_syslog($e->getMessage(), LOG_WARNING);
+				$token = false;
 			}
 		}
-		$client = new Google_Client();
-		$client->setAccessToken($token->getToken());
+		if (is_object($token)) {
+			$client = new Google_Client();
+			$client->setAccessToken($token->getToken());
+		}
 	}
 
 	return $client;
+}
+
+/**
+ * Get an authenticated Google Drive service for a user's connected Google account
+ *
+ * @param User $fuser User owning the Google OAuth token
+ * @return \Google\Service\Drive|false Drive service, or false if the user has no valid token
+ */
+function getGoogleDriveService($fuser)
+{
+	$client = getGoogleApiClient($fuser);
+	if (!is_object($client)) {
+		return false;
+	}
+	return new \Google\Service\Drive($client);
+}
+
+/**
+ * Escape a Google Drive object id for safe use inside a Drive API 'q' query string
+ *
+ * @param string $id Drive file or folder id
+ * @return string Escaped id
+ */
+function googleapiDriveEscapeId($id)
+{
+	return str_replace("'", "\\'", (string) $id);
+}
+
+/**
+ * Find a Drive folder by exact name under a given parent, creating it if it does not exist
+ *
+ * @param \Google\Service\Drive $driveservice Drive service for the current user
+ * @param string $name Folder name to find or create
+ * @param string $parentid Drive id of the parent folder ('root' for the Drive root)
+ * @param string $errmsg Set to the real error detail on failure (by reference)
+ * @return string|false Drive folder id, or false on API failure
+ */
+function googleapiGetOrCreateDriveFolder($driveservice, $name, $parentid, &$errmsg = '')
+{
+	try {
+		$query = "'" . googleapiDriveEscapeId($parentid) . "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false and name='" . googleapiDriveEscapeId($name) . "'";
+		$result = $driveservice->files->listFiles([
+			'q' => $query,
+			'fields' => 'files(id)',
+			'pageSize' => 1,
+		]);
+		$existing = $result->getFiles();
+		if (!empty($existing)) {
+			return $existing[0]->getId();
+		}
+
+		$folder = new \Google\Service\Drive\DriveFile();
+		$folder->setName($name);
+		$folder->setMimeType('application/vnd.google-apps.folder');
+		$folder->setParents([$parentid]);
+		$created = $driveservice->files->create($folder, ['fields' => 'id']);
+		return $created->getId();
+	} catch (Throwable $e) {
+		dol_syslog('googleapiGetOrCreateDriveFolder: ' . $e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
+		return false;
+	}
+}
+
+/**
+ * Resolve (creating as needed) the Drive folder matching a Dolibarr relative document path,
+ * nested under a fixed top-level root folder
+ *
+ * @param \Google\Service\Drive $driveservice Drive service for the current user
+ * @param string $rootfoldername Name of the top-level Drive folder (e.g. 'Dolibarr')
+ * @param string $relativepath Path relative to DOL_DATA_ROOT (e.g. "facture/FA2401-0001")
+ * @param string $errmsg Set to the real error detail on failure (by reference)
+ * @return string|false Drive id of the deepest folder, or false on API failure
+ */
+function googleapiResolveDriveFolderPath($driveservice, $rootfoldername, $relativepath, &$errmsg = '')
+{
+	$parentid = googleapiGetOrCreateDriveFolder($driveservice, $rootfoldername, 'root', $errmsg);
+	if ($parentid === false) {
+		return false;
+	}
+
+	$segments = array_filter(explode('/', trim((string) $relativepath, '/')), function ($segment) {
+		return $segment !== '';
+	});
+
+	foreach ($segments as $segment) {
+		$parentid = googleapiGetOrCreateDriveFolder($driveservice, $segment, $parentid, $errmsg);
+		if ($parentid === false) {
+			return false;
+		}
+	}
+
+	return $parentid;
+}
+
+/**
+ * Upload a local file to Google Drive using a resumable, chunked upload (never loads the
+ * whole file into memory at once)
+ *
+ * @param \Google\Client $client Authenticated Google client (as returned by getGoogleApiClient())
+ * @param string $localpath Absolute path of the local file to upload
+ * @param string $drivefilename Name to give the file on Drive
+ * @param string $parentfolderid Drive id of the destination folder
+ * @param string $mimetype Mime type to set on the Drive file
+ * @param string $errmsg Set to the real error detail on failure (by reference)
+ * @return string|false Drive file id, or false on failure
+ */
+function googleapiUploadFileToDrive($client, $localpath, $drivefilename, $parentfolderid, $mimetype, &$errmsg = '')
+{
+	$handle = null;
+	try {
+		$filesize = (int) dol_filesize($localpath);
+
+		$drivefile = new \Google\Service\Drive\DriveFile();
+		$drivefile->setName($drivefilename);
+		$drivefile->setParents([$parentfolderid]);
+
+		// 1 MB chunks: avoids loading the whole file in memory at once, matching the same
+		// approach already used by the manual "Google Drive" ECM tab upload.
+		$chunksizebytes = 1 * 1024 * 1024;
+
+		$client->setDefer(true);
+		$uploadservice = new \Google\Service\Drive($client);
+		$request = $uploadservice->files->create($drivefile, ['mimeType' => $mimetype]);
+		$media = new \Google\Http\MediaFileUpload($client, $request, $mimetype, null, true, $chunksizebytes);
+		$media->setFileSize($filesize);
+
+		$handle = fopen($localpath, 'rb');
+		if ($handle === false) {
+			dol_syslog('googleapiUploadFileToDrive: cannot open ' . $localpath, LOG_ERR);
+			$errmsg = 'Cannot open ' . $localpath;
+			return false;
+		}
+		$status = false;
+		while ($status === false && !feof($handle)) {
+			$chunk = fread($handle, $chunksizebytes);
+			$status = $media->nextChunk($chunk);
+		}
+
+		if (!is_object($status)) {
+			dol_syslog('googleapiUploadFileToDrive: upload did not complete', LOG_ERR);
+			$errmsg = 'Drive upload did not complete';
+			return false;
+		}
+
+		return $status->getId();
+	} catch (Throwable $e) {
+		dol_syslog('googleapiUploadFileToDrive: ' . $e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
+		return false;
+	} finally {
+		if ($handle) {
+			fclose($handle);
+		}
+		$client->setDefer(false);
+	}
+}
+
+/**
+ * Append a Drive file as an attachment on an already-synced Google Calendar event.
+ *
+ * @param \Google\Client $client Google API client for the EVENT OWNER (not necessarily the uploader)
+ * @param string $calendarId Calendar id ('primary' or the owner's configured calendar)
+ * @param string $eventId Google Calendar event id (options_googleapi_EventId)
+ * @param string $drivefileid Drive file id just returned by googleapiUploadFileToDrive()
+ * @param string $filename Displayed attachment title
+ * @param string $mimetype Attachment mime type
+ * @param string $errmsg Set to the real error detail on failure (by reference)
+ * @return bool true on success, false on failure
+ */
+function googleapiAddDriveAttachmentToCalendarEvent($client, $calendarId, $eventId, $drivefileid, $filename, $mimetype, &$errmsg = '')
+{
+	try {
+		$service = new \Google\Service\Calendar($client);
+		$event = $service->events->get($calendarId, $eventId);
+
+		$attachments = $event->getAttachments();
+		if (!is_array($attachments)) {
+			$attachments = [];
+		}
+		$attachment = new \Google\Service\Calendar\EventAttachment();
+		$attachment->setFileId($drivefileid);
+		$attachment->setFileUrl('https://drive.google.com/file/d/' . $drivefileid . '/view');
+		$attachment->setTitle($filename);
+		$attachment->setMimeType($mimetype);
+		$attachments[] = $attachment;
+		$event->setAttachments($attachments);
+
+		$service->events->update($calendarId, $eventId, $event, ['supportsAttachments' => true]);
+		return true;
+	} catch (Throwable $e) {
+		dol_syslog('googleapiAddDriveAttachmentToCalendarEvent: ' . $e->getMessage(), LOG_ERR);
+		$errmsg = $e->getMessage();
+		return false;
+	}
 }
 
 /**
@@ -375,10 +586,10 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
 {
 	// use constants when possible, for HipHop support
 	switch ($algo) {
-			// case'HS256':
-			// case'HS384':
-			// case'HS512':
-			//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
+		// case'HS256':
+		// case'HS384':
+		// case'HS512':
+		//     return $this->hash_equals($this->sign($input, $key, $algo), $signature);
 
 		case 'RS256':
 			return @openssl_verify($input, $signature, $key, defined('OPENSSL_ALGO_SHA256') ? OPENSSL_ALGO_SHA256 : 'sha256')  === 1;
@@ -392,4 +603,114 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
 		default:
 			throw new \InvalidArgumentException("Unsupported or invalid signing algorithm.");
 	}
+}
+
+/**
+ * Get the Gmail Messages. Automatically save / get the full record from database to avoid API request
+ *
+ *  For more informations about query :
+ *  https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list?hl=fr
+ * @param array $query Google Mail API query
+ * @param int $maxResults
+ * @param string|null $pageToken Page token. If new next token is received, new value will be passed by reference
+ * @param User|null $user
+ * @param string|null $object_type
+ * @param int|null $object_id
+ * @return GoogleApiGMailMessage[]
+ * @throws \Google\Service\Exception
+ * @throws Exception
+ */
+function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null): array
+{
+	global $db;
+	require_once __DIR__ . '/../class/googleapi.class.php';
+
+	// Use connected user if not defined
+	if (!$user) {
+		global $user;
+	}
+
+	$gUser = 'me';
+	$client = getGoogleApiClient($user);
+	$gMailService = new Google_Service_Gmail($client);
+	$filters = ['q' => implode(' OR ', $query)];
+	if ($maxResults) {
+		$filters['maxResults'] = $maxResults;
+	}
+	if ($pageToken) {
+		$filters['pageToken'] = $pageToken;
+	}
+
+	$messagesResponse = $gMailService->users_messages->listUsersMessages($gUser, $filters);
+	$googleApi = new GoogleApi($db);
+	$googleApiGmailMessages = [];
+	foreach ($messagesResponse->getMessages() as $message) {
+		$gMailMessage = $googleApi->fetchGoogleApiGMailMessage($message->getId());
+		//		$gMailMessage->unread = in_array('UNREAD', $message->getLabelIds());
+		if ($gMailMessage->message_id) {
+			if (!$gMailMessage->object_type && $object_type && $object_id) {
+				$gMailMessage->object_type = $object_type;
+				$gMailMessage->object_id = $object_id;
+				$gMailMessage->save();
+			}
+			$googleApiGmailMessages[] = $gMailMessage;
+		} else {
+			$fullMessage = $gMailService->users_messages->get($gUser, $message->getId(), ['format' => 'full']);
+			$googleApiGmailMessages[] = $googleApi->saveGoogleServiceGmailMessage($fullMessage, $user, $object_type, $object_id);
+		}
+	}
+
+	$pageToken = $messagesResponse->getNextPageToken() ?: null;
+	return $googleApiGmailMessages;
+}
+
+function getGoogleMailMessageAndBody(string $messageId, ?User $user = null): array
+{
+	// Use connected user if not defined
+	if (!$user) {
+		global $user;
+	}
+
+	$client = getGoogleApiClient($user);
+	$gMailService = new Google_Service_Gmail($client);
+
+	$gUser = 'me';
+
+	$fullMessage = $gMailService->users_messages->get($gUser, $messageId, ['format' => 'full']);
+
+	$payload = $fullMessage->getPayload();
+
+	$body['html'] = $payload->getParts() ? getPartBody($payload->getParts()) : '';
+	$body['plain'] = $payload->getParts() ? getPartBody($payload->getParts(), 'text/plain') : '';
+
+	if (!dol_textishtml($body['plain'])) {
+		$body['plain'] = nl2br($body['plain']);
+	}
+	return ['message' => $fullMessage, 'body' => $body];
+}
+
+
+/**
+ * Recursive function to get the whole body (Message parts may have sub parts !)
+ * @param \Google\Service\Gmail\MessagePart[] $parts
+ * @param string $type
+ * @return string
+ */
+function getPartBody(array $parts, $type = 'text/html'): string
+{
+	$body = '';
+	foreach ($parts as $part) {
+		$mimeType = $part->getMimeType();
+		if ($mimeType === 'multipart/alternative' && $part->getParts()) {
+			$body .= getPartBody($part->getParts());
+		}
+		if ($mimeType === $type) {
+			$mailData = $part->getBody()->getData();
+			if ($mailData) {
+				$body .= base64_decode(str_replace(['-', '_'], ['+', '/'], $mailData));
+			}
+		}
+	}
+
+	return $body;
 }

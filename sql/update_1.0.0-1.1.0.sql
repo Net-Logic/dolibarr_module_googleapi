@@ -1,4 +1,4 @@
--- Copyright (C) 2019-2026  Frédéric France         <frederic.france@netlogic.fr>
+-- Copyright (C) 2025       Jean-Rémi Taponier         <jean-remi@netlogic.fr>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -13,8 +13,4 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see http://www.gnu.org/licenses/.
 
--- TO FIX PHP WARNINGS
-UPDATE llx_extrafields SET list = '(getDolGlobalInt("GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG") ? 3:0)' WHERE list = '(empty($conf->global->GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG) ? 0:3)';
-UPDATE llx_extrafields SET enabled='isModEnabled("googleapi")' WHERE enabled='!empty($conf->googleapi->enabled)';
-UPDATE llx_extrafields SET enabled = 'isModEnabled("googleapi")' WHERE enabled = '$conf->googleapi->enabled';
-UPDATE llx_c_actioncomm SET type='module', module='googleapi@googleapi' WHERE type='system' AND module='googleapi';
+ALTER TABLE llx_googleapi_email MODIFY email_to TEXT NOT NULL;

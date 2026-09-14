@@ -1,0 +1,4 @@
+div.mainmenu.googleapi #mainmenuspan_googleapi::before {
+	content: "\f0e0" !important;
+	/*content: "\f1a0" !important;*/
+}

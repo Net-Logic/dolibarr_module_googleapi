@@ -356,6 +356,36 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		return $result['body']['html'] ?: $result['body']['plain'];
 	}
 
+	public function getMessageHeaders($messageId)
+	{
+		if (!$this->fuser) return [];
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$message = $gMailService->users_messages->get('me', $messageId, [
+				'format' => 'metadata',
+				'metadataHeaders' => ['Message-Id', 'In-Reply-To', 'References'],
+			]);
+		} catch (\Exception $e) {
+			$this->error = 'Failed to load message headers: '.$e->getMessage();
+			return [];
+		}
+
+		$headers = [];
+		foreach ($message->getPayload()->getHeaders() as $header) {
+			$name = strtolower($header->getName());
+			if ($name === 'message-id') {
+				$headers['message_id'] = $header->getValue();
+			} elseif ($name === 'in-reply-to') {
+				$headers['in_reply_to'] = $header->getValue();
+			} elseif ($name === 'references') {
+				$headers['references'] = $header->getValue();
+			}
+		}
+		return $headers;
+	}
+
 	public function getAttachments($messageId)
 	{
 		return [];

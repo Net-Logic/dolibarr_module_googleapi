@@ -83,29 +83,81 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	// ── Folder / conversation navigation ─────────────────────────────────────
 
+	/** @var array<string,array{name:string,type:string}> System Gmail labels shown as folders, with the same French names/type vocabulary as ImapClient::getFolders() */
+	private const SYSTEM_LABELS = [
+		'INBOX' => ['name' => 'Boîte de réception', 'type' => 'inbox'],
+		'SENT'  => ['name' => 'Envoyés', 'type' => 'sent'],
+		'DRAFT' => ['name' => 'Brouillons', 'type' => 'drafts'],
+		'TRASH' => ['name' => 'Corbeille', 'type' => 'trash'],
+		'SPAM'  => ['name' => 'Pourriel', 'type' => 'spam'],
+	];
+
 	public function getFolders()
 	{
-		return [
-			[
-				'id'     => 'INBOX',
-				'name'   => 'Gmail',
-				'label'  => 'Gmail',
-				'type'   => 'inbox',
-				'unseen' => $this->getUnseenCount(),
-			],
-		];
+		if (!$this->fuser) return [];
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$response = $gMailService->users_labels->listUsersLabels('me');
+		} catch (\Exception $e) {
+			$this->error = 'Failed to list labels: '.$e->getMessage();
+			return [];
+		}
+
+		$folders = [];
+		foreach ($response->getLabels() as $lbl) {
+			$id = $lbl->getId();
+			if ($lbl->getType() === 'system') {
+				// Only show the handful of system labels that are genuine "folders" —
+				// skip CATEGORY_*, STARRED, IMPORTANT, UNREAD, CHAT (Gmail flags/tabs,
+				// not folders; IMAPClient::getFolders() has no equivalent for these).
+				if (!isset(self::SYSTEM_LABELS[$id])) continue;
+				$name = self::SYSTEM_LABELS[$id]['name'];
+				$type = self::SYSTEM_LABELS[$id]['type'];
+			} else {
+				// Respect the user's own choice to hide a label from their Gmail sidebar.
+				if ($lbl->getLabelListVisibility() === 'labelHide') continue;
+				$name = $lbl->getName();
+				$type = 'folder';
+			}
+
+			$folders[] = [
+				'id'     => $id,
+				'name'   => $name,
+				'label'  => $name,
+				'type'   => $type,
+				// Real per-label unseen counts need one extra API call per label (Gmail's
+				// labels.list doesn't return messagesUnread, only labels.get does) — only
+				// worth it for INBOX, which is the only folder unifiedinbox's UI surfaces
+				// an unseen count for today (see getUnseenCount()).
+				'unseen' => ($id === 'INBOX') ? $this->getUnseenCount('INBOX') : 0,
+			];
+		}
+
+		usort($folders, static function ($a, $b) {
+			$order = ['inbox' => 1, 'sent' => 2, 'drafts' => 3, 'archive' => 4, 'spam' => 5, 'trash' => 6, 'folder' => 10];
+			$wa = $order[$a['type']] ?? 10;
+			$wb = $order[$b['type']] ?? 10;
+			return ($wa === $wb) ? strcasecmp($a['name'], $b['name']) : ($wa - $wb);
+		});
+
+		return $folders;
 	}
 
 	public function getUnseenCount($folder = 'INBOX')
 	{
-		global $db;
-
 		if (!$this->fuser) return 0;
 
-		$sql = 'SELECT unread FROM '.MAIN_DB_PREFIX.'googleapi_mailboxes WHERE userid='.(int) $this->fuser->id;
-		$res = $db->query($sql);
-		if (!$res || !($obj = $db->fetch_object($res))) return 0;
-		return (int) $obj->unread;
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$label = $gMailService->users_labels->get('me', $folder);
+			return (int) $label->getMessagesUnread();
+		} catch (\Exception $e) {
+			$this->error = 'Failed to get unseen count: '.$e->getMessage();
+			return 0;
+		}
 	}
 
 	// ── Message listing (implemented in Task 7) ───────────────────────────────

@@ -616,11 +616,12 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
  * @param User|null $user
  * @param string|null $object_type
  * @param int|null $object_id
+ * @param string[] $labelIds Restrict results to messages carrying ALL of these Gmail label IDs (e.g. ['INBOX'] or a custom label ID) — empty means no restriction (all mail except spam/trash, Gmail's default)
  * @return GoogleApiGMailMessage[]
  * @throws \Google\Service\Exception
  * @throws Exception
  */
-function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null): array
+function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null, array $labelIds = []): array
 {
 	global $db;
 	require_once __DIR__ . '/../class/googleapi.class.php';
@@ -639,6 +640,9 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 	}
 	if ($pageToken) {
 		$filters['pageToken'] = $pageToken;
+	}
+	if ($labelIds) {
+		$filters['labelIds'] = $labelIds;
 	}
 
 	$messagesResponse = $gMailService->users_messages->listUsersMessages($gUser, $filters);

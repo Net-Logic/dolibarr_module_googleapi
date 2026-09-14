@@ -30,6 +30,8 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 {
 	/** @var User|null  Dolibarr user that owns the Google connection */
 	private $fuser;
+	/** @var string  Gmail label ID to scope getMessages()/getThreadedMessages() to, set by connect() */
+	private $folder = 'INBOX';
 	/** @var string */
 	private $error = '';
 
@@ -68,6 +70,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		}
 
 		$this->fuser = $fuser;
+		$this->folder = $folder ?: 'INBOX';
 		return true;
 	}
 
@@ -179,7 +182,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 		try {
 			do {
-				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser);
+				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser, labelIds: [$this->folder]);
 				if (empty($batch)) break;
 				foreach ($batch as $row) {
 					$totalSeen++;

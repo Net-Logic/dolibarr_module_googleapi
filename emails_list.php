@@ -101,6 +101,10 @@ if ($user->socid > 0) {
 	//$socid = $user->socid;
 	accessforbidden();
 }
+
+if (!getDolGlobalInt('GOOGLEAPI_ENABLE_MAIL_READER', 1)) {
+	accessforbidden($langs->trans('GoogleApiMailReaderDisabled'));
+}
 $arrayofjs = [
 	'https://uicdn.toast.com/tui.code-snippet/latest/tui-code-snippet.js',
 	'https://uicdn.toast.com/tui.pagination/latest/tui-pagination.js',

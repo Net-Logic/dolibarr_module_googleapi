@@ -94,6 +94,7 @@ $arrayofparameters = [
 
 // Paramètres ON/OFF GOOGLEAPI_ est rajouté au paramètre
 $modules = [
+	'GOOGLEAPI_ENABLE_MAIL_READER' => 'GoogleApiEnableMailReader',
 	'GOOGLEAPI_ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
@@ -103,6 +104,11 @@ $modules = [
 	// tweak dolibarr
 	'CHECKLASTVERSION_EXTERNALMODULE' => 'CHECKLASTVERSION_EXTERNALMODULE',
 ];
+
+// Mail reader (top menu icon + emails_list.php) is enabled by default, unlike the other toggles below which default to off
+// if (getDolGlobalString('GOOGLEAPI_ENABLE_MAIL_READER') === '') {
+// 	dolibarr_set_const($db, 'GOOGLEAPI_ENABLE_MAIL_READER', '1', 'chaine', 0, '', $conf->entity);
+// }
 
 $googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
 if (empty($googleapicontexts)) {

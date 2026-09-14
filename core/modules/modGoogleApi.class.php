@@ -246,7 +246,7 @@ class modGoogleApi extends DolibarrModules
 			'url' => '/googleapi/emails_list.php',
 			'langs' => 'googleapi@googleapi', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("googleapi")', // Define condition to show or hide menu entry. Use 'isModEnabled("netlogicdevtoolbox")' if entry must be visible if module is enabled.
+			'enabled' => 'isModEnabled("googleapi") && getDolGlobalInt("GOOGLEAPI_ENABLE_MAIL_READER")', // Define condition to show or hide menu entry. Use 'isModEnabled("netlogicdevtoolbox")' if entry must be visible if module is enabled.
 			'perms' => '1', // Use 'perms'=>'$user->hasRight("netlogicdevtoolbox", "myobject", "read")' if you want your menu with a permission rules
 			'target' => '',
 			'user' => 2, // 0=Menu for internal users, 1=external users, 2=both

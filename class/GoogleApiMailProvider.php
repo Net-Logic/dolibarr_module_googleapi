@@ -110,19 +110,122 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessages($limitNb, $limitDays, $offset, $pageSize)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		// getGoogleMailMessages() paginates via an opaque Gmail pageToken, not a
+		// numeric offset, so pull sequential pages until $offset is reached, then
+		// return the next $pageSize. $limitNb caps how many messages we'll ever
+		// walk through looking for that offset (mirrors WhatsAppProvider's $limitNb
+		// role as a pool-size cap, not a Gmail API concept).
+		$pageToken = null;
+		$skipped = 0;
+		$collected = [];
+		$totalSeen = 0;
+		$query = ['newer_than:'.(int) $limitDays.'d'];
+
+		do {
+			$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser);
+			if (empty($batch)) break;
+			foreach ($batch as $row) {
+				$totalSeen++;
+				if ($skipped < $offset) {
+					$skipped++;
+					continue;
+				}
+				if (count($collected) < $pageSize) {
+					$collected[] = $this->rowToMessage($row);
+				}
+			}
+		} while ($pageToken && $totalSeen < $limitNb && count($collected) < $pageSize);
+
+		return [
+			'messages' => $collected,
+			'total'    => $totalSeen,
+			'has_more' => (bool) $pageToken,
+		];
 	}
 
 	public function getThreadedMessages($limitDays, $offset, $pageSize)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		// Gmail already groups by thread_id server-side; ask for one message per
+		// thread by paging through and de-duplicating on threadId client-side,
+		// since getGoogleMailMessages() returns flat GoogleApiGMailMessage rows
+		// without a threadId column today — group on message_id prefix isn't
+		// reliable, so group on subject instead (same heuristic already visible
+		// in emails_list.php's own thread grouping, not a new convention).
+		$flat = $this->getMessages(500, $limitDays, 0, 500);
+		if ($flat === false) return false;
+
+		$byThread = [];
+		foreach ($flat['messages'] as $msg) {
+			$key = $msg->subject;
+			if (!isset($byThread[$key])) {
+				$thread = clone $msg;
+				$thread->is_thread = true;
+				$thread->participants = [$msg->from];
+				$thread->messages = [$msg];
+				$byThread[$key] = $thread;
+			} else {
+				$byThread[$key]->messages[] = $msg;
+				if (!in_array($msg->from, $byThread[$key]->participants)) {
+					$byThread[$key]->participants[] = $msg->from;
+				}
+			}
+		}
+
+		$threads = array_slice(array_values($byThread), $offset, $pageSize);
+		return [
+			'messages' => $threads,
+			'total'    => count($byThread),
+			'has_more' => ($offset + $pageSize) < count($byThread),
+		];
+	}
+
+	/**
+	 * Map a GoogleApiGMailMessage row onto the shape the shared unifiedinbox UI
+	 * expects (same fields as WhatsAppProvider::rowToMessage()).
+	 *
+	 * @param  GoogleApiGMailMessage $row
+	 * @return stdClass
+	 */
+	private function rowToMessage($row)
+	{
+		$item = new stdClass();
+		$item->uid = $row->message_id;
+		$item->message_id = $row->message_id;
+		$item->seen = $row->unread ? 0 : 1;
+		$item->answered = 0;
+		$item->deleted = 0;
+		$item->keywords = '';
+		$item->date = $row->date;
+		$item->cc = '';
+		$item->from = $row->email_from;
+		$item->to = $row->email_to;
+		$item->subject = $row->subject ?: '(no subject)';
+		$item->has_attachments = 0;
+		return $item;
 	}
 
 	// ── Message detail (implemented in Task 7) ────────────────────────────────
 
 	public function getMessageBody($messageId)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		try {
+			$result = getGoogleMailMessageAndBody($messageId, $this->fuser);
+		} catch (\Exception $e) {
+			$this->error = 'Failed to load message body: '.$e->getMessage();
+			return false;
+		}
+		if (empty($result['body'])) {
+			$this->error = 'Message not found: '.$messageId;
+			return false;
+		}
+
+		return ['html' => $result['body']['html'], 'plain' => $result['body']['plain']];
 	}
 
 	public function getAttachments($messageId)
@@ -139,12 +242,12 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function markSeen($messageId)
 	{
-		return false;
+		return $this->setUnreadLabel($messageId, false);
 	}
 
 	public function markUnseen($messageId)
 	{
-		return false;
+		return $this->setUnreadLabel($messageId, true);
 	}
 
 	public function moveMessage($messageId, $targetFolder)
@@ -154,7 +257,51 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function deleteMessage($messageId)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$gMailService->users_messages->trash('me', $messageId);
+		} catch (\Exception $e) {
+			$this->error = 'Gmail trash failed: '.$e->getMessage();
+			return false;
+		}
+
+		global $db;
+		$db->query('UPDATE '.MAIN_DB_PREFIX."googleapi_email SET unread=0 WHERE message_id='".$db->escape($messageId)."'");
+		return true;
+	}
+
+	/**
+	 * Add/remove Gmail's UNREAD label and mirror the result into the local cache.
+	 *
+	 * @param  string $messageId
+	 * @param  bool   $unread    true = mark unread (add UNREAD), false = mark read (remove UNREAD)
+	 * @return bool
+	 */
+	private function setUnreadLabel($messageId, $unread)
+	{
+		if (!$this->fuser) return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$modifyRequest = new \Google\Service\Gmail\ModifyMessageRequest();
+			if ($unread) {
+				$modifyRequest->setAddLabelIds(['UNREAD']);
+			} else {
+				$modifyRequest->setRemoveLabelIds(['UNREAD']);
+			}
+			$gMailService->users_messages->modify('me', $messageId, $modifyRequest);
+		} catch (\Exception $e) {
+			$this->error = 'Gmail label update failed: '.$e->getMessage();
+			return false;
+		}
+
+		global $db;
+		$db->query('UPDATE '.MAIN_DB_PREFIX."googleapi_email SET unread=".($unread ? 1 : 0)." WHERE message_id='".$db->escape($messageId)."'");
+		return true;
 	}
 
 	// ── Extended actions — not supported, see file docblock ───────────────────

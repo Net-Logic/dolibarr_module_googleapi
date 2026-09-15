@@ -158,7 +158,7 @@ class modGoogleApi extends DolibarrModules
 		// Minimum version of PHP required by module
 		$this->phpmin = [7, 4];
 		// Minimum version of Dolibarr required by module
-		$this->need_dolibarr_version = [15, 0];
+		$this->need_dolibarr_version = [19, 0];
 		// Warning to show when we activate module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
 		$this->warnings_activation = [];
 		// Warning to show when we activate an external module. array('always'='text') or array('FR'='textfr','ES'='textes'...)

@@ -581,7 +581,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		return false;
 	}
 
-	public function setKeyword($messageId, $keyword)
+	public function setKeyword($messageId, $keyword, $color = null)
 	{
 		if (!$this->fuser || $keyword === '') return false;
 
@@ -589,7 +589,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			$client = getGoogleApiClient($this->fuser);
 			$gMailService = new Google_Service_Gmail($client);
 
-			$labelId = $this->findOrCreateLabelId($gMailService, $keyword);
+			$labelId = $this->findOrCreateLabelId($gMailService, $keyword, $color);
 			if (!$labelId) return false;
 
 			$modify = new \Google\Service\Gmail\ModifyMessageRequest();
@@ -648,9 +648,13 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 *
 	 * @param  Google_Service_Gmail $gMailService
 	 * @param  string               $name
+	 * @param  string|null          $color   Tag color (#rrggbb), applied only
+	 *                                       when the label is newly created —
+	 *                                       Gmail has no per-message color, only
+	 *                                       a color on the label itself.
 	 * @return string|null
 	 */
-	private function findOrCreateLabelId($gMailService, $name)
+	private function findOrCreateLabelId($gMailService, $name, $color = null)
 	{
 		$existing = $this->findLabelId($gMailService, $name);
 		if ($existing) return $existing;
@@ -659,8 +663,76 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$label->setName($name);
 		$label->setLabelListVisibility('labelShow');
 		$label->setMessageListVisibility('show');
+
+		if ($color) {
+			$background = $this->nearestGmailPaletteColor($color);
+			$labelColor = new \Google\Service\Gmail\LabelColor();
+			$labelColor->setBackgroundColor($background);
+			$labelColor->setTextColor($this->contrastTextColor($background));
+			$label->setColor($labelColor);
+		}
+
 		$created = $gMailService->users_labels->create('me', $label);
 		return $created->getId();
+	}
+
+	/**
+	 * Gmail only accepts backgroundColor/textColor from this fixed 96-color
+	 * palette (confirmed live: an arbitrary hex is rejected with HTTP 400
+	 * "Label color ... is not on the allowed color palette") — there is no
+	 * free-form color support, so a tag's Dolibarr color is approximated by
+	 * its nearest palette entry rather than used as-is.
+	 *
+	 * @var string[]
+	 */
+	private const GMAIL_LABEL_PALETTE = [
+		'#000000', '#434343', '#666666', '#999999', '#cccccc', '#efefef', '#f3f3f3', '#ffffff',
+		'#fb4c2f', '#ffad47', '#fad165', '#16a766', '#43d692', '#4a86e8', '#a479e2', '#f691b3',
+		'#f6c5be', '#ffe6c7', '#fef1d1', '#b9e4d0', '#c6f3de', '#c9daf8', '#e4d7f5', '#fcdee8',
+		'#efa093', '#ffd6a2', '#fce8b3', '#89d3b2', '#a0eac9', '#a4c2f4', '#d0bcf1', '#fbc8d9',
+		'#e66550', '#ffbc6b', '#fcda83', '#44b984', '#68dfa9', '#6d9eeb', '#b694e8', '#f7a7c0',
+		'#cc3a21', '#eaa041', '#f2c960', '#149e60', '#3dc789', '#3c78d8', '#8e63ce', '#e07798',
+		'#ac2b16', '#cf8933', '#d5ae49', '#0b804b', '#2a9c68', '#285bac', '#653e9b', '#b65775',
+		'#822111', '#a46a21', '#aa8831', '#076239', '#1a764d', '#1c4587', '#41236d', '#83334c',
+		'#464646', '#e7e7e7', '#0d3472', '#b6cff5', '#0d3b44', '#98d7e4', '#3d188e', '#e3d7ff',
+		'#711a36', '#fbd3e0', '#8a1c0a', '#f2b2a8', '#7a2e0b', '#ffc8af', '#7a4706', '#ffdeb5',
+		'#594c05', '#fbe983', '#684e07', '#fdedc1', '#0b4f30', '#b3efd3', '#04502e', '#a2dcc1',
+		'#c2c2c2', '#4986e7', '#2da2bb', '#b99aff', '#994a64', '#f691b2', '#ff7537', '#ffad46',
+		'#662e37', '#ebdbde', '#cca6ac', '#094228', '#42d692', '#16a765',
+	];
+
+	/**
+	 * @param  string $hex  Arbitrary #rrggbb color
+	 * @return string       The closest color in GMAIL_LABEL_PALETTE, by RGB
+	 *                      Euclidean distance
+	 */
+	private function nearestGmailPaletteColor($hex)
+	{
+		[$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+
+		$best = self::GMAIL_LABEL_PALETTE[0];
+		$bestDistance = null;
+		foreach (self::GMAIL_LABEL_PALETTE as $candidate) {
+			[$cr, $cg, $cb] = sscanf($candidate, '#%02x%02x%02x');
+			$distance = ($r - $cr) ** 2 + ($g - $cg) ** 2 + ($b - $cb) ** 2;
+			if ($bestDistance === null || $distance < $bestDistance) {
+				$bestDistance = $distance;
+				$best = $candidate;
+			}
+		}
+		return $best;
+	}
+
+	/**
+	 * @param  string $hex  #rrggbb background color
+	 * @return string       '#000000' or '#ffffff', whichever reads better on it
+	 */
+	private function contrastTextColor($hex)
+	{
+		[$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+		// Standard relative-luminance weighting (ITU-R BT.601)
+		$luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+		return $luminance > 0.6 ? '#000000' : '#ffffff';
 	}
 
 	// ── Provider capabilities ─────────────────────────────────────────────────

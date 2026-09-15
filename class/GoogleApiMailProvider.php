@@ -452,16 +452,37 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$body = $part->getBody();
 		if (!empty($part->getFilename()) && $body && $body->getAttachmentId()) {
 			$attachments[] = [
-				'partno'   => $part->getPartId(),
-				'filename' => $part->getFilename(),
-				'mime'     => $part->getMimeType(),
-				'size'     => (int) $body->getSize(),
-				'encoding' => 0,
+				'partno'     => $part->getPartId(),
+				'filename'   => $part->getFilename(),
+				'mime'       => $part->getMimeType(),
+				'size'       => (int) $body->getSize(),
+				'encoding'   => 0,
+				'content_id' => $this->findContentIdHeader($part),
 			];
 		}
 		foreach ((array) $part->getParts() as $childPart) {
 			$this->collectAttachmentParts($childPart, $attachments);
 		}
+	}
+
+	/**
+	 * A part referenced as cid:... in the HTML body carries a Content-ID
+	 * MIME header — Gmail's API surfaces MIME headers per-part (only when
+	 * fetched with format=full, already the case for every caller of
+	 * collectAttachmentParts()) rather than as a dedicated accessor the way
+	 * IMAP/Graph expose one.
+	 *
+	 * @param  \Google\Service\Gmail\MessagePart $part
+	 * @return string|null
+	 */
+	private function findContentIdHeader($part)
+	{
+		foreach ((array) $part->getHeaders() as $header) {
+			if (strcasecmp($header->getName(), 'Content-ID') === 0) {
+				return $header->getValue();
+			}
+		}
+		return null;
 	}
 
 	/**

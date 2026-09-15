@@ -212,7 +212,7 @@ class ActionsGoogleApi
 			$element = $parameters['object']->element;
 			$id = $parameters['object']->id;
 			// verifier le type d'onglet comme member_stats où ça ne doit pas apparaitre
-			if (in_array($element, ['societe', 'member', 'contrat', 'fichinter', 'project', 'propal', 'commande', 'facture', 'order_supplier', 'invoice_supplier'])) {
+			if (!getDolGlobalInt('GOOGLEAPI_DISABLE_EMAILS_TAB') && in_array($element, ['societe', 'member', 'contrat', 'fichinter', 'project', 'propal', 'commande', 'facture', 'order_supplier', 'invoice_supplier'])) {
 				require_once DOL_DOCUMENT_ROOT . '/core/lib/memory.lib.php';
 				$emailcount = 0;
 				$cachekey = 'count_gapiemails_' . $element . '_' . $id;

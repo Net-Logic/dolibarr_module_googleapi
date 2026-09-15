@@ -395,12 +395,95 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getAttachments($messageId)
 	{
-		return [];
+		if (!$this->fuser) return [];
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$message = $gMailService->users_messages->get('me', $messageId, ['format' => 'full']);
+		} catch (\Exception $e) {
+			$this->error = 'Failed to load attachments: '.$e->getMessage();
+			return [];
+		}
+
+		$attachments = [];
+		$this->collectAttachmentParts($message->getPayload(), $attachments);
+		return $attachments;
 	}
 
 	public function getAttachmentData($messageId, $partNo, $encoding)
 	{
-		return false;
+		if (!$this->fuser) return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+			$message = $gMailService->users_messages->get('me', $messageId, ['format' => 'full']);
+
+			$attachmentId = $this->findAttachmentId($message->getPayload(), (string) $partNo);
+			if (!$attachmentId) {
+				$this->error = 'Attachment part not found: '.$partNo;
+				return false;
+			}
+
+			$body = $gMailService->users_messages_attachments->get('me', $messageId, $attachmentId);
+		} catch (\Exception $e) {
+			$this->error = 'Failed to load attachment data: '.$e->getMessage();
+			return false;
+		}
+
+		// Gmail always returns attachment bytes base64url-encoded (RFC 4648 §5),
+		// regardless of the part's original Content-Transfer-Encoding — $encoding
+		// (the IMAP-style transfer-encoding constant from the interface's own
+		// docblock) is meaningless here and deliberately unused, same as this
+		// class's other REST-provider methods that ignore IMAP-only parameters.
+		return base64_decode(strtr((string) $body->getData(), '-_', '+/'));
+	}
+
+	/**
+	 * Recursively collect every part with both a filename and an attachmentId
+	 * — Gmail's own definition of "this part is a downloadable attachment",
+	 * as opposed to an inline body part (text/plain, text/html) which has
+	 * neither.
+	 *
+	 * @param  \Google\Service\Gmail\MessagePart $part
+	 * @param  array                             $attachments  Appended to by reference
+	 */
+	private function collectAttachmentParts($part, &$attachments)
+	{
+		$body = $part->getBody();
+		if (!empty($part->getFilename()) && $body && $body->getAttachmentId()) {
+			$attachments[] = [
+				'partno' => $part->getPartId(),
+				'name'   => $part->getFilename(),
+				'mime'   => $part->getMimeType(),
+				'size'   => (int) $body->getSize(),
+			];
+		}
+		foreach ((array) $part->getParts() as $childPart) {
+			$this->collectAttachmentParts($childPart, $attachments);
+		}
+	}
+
+	/**
+	 * Find the attachmentId for a given Gmail partId, walking the same MIME
+	 * tree getAttachments() built 'partno' values from.
+	 *
+	 * @param  \Google\Service\Gmail\MessagePart $part
+	 * @param  string                            $wantedPartId
+	 * @return string|null
+	 */
+	private function findAttachmentId($part, $wantedPartId)
+	{
+		if ((string) $part->getPartId() === $wantedPartId) {
+			$body = $part->getBody();
+			return $body ? $body->getAttachmentId() : null;
+		}
+		foreach ((array) $part->getParts() as $childPart) {
+			$found = $this->findAttachmentId($childPart, $wantedPartId);
+			if ($found) return $found;
+		}
+		return null;
 	}
 
 	// ── Message actions (implemented in Task 7) ───────────────────────────────

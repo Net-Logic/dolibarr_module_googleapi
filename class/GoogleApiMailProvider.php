@@ -454,10 +454,11 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$body = $part->getBody();
 		if (!empty($part->getFilename()) && $body && $body->getAttachmentId()) {
 			$attachments[] = [
-				'partno' => $part->getPartId(),
-				'name'   => $part->getFilename(),
-				'mime'   => $part->getMimeType(),
-				'size'   => (int) $body->getSize(),
+				'partno'   => $part->getPartId(),
+				'filename' => $part->getFilename(),
+				'mime'     => $part->getMimeType(),
+				'size'     => (int) $body->getSize(),
+				'encoding' => 0,
 			];
 		}
 		foreach ((array) $part->getParts() as $childPart) {

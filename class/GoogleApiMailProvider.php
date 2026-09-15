@@ -365,13 +365,18 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			$gMailService = new Google_Service_Gmail($client);
 			$message = $gMailService->users_messages->get('me', $messageId, [
 				'format' => 'metadata',
-				'metadataHeaders' => ['Message-Id', 'In-Reply-To', 'References'],
+				'metadataHeaders' => ['Message-Id', 'In-Reply-To', 'References', 'X-Dolibarr-TRACKID'],
 			]);
 		} catch (\Exception $e) {
 			$this->error = 'Failed to load message headers: '.$e->getMessage();
 			return [];
 		}
 
+		// Confirmed live (2026-09-15): Gmail's own outbound SMTP relay rewrites
+		// Message-Id on submission (e.g. Dolibarr's CMailFile-generated id becomes
+		// a Gmail-generated <...@mail.gmail.com> one), but leaves the custom
+		// X-Dolibarr-TRACKID header CMailFile sets independently untouched — this
+		// is the reliable signal for any mail actually sent through Gmail.
 		$headers = [];
 		foreach ($message->getPayload()->getHeaders() as $header) {
 			$name = strtolower($header->getName());
@@ -381,6 +386,8 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 				$headers['in_reply_to'] = $header->getValue();
 			} elseif ($name === 'references') {
 				$headers['references'] = $header->getValue();
+			} elseif ($name === 'x-dolibarr-trackid') {
+				$headers['x_dolibarr_trackid'] = $header->getValue();
 			}
 		}
 		return $headers;

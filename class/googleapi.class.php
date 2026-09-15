@@ -386,8 +386,33 @@ class GoogleApi
 		$googleApiGMailMessage->object_id = $object_id;
 		$googleApiGMailMessage->outgoing = (int) in_array('SENT', $message->getLabelIds());
 		$googleApiGMailMessage->unread = (int) in_array('UNREAD', $message->getLabelIds());
+		$googleApiGMailMessage->has_attachments = (int) $this->payloadHasAttachments($message->getPayload());
 		$googleApiGMailMessage->fk_user = $user->id;
 		return $googleApiGMailMessage->save();
+	}
+
+	/**
+	 * Recursively check a Gmail MIME part tree for a downloadable attachment
+	 * — a part with both a filename and an attachmentId (Gmail's own
+	 * definition), as opposed to an inline body part (text/plain, text/html)
+	 * which has neither. Same tree-walk GoogleApiMailProvider::getAttachments()
+	 * does, just collapsed to a boolean.
+	 *
+	 * @param \Google\Service\Gmail\MessagePart $part
+	 * @return bool
+	 */
+	private function payloadHasAttachments($part): bool
+	{
+		$body = $part->getBody();
+		if (!empty($part->getFilename()) && $body && $body->getAttachmentId()) {
+			return true;
+		}
+		foreach ((array) $part->getParts() as $childPart) {
+			if ($this->payloadHasAttachments($childPart)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -429,6 +454,9 @@ class GoogleApiGMailMessage
 
 	/** @var int 1 = unread, 0 = read — mirrors Gmail's UNREAD label as of ingestion time */
 	public $unread = 1;
+
+	/** @var int 1 = message has at least one downloadable attachment, computed from the MIME tree at ingestion time */
+	public $has_attachments = 0;
 
 	public function __construct()
 	{
@@ -485,12 +513,12 @@ class GoogleApiGMailMessage
 			$sql = "UPDATE {$this->db->prefix()}googleapi_email SET date = '{$this->db->idate($this->date)}',
 					email_from = '{$this->db->escape($this->email_from)}', email_to = '{$this->db->escape($this->email_to)}',
 					subject = '{$this->db->escape($this->subject)}', snippet = '{$this->db->escape($this->snippet)}',
-					outgoing = {$this->db->escape($this->outgoing)}, unread = {$this->db->escape((int) $this->unread)}, object_type = {$object_type}, object_id = {$object_id},
+					outgoing = {$this->db->escape($this->outgoing)}, unread = {$this->db->escape((int) $this->unread)}, has_attachments = {$this->db->escape((int) $this->has_attachments)}, object_type = {$object_type}, object_id = {$object_id},
 					message_id = '{$this->message_id}', fk_user = {$this->fk_user} WHERE rowid = {$this->rowid}";
 		} else {
-			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, unread, subject, snippet, object_type, object_id, message_id, fk_user)
+			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, unread, has_attachments, subject, snippet, object_type, object_id, message_id, fk_user)
 				VALUE ('{$this->db->idate($this->date)}', '{$this->db->escape($this->email_from)}', '{$this->db->escape($this->email_to)}',
-				       {$this->db->escape($this->outgoing)}, {$this->db->escape((int) $this->unread)}, '{$this->db->escape($this->subject)}',
+				       {$this->db->escape($this->outgoing)}, {$this->db->escape((int) $this->unread)}, {$this->db->escape((int) $this->has_attachments)}, '{$this->db->escape($this->subject)}',
 				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$this->fk_user})";
 		}
 

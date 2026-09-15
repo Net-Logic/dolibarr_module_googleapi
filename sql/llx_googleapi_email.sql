@@ -25,5 +25,7 @@ CREATE TABLE llx_googleapi_email (
     object_id INTEGER,
     message_id VARCHAR(128),
     fk_user INTEGER NOT NULL,
-    tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    unread TINYINT(1) NOT NULL DEFAULT 1,
+    has_attachments TINYINT(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;

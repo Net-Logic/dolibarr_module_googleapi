@@ -329,7 +329,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$item->from = $row->email_from;
 		$item->to = $row->email_to;
 		$item->subject = $row->subject ?: '(no subject)';
-		$item->has_attachments = 0;
+		$item->has_attachments = (int) $row->has_attachments;
 		return $item;
 	}
 

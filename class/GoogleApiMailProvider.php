@@ -14,10 +14,8 @@
  *
  * Deliberately not implemented (return false, per the interface's own
  * documented convention for "Extended actions" providers don't support):
- * getAttachments(), getAttachmentData(), setKeyword(), clearKeyword(),
- * appendMessage(). The Gmail API could support all of these (message parts /
- * attachments, labels-as-keywords, users.messages.insert) but that's
- * follow-up work, not part of this feature — see
+ * appendMessage(). The Gmail API could support this too (users.messages.insert)
+ * but that's follow-up work, not part of this feature — see
  * docs/superpowers/specs/2026-09-14-external-provider-hook-design.md in the
  * unifiedinbox repo, section "Non-goals".
  */
@@ -585,12 +583,84 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function setKeyword($messageId, $keyword)
 	{
-		return false;
+		if (!$this->fuser || $keyword === '') return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+
+			$labelId = $this->findOrCreateLabelId($gMailService, $keyword);
+			if (!$labelId) return false;
+
+			$modify = new \Google\Service\Gmail\ModifyMessageRequest();
+			$modify->setAddLabelIds([$labelId]);
+			$gMailService->users_messages->modify('me', $messageId, $modify);
+			return true;
+		} catch (\Exception $e) {
+			$this->error = 'Failed to set label: '.$e->getMessage();
+			return false;
+		}
 	}
 
 	public function clearKeyword($messageId, $keyword)
 	{
-		return false;
+		if (!$this->fuser || $keyword === '') return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			$gMailService = new Google_Service_Gmail($client);
+
+			$labelId = $this->findLabelId($gMailService, $keyword);
+			if (!$labelId) return true; // nothing to remove, not an error
+
+			$modify = new \Google\Service\Gmail\ModifyMessageRequest();
+			$modify->setRemoveLabelIds([$labelId]);
+			$gMailService->users_messages->modify('me', $messageId, $modify);
+			return true;
+		} catch (\Exception $e) {
+			$this->error = 'Failed to clear label: '.$e->getMessage();
+			return false;
+		}
+	}
+
+	/**
+	 * Find a Gmail label's id by its exact display name.
+	 *
+	 * @param  Google_Service_Gmail $gMailService
+	 * @param  string               $name
+	 * @return string|null
+	 */
+	private function findLabelId($gMailService, $name)
+	{
+		$labels = $gMailService->users_labels->listUsersLabels('me')->getLabels();
+		foreach ((array) $labels as $label) {
+			if ($label->getName() === $name) {
+				return $label->getId();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Find a Gmail label's id by its exact display name, creating it
+	 * (visible in the label list and on messages, like any label a user
+	 * creates by hand) if it doesn't exist yet.
+	 *
+	 * @param  Google_Service_Gmail $gMailService
+	 * @param  string               $name
+	 * @return string|null
+	 */
+	private function findOrCreateLabelId($gMailService, $name)
+	{
+		$existing = $this->findLabelId($gMailService, $name);
+		if ($existing) return $existing;
+
+		$label = new \Google\Service\Gmail\Label();
+		$label->setName($name);
+		$label->setLabelListVisibility('labelShow');
+		$label->setMessageListVisibility('show');
+		$created = $gMailService->users_labels->create('me', $label);
+		return $created->getId();
 	}
 
 	// ── Provider capabilities ─────────────────────────────────────────────────

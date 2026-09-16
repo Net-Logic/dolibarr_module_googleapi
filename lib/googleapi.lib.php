@@ -683,8 +683,18 @@ function getGoogleMailMessageAndBody(string $messageId, ?User $user = null): arr
 
 	$payload = $fullMessage->getPayload();
 
-	$body['html'] = $payload->getParts() ? getPartBody($payload->getParts()) : '';
-	$body['plain'] = $payload->getParts() ? getPartBody($payload->getParts(), 'text/plain') : '';
+	if ($payload->getParts()) {
+		$body['html'] = getPartBody($payload->getParts());
+		$body['plain'] = getPartBody($payload->getParts(), 'text/plain');
+	} else {
+		// Single-part message (e.g. a plain "Content-Type: text/html" mail with
+		// no attachment): the body sits directly on the top-level payload, not
+		// inside a `parts` array, so there is nothing to walk.
+		$mailData = $payload->getBody() ? $payload->getBody()->getData() : '';
+		$decoded = $mailData ? base64_decode(str_replace(['-', '_'], ['+', '/'], $mailData)) : '';
+		$body['html'] = ($payload->getMimeType() === 'text/html') ? $decoded : '';
+		$body['plain'] = ($payload->getMimeType() === 'text/html') ? '' : $decoded;
+	}
 
 	if (!dol_textishtml($body['plain'])) {
 		$body['plain'] = nl2br($body['plain']);
@@ -704,10 +714,14 @@ function getPartBody(array $parts, $type = 'text/html'): string
 	$body = '';
 	foreach ($parts as $part) {
 		$mimeType = $part->getMimeType();
-		if ($mimeType === 'multipart/alternative' && $part->getParts()) {
-			$body .= getPartBody($part->getParts());
-		}
-		if ($mimeType === $type) {
+		if (strpos($mimeType, 'multipart/') === 0 && $part->getParts()) {
+			// Content can be nested under any multipart/* container, not just
+			// multipart/alternative (e.g. multipart/related for messages with
+			// inline images, or multipart/report for delivery-status
+			// notifications) - propagate $type so a plain-text request doesn't
+			// silently pick up HTML from a nested multipart/alternative.
+			$body .= getPartBody($part->getParts(), $type);
+		} elseif ($mimeType === $type) {
 			$mailData = $part->getBody()->getData();
 			if ($mailData) {
 				$body .= base64_decode(str_replace(['-', '_'], ['+', '/'], $mailData));

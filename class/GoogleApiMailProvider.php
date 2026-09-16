@@ -645,6 +645,17 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	}
 
 	/**
+	 * Not implemented yet — no People API lookup wired up for this provider.
+	 *
+	 * @param string $email
+	 * @return false
+	 */
+	public function getSenderPhoto($email)
+	{
+		return false;
+	}
+
+	/**
 	 * Find a Gmail label's id by its exact display name.
 	 *
 	 * @param  Google_Service_Gmail $gMailService

@@ -23,6 +23,7 @@
 require_once DOL_DOCUMENT_ROOT.'/custom/unifiedinbox/class/UnifiedInboxProviderInterface.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/class/googleapi.class.php';
 require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/lib/googleapi.lib.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
 
 class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 {
@@ -645,14 +646,60 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	}
 
 	/**
-	 * Not implemented yet — no People API lookup wired up for this provider.
+	 * Looks the sender up in the connected user's Google Contacts (People
+	 * API searchContacts — covered by the 'contacts' scope already granted,
+	 * no extra consent needed) and returns their photo, if they have a real
+	 * one uploaded.
 	 *
-	 * @param string $email
-	 * @return false
+	 * Google always returns *some* photo for a matched contact, even with no
+	 * real one set — a generated monogram avatar (initial-on-a-colour-tile),
+	 * flagged via Photo::getDefault(). That is no better than the initials
+	 * circle the UI already shows, so those are skipped rather than treated
+	 * as a hit. searchContacts's fuzzy matching can also return people whose
+	 * *other* addresses matched, not $email itself, so results are filtered
+	 * down to an exact email match first.
+	 *
+	 * @param  string $email
+	 * @return string|false
 	 */
 	public function getSenderPhoto($email)
 	{
-		return false;
+		if (!$this->fuser || empty($email)) return false;
+
+		try {
+			$client = getGoogleApiClient($this->fuser);
+			if (!$client) return false;
+
+			$people = new Google_Service_PeopleService($client);
+			$response = $people->people->searchContacts([
+				'query'    => $email,
+				'readMask' => 'emailAddresses,photos',
+			]);
+
+			$photoUrl = null;
+			foreach ((array) $response->getResults() as $result) {
+				$person = $result->getPerson();
+				$emails = array_map(function ($e) { return strtolower((string) $e->getValue()); }, (array) $person->getEmailAddresses());
+				if (!in_array(strtolower($email), $emails, true)) continue;
+
+				foreach ((array) $person->getPhotos() as $photo) {
+					if ($photo->getDefault()) continue;
+					$photoUrl = $photo->getUrl();
+					break 2;
+				}
+			}
+			if (!$photoUrl) return false;
+
+			// The photo URL itself is a plain public CDN link (no OAuth needed
+			// to fetch the bytes, only to have looked it up) — a normal GET,
+			// per repo convention via getURLContent() rather than curl_*.
+			$res = getURLContent($photoUrl, 'GET', '', 1, [], ['https']);
+			if (empty($res['content']) || (int) ($res['http_code'] ?? 0) !== 200) return false;
+
+			return $res['content'];
+		} catch (\Exception $e) {
+			return false;
+		}
 	}
 
 	/**

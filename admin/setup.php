@@ -215,7 +215,7 @@ if ($action == 'edit') {
 		$tooltiphelp = (($langs->trans($key . 'Tooltip') != $key . 'Tooltip') ? $langs->trans($key . 'Tooltip') : '');
 		print $form->textwithpicto($langs->trans($key), $tooltiphelp);
 		$type = empty($val['type']) ? 'text' : $val['type'];
-		$value = ! empty($conf->global->$key) ? $conf->global->$key : (isset($val['default']) ? $val['default'] : '');
+		$value = getDolGlobalString($key, isset($val['default']) ? $val['default'] : '');
 		print '</td>';
 		print '<td><input name="' . $key . '" type="' . $type . '" class="flat ' . (empty($val['css']) ? 'minwidth200' : $val['css']) . '" value="' . $value . '"></td>';
 		print '</tr>';
@@ -246,7 +246,7 @@ if ($action == 'edit') {
 		$tooltiphelp = (($langs->trans($key . 'Tooltip') != $key . 'Tooltip') ? $langs->trans($key . 'Tooltip') : '');
 		print $form->textwithpicto($langs->trans($key), $tooltiphelp);
 		print '</td><td>';
-		$value = $conf->global->$key;
+		$value = getDolGlobalString($key, isset($val['default']) ? $val['default'] : '');
 		if (isset($val['type']) && $val['type'] == 'password') {
 			$value = preg_replace('/./i', '*', $value);
 		}

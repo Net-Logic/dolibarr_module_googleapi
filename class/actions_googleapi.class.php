@@ -307,6 +307,13 @@ class ActionsGoogleApi
 			$fromsender = $this->getArrayAddress($object->addr_from);
 			if (!empty($user->array_options['options_googleapi_email']) && $fromsender[0]['address'] == $user->array_options['options_googleapi_email']) {
 				$client = getGoogleApiClient($user);
+				if (!is_object($client)) {
+					// No valid/refreshable Google OAuth token: fall back to standard mail
+					// sending instead of letting Google\Service's constructor throw a fatal
+					// TypeError on a plain bool (getGoogleApiClient() returns false by design
+					// here, same as getGoogleDriveService() already guards against).
+					return 0;
+				}
 				$service = new Google\Service\Gmail($client);
 
 				$message = new Google\Service\Gmail\Message();

@@ -360,9 +360,9 @@ class GoogleApi
 	{
 		$headers = $message->getPayload()->getHeaders();
 
-		$subject = $from = $to = $date = '';
+		$subject = $from = $to = $date = $cc = $bcc = '';
 		foreach ($headers as $header) {
-			if (in_array($header->getName(), ['Subject', 'From', 'To', 'Date'])) {
+			if (in_array($header->getName(), ['Subject', 'From', 'To', 'Date', 'Cc', 'Bcc'])) {
 				$headerName = mb_strtolower($header->getName());
 				$$headerName = $header->getValue();
 			}
@@ -379,6 +379,12 @@ class GoogleApi
 		$googleApiGMailMessage->date = $date;
 		$googleApiGMailMessage->email_from = $from;
 		$googleApiGMailMessage->email_to = $to;
+		// Cc is present on any message that had one. Bcc only ever survives on
+		// the sender's own Sent copy — like any IMAP/SMTP server, Gmail strips
+		// it from the copies actually delivered to recipients — so it's empty
+		// on everything except your own outgoing mail.
+		$googleApiGMailMessage->email_cc = $cc;
+		$googleApiGMailMessage->email_bcc = $bcc;
 		$googleApiGMailMessage->subject = $subject;
 		$googleApiGMailMessage->snippet = $message->getSnippet();
 		$googleApiGMailMessage->message_id = $message->getId();
@@ -443,6 +449,8 @@ class GoogleApiGMailMessage
 	public $date;
 	public $email_from;
 	public $email_to;
+	public $email_cc;
+	public $email_bcc;
 	public $outgoing;
 	public $subject;
 	public $snippet;
@@ -513,12 +521,14 @@ class GoogleApiGMailMessage
 		if ($this->rowid) {
 			$sql = "UPDATE {$this->db->prefix()}googleapi_email SET date = '{$this->db->idate($this->date)}',
 					email_from = '{$this->db->escape($this->email_from)}', email_to = '{$this->db->escape($this->email_to)}',
+					email_cc = '{$this->db->escape($this->email_cc)}', email_bcc = '{$this->db->escape($this->email_bcc)}',
 					subject = '{$this->db->escape($this->subject)}', snippet = '{$this->db->escape($this->snippet)}',
 					outgoing = {$this->db->escape($this->outgoing)}, unread = {$this->db->escape((int) $this->unread)}, has_attachments = {$this->db->escape((int) $this->has_attachments)}, object_type = {$object_type}, object_id = {$object_id},
 					message_id = '{$this->message_id}', fk_user = {$fk_user} WHERE rowid = {$this->rowid}";
 		} else {
-			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, unread, has_attachments, subject, snippet, object_type, object_id, message_id, fk_user)
+			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, email_cc, email_bcc, outgoing, unread, has_attachments, subject, snippet, object_type, object_id, message_id, fk_user)
 				VALUE ('{$this->db->idate($this->date)}', '{$this->db->escape($this->email_from)}', '{$this->db->escape($this->email_to)}',
+				       '{$this->db->escape($this->email_cc)}', '{$this->db->escape($this->email_bcc)}',
 				       {$this->db->escape($this->outgoing)}, {$this->db->escape((int) $this->unread)}, {$this->db->escape((int) $this->has_attachments)}, '{$this->db->escape($this->subject)}',
 				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$fk_user})";
 		}

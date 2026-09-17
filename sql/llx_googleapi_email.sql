@@ -18,6 +18,8 @@ CREATE TABLE llx_googleapi_email (
     date DATETIME NOT NULL,
     email_from VARCHAR(255) NOT NULL,
     email_to TEXT NOT NULL,
+    email_cc TEXT NULL,
+    email_bcc TEXT NULL,
     outgoing BOOLEAN NOT NULL,
     subject TEXT,
     snippet TEXT,

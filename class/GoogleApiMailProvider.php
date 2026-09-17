@@ -182,7 +182,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 		try {
 			do {
-				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser, labelIds: [$this->folder]);
+				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser, null, null, [$this->folder]);
 				if (empty($batch)) break;
 				foreach ($batch as $row) {
 					$totalSeen++;

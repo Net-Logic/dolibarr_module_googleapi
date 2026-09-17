@@ -621,7 +621,7 @@ function verifyGoogleApiSignature($signature, $input, $key, $algo = 'HS256')
  * @throws \Google\Service\Exception
  * @throws Exception
  */
-function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null, array $labelIds = []): array
+function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string &$pageToken = null, ?User $user = null, string $object_type = null, int $object_id = null, array $labelIds = [], ?string $email = null): array
 {
 	global $db;
 	require_once __DIR__ . '/../class/googleapi.class.php';
@@ -632,7 +632,7 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 	}
 
 	$gUser = 'me';
-	$client = getGoogleApiClient($user);
+	$client = getGoogleApiClient($user, $email);
 	$gMailService = new Google_Service_Gmail($client);
 	$filters = ['q' => implode(' OR ', $query)];
 	if ($maxResults) {
@@ -667,14 +667,14 @@ function getGoogleMailMessages(array $query = [], int $maxResults = 25, ?string 
 	return $googleApiGmailMessages;
 }
 
-function getGoogleMailMessageAndBody(string $messageId, ?User $user = null): array
+function getGoogleMailMessageAndBody(string $messageId, ?User $user = null, ?string $email = null): array
 {
 	// Use connected user if not defined
 	if (!$user) {
 		global $user;
 	}
 
-	$client = getGoogleApiClient($user);
+	$client = getGoogleApiClient($user, $email);
 	$gMailService = new Google_Service_Gmail($client);
 
 	$gUser = 'me';

@@ -1,0 +1,22 @@
+-- Copyright (C) 2026  Frédéric FRANCE  <frederic.france@netlogic.fr>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see http://www.gnu.org/licenses/.
+
+-- Allow a cached Gmail message row to have no owning Dolibarr user, for
+-- unifiedinbox "googleapi" accounts authorized via a sender-profile token
+-- (admin/mails_senderprofile_list.php) instead of a specific user's own
+-- linked Google account. The FK to llx_user is untouched: InnoDB exempts
+-- NULL values from FK matching, so existing rows and the constraint itself
+-- are unaffected.
+ALTER TABLE llx_googleapi_email MODIFY COLUMN fk_user INTEGER NULL;

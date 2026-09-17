@@ -387,7 +387,7 @@ class GoogleApi
 		$googleApiGMailMessage->outgoing = (int) in_array('SENT', $message->getLabelIds());
 		$googleApiGMailMessage->unread = (int) in_array('UNREAD', $message->getLabelIds());
 		$googleApiGMailMessage->has_attachments = (int) $this->payloadHasAttachments($message->getPayload());
-		$googleApiGMailMessage->fk_user = $user->id;
+		$googleApiGMailMessage->fk_user = $user->id ?: null;
 		return $googleApiGMailMessage->save();
 	}
 
@@ -508,21 +508,32 @@ class GoogleApiGMailMessage
 
 		$object_type = $this->object_type ? "'{$this->object_type}'" : 'NULL';
 		$object_id = $this->object_id ? (int) $this->object_id : 'NULL';
+		$fk_user = $this->fk_user ? (int) $this->fk_user : 'NULL';
 
 		if ($this->rowid) {
 			$sql = "UPDATE {$this->db->prefix()}googleapi_email SET date = '{$this->db->idate($this->date)}',
 					email_from = '{$this->db->escape($this->email_from)}', email_to = '{$this->db->escape($this->email_to)}',
 					subject = '{$this->db->escape($this->subject)}', snippet = '{$this->db->escape($this->snippet)}',
 					outgoing = {$this->db->escape($this->outgoing)}, unread = {$this->db->escape((int) $this->unread)}, has_attachments = {$this->db->escape((int) $this->has_attachments)}, object_type = {$object_type}, object_id = {$object_id},
-					message_id = '{$this->message_id}', fk_user = {$this->fk_user} WHERE rowid = {$this->rowid}";
+					message_id = '{$this->message_id}', fk_user = {$fk_user} WHERE rowid = {$this->rowid}";
 		} else {
 			$sql = "INSERT INTO {$this->db->prefix()}googleapi_email (date, email_from, email_to, outgoing, unread, has_attachments, subject, snippet, object_type, object_id, message_id, fk_user)
 				VALUE ('{$this->db->idate($this->date)}', '{$this->db->escape($this->email_from)}', '{$this->db->escape($this->email_to)}',
 				       {$this->db->escape($this->outgoing)}, {$this->db->escape((int) $this->unread)}, {$this->db->escape((int) $this->has_attachments)}, '{$this->db->escape($this->subject)}',
-				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$this->fk_user})";
+				      '{$this->db->escape($this->snippet)}', $object_type, $object_id, '{$this->message_id}', {$fk_user})";
 		}
 
 		if (!$this->db->query($sql)) {
+			if (!$this->rowid && $this->db->lasterrno() == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
+				// Two concurrent requests both saw this message as "not cached yet" and
+				// raced to insert it (idx_message_id is UNIQUE) — the other one won,
+				// so just use its row instead of failing the whole fetch.
+				$row = $this->db->getRow("SELECT * FROM {$this->db->prefix()}googleapi_email WHERE message_id = '{$this->message_id}'");
+				if (is_object($row)) {
+					$this->populate($row);
+					return $this;
+				}
+			}
 			throw new Exception("DB ERROR: {$this->db->lasterror()}");
 		}
 		$this->rowid = $this->db->last_insert_id("{$this->db->prefix()}googleapi_email");

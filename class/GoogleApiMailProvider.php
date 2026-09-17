@@ -8,9 +8,13 @@
  *          calls for message body / mark seen / delete).
  *
  * Unlike unifiedinbox's own IMAP/WhatsApp providers, a googleapi-type
- * unifiedinbox account carries no credentials of its own: it points at a
- * Dolibarr user (UnifiedInboxAccount::$fk_user) whose Google account is
- * already connected through googleapi's own OAuth flow.
+ * unifiedinbox account carries no credentials of its own: it points at either
+ * a Dolibarr user (UnifiedInboxAccount::$fk_user) whose Google account is
+ * already connected through googleapi's own OAuth flow, or — when $fk_user is
+ * left empty — a sender-profile-scoped token (fk_user=0 in
+ * llx_prune_oauth_token, keyed by UnifiedInboxAccount::$email) authorized via
+ * the "connect with Google" action on admin/mails_senderprofile_list.php, for
+ * a shared Gmail inbox not owned by any one Dolibarr user.
  *
  * Deliberately not implemented (return false, per the interface's own
  * documented convention for "Extended actions" providers don't support):
@@ -27,8 +31,10 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
 
 class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 {
-	/** @var User|null  Dolibarr user that owns the Google connection */
+	/** @var User|null  Dolibarr user that owns the Google connection (personal mode) */
 	private $fuser;
+	/** @var string|null  Account's own email, used to look up a sender-profile-scoped token (shared mode, no owning user) */
+	private $senderEmail;
 	/** @var string  Gmail label ID to scope getMessages()/getThreadedMessages() to, set by connect() */
 	private $folder = 'INBOX';
 	/** @var string */
@@ -40,35 +46,54 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	{
 		global $db;
 
-		if (empty($account->fk_user)) {
-			$this->error = 'No Dolibarr user configured for this Gmail account';
-			return false;
-		}
-
 		require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
-		$fuser = new User($db);
-		if ($fuser->fetch((int) $account->fk_user) <= 0) {
-			$this->error = 'Dolibarr user #'.$account->fk_user.' not found';
-			return false;
-		}
-		$fuser->loadDefaultValues();
-		if (empty($fuser->array_options['options_googleapi_email'])) {
-			$this->error = 'This user has no linked Google account (Setup > OAuth login tokens)';
-			return false;
+
+		if (!empty($account->fk_user)) {
+			$fuser = new User($db);
+			if ($fuser->fetch((int) $account->fk_user) <= 0) {
+				$this->error = 'Dolibarr user #'.$account->fk_user.' not found';
+				return false;
+			}
+			$fuser->loadDefaultValues();
+			if (empty($fuser->array_options['options_googleapi_email'])) {
+				$this->error = 'This user has no linked Google account (Setup > OAuth login tokens)';
+				return false;
+			}
+
+			try {
+				$client = getGoogleApiClient($fuser);
+			} catch (\Exception $e) {
+				$this->error = 'Google API connection failed: '.$e->getMessage();
+				return false;
+			}
+			if (empty($client)) {
+				$this->error = 'Google API connection failed for user '.$fuser->login;
+				return false;
+			}
+
+			$this->fuser = $fuser;
+		} else {
+			// No Dolibarr user configured: fall back to a sender-profile-scoped token
+			// for this account's own email (see the class docblock).
+			if (empty($account->email)) {
+				$this->error = 'No Dolibarr user configured for this Gmail account, and no email to look up a sender-profile token for';
+				return false;
+			}
+
+			try {
+				$client = getGoogleApiClient(new User($db), $account->email);
+			} catch (\Exception $e) {
+				$this->error = 'Google API connection failed: '.$e->getMessage();
+				return false;
+			}
+			if (empty($client)) {
+				$this->error = 'No Google token found for sender profile '.$account->email.' (Setup > Emails > Sender profiles)';
+				return false;
+			}
+
+			$this->senderEmail = $account->email;
 		}
 
-		try {
-			$client = getGoogleApiClient($fuser);
-		} catch (\Exception $e) {
-			$this->error = 'Google API connection failed: '.$e->getMessage();
-			return false;
-		}
-		if (empty($client)) {
-			$this->error = 'Google API connection failed for user '.$fuser->login;
-			return false;
-		}
-
-		$this->fuser = $fuser;
 		$this->folder = $folder ?: 'INBOX';
 		return true;
 	}
@@ -81,6 +106,44 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	public function getError()
 	{
 		return $this->error;
+	}
+
+	/**
+	 * Build a Google client for whichever identity connect() resolved —
+	 * the personal user, or the sender-profile-scoped email fallback.
+	 *
+	 * @return \Google\Client|false
+	 */
+	private function client()
+	{
+		global $db;
+		if ($this->fuser) {
+			return getGoogleApiClient($this->fuser);
+		}
+		return getGoogleApiClient(new User($db), $this->senderEmail);
+	}
+
+	/**
+	 * @return bool  True once connect() has resolved either identity
+	 */
+	private function connected()
+	{
+		return (bool) ($this->fuser || $this->senderEmail);
+	}
+
+	/**
+	 * A real (possibly unfetched, id-less) User object for the shared
+	 * getGoogleMailMessages()/getGoogleMailMessageAndBody() helpers, which
+	 * treat a falsy $user as "use the globally logged-in user" — passing an
+	 * object here (even an empty one, in sender-profile mode) skips that
+	 * fallback so $this->senderEmail is what actually resolves the token.
+	 *
+	 * @return User
+	 */
+	private function identityUser()
+	{
+		global $db;
+		return $this->fuser ?: new User($db);
 	}
 
 	// ── Folder / conversation navigation ─────────────────────────────────────
@@ -96,10 +159,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getFolders()
 	{
-		if (!$this->fuser) return [];
+		if (!$this->connected()) return [];
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$response = $gMailService->users_labels->listUsersLabels('me');
 		} catch (\Exception $e) {
@@ -149,10 +212,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getUnseenCount($folder = 'INBOX')
 	{
-		if (!$this->fuser) return 0;
+		if (!$this->connected()) return 0;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$label = $gMailService->users_labels->get('me', $folder);
 			return (int) $label->getMessagesUnread();
@@ -166,7 +229,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessages($limitNb, $limitDays, $offset, $pageSize)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		// getGoogleMailMessages() paginates via an opaque Gmail pageToken, not a
 		// numeric offset, so pull sequential pages until $offset is reached, then
@@ -182,7 +245,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 		try {
 			do {
-				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->fuser, null, null, [$this->folder]);
+				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->identityUser(), null, null, [$this->folder], $this->senderEmail);
 				if (empty($batch)) break;
 				foreach ($batch as $row) {
 					$totalSeen++;
@@ -234,7 +297,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		if (empty($items)) return;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$unreadIds = [];
 			$pageToken = null;
@@ -271,7 +334,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getThreadedMessages($limitDays, $offset, $pageSize)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		// Gmail already groups by thread_id server-side; ask for one message per
 		// thread by paging through and de-duplicating on threadId client-side,
@@ -336,10 +399,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessageBody($messageId)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		try {
-			$result = getGoogleMailMessageAndBody($messageId, $this->fuser);
+			$result = getGoogleMailMessageAndBody($messageId, $this->identityUser(), $this->senderEmail);
 		} catch (\Exception $e) {
 			$this->error = 'Failed to load message body: '.$e->getMessage();
 			return false;
@@ -357,10 +420,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessageHeaders($messageId)
 	{
-		if (!$this->fuser) return [];
+		if (!$this->connected()) return [];
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$message = $gMailService->users_messages->get('me', $messageId, [
 				'format' => 'metadata',
@@ -394,10 +457,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getAttachments($messageId)
 	{
-		if (!$this->fuser) return [];
+		if (!$this->connected()) return [];
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$message = $gMailService->users_messages->get('me', $messageId, ['format' => 'full']);
 		} catch (\Exception $e) {
@@ -412,10 +475,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getAttachmentData($messageId, $partNo, $encoding)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$message = $gMailService->users_messages->get('me', $messageId, ['format' => 'full']);
 
@@ -521,7 +584,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function moveMessage($messageId, $targetFolder)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		// Gmail's Trash is a first-class action (also excludes the message from
 		// IMAP/POP and schedules permanent deletion after 30 days) — reuse it
@@ -531,7 +594,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		}
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$modifyRequest = new \Google\Service\Gmail\ModifyMessageRequest();
 			$modifyRequest->setAddLabelIds([$targetFolder]);
@@ -549,10 +612,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function deleteMessage($messageId)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$gMailService->users_messages->trash('me', $messageId);
 		} catch (\Exception $e) {
@@ -574,10 +637,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 */
 	private function setUnreadLabel($messageId, $unread)
 	{
-		if (!$this->fuser) return false;
+		if (!$this->connected()) return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$modifyRequest = new \Google\Service\Gmail\ModifyMessageRequest();
 			if ($unread) {
@@ -605,10 +668,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function setKeyword($messageId, $keyword, $color = null)
 	{
-		if (!$this->fuser || $keyword === '') return false;
+		if (!$this->connected() || $keyword === '') return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 
 			$labelId = $this->findOrCreateLabelId($gMailService, $keyword, $color);
@@ -626,10 +689,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function clearKeyword($messageId, $keyword)
 	{
-		if (!$this->fuser || $keyword === '') return false;
+		if (!$this->connected() || $keyword === '') return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 
 			$labelId = $this->findLabelId($gMailService, $keyword);
@@ -664,10 +727,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 */
 	public function getSenderPhoto($email)
 	{
-		if (!$this->fuser || empty($email)) return false;
+		if (!$this->connected() || empty($email)) return false;
 
 		try {
-			$client = getGoogleApiClient($this->fuser);
+			$client = $this->client();
 			if (!$client) return false;
 
 			$people = new Google_Service_PeopleService($client);

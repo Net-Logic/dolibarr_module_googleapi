@@ -677,11 +677,10 @@ class ActionsGoogleApi
 
 			$html  = '<tbody id="section_googleapi" data-provider-section="googleapi" style="display:none">';
 			$html .= '<tr><td colspan="2" class="liste_titre">Gmail (GoogleApi)</td></tr>';
-			$html .= '<tr><td class="fieldrequired">'.$langs->trans('GoogleApiUnifiedInboxSelectUser').'</td><td>';
+			$html .= '<tr><td>'.$langs->trans('GoogleApiUnifiedInboxSelectUser').'</td><td>';
+			$html .= '<select name="fk_user"><option value=""'.($currentFkUser == 0 ? ' selected' : '').'>'.$langs->trans('GoogleApiUnifiedInboxSharedOption').'</option>'.$options.'</select>';
 			if ($options === '') {
-				$html .= '<span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxNoConnectedUser').'</span>';
-			} else {
-				$html .= '<select name="fk_user"><option value=""></option>'.$options.'</select>';
+				$html .= '<br><span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxNoConnectedUser').'</span>';
 			}
 			$html .= ' <span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxSelectUserHelp').'</span>';
 			$html .= '</td></tr>';

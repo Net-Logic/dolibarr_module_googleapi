@@ -305,37 +305,44 @@ class ActionsGoogleApi
 		if (in_array($context, $googleapicontextsok)) {
 			dol_include_once('/googleapi/lib/googleapi.lib.php');
 			$fromsender = $this->getArrayAddress($object->addr_from);
+
 			if (!empty($user->array_options['options_googleapi_email']) && $fromsender[0]['address'] == $user->array_options['options_googleapi_email']) {
+				// Sending as the current user's own linked Gmail account.
 				$client = getGoogleApiClient($user);
-				if (!is_object($client)) {
-					// No valid/refreshable Google OAuth token: fall back to standard mail
-					// sending instead of letting Google\Service's constructor throw a fatal
-					// TypeError on a plain bool (getGoogleApiClient() returns false by design
-					// here, same as getGoogleDriveService() already guards against).
-					return 0;
-				}
-				$service = new Google\Service\Gmail($client);
-
-				$message = new Google\Service\Gmail\Message();
-				$mime = rtrim(strtr(base64_encode($this->buildRawMessage($object)), '+/', '-_'), '=');
-				$message->setRaw($mime);
-
-				$mailsent = false;
-				$response = null;
-				try {
-					$response = $service->users_messages->send('me', $message);
-					$mailsent = true;
-				} catch (Exception $e) {
-					$this->errors[] = $e->getMessage();
-					setEventMessage($e->getMessage(), 'errors');
-					$error++;
-				}
-				if ($mailsent) {
-					$googleapiMessageId = $response->getId();
-				}
 			} else {
-				// nothing done
+				// Not the current user's own Gmail: try a sender-profile-scoped token instead
+				// (fk_user=0, keyed by email — the "connect with Google" action on
+				// admin/mails_senderprofile_list.php, see printFieldListValue() below, which
+				// stores exactly this kind of token via storeAccessToken('GoogleApi', ..., 0, $email)).
+				$client = getGoogleApiClient(new User($this->db), $fromsender[0]['address']);
+			}
+
+			if (!is_object($client)) {
+				// Neither a personal nor a sender-profile Google token: fall back to standard
+				// mail sending instead of letting Google\Service's constructor throw a fatal
+				// TypeError on a plain bool (getGoogleApiClient() returns false by design here,
+				// same as getGoogleDriveService() already guards against).
 				return 0;
+			}
+
+			$service = new Google\Service\Gmail($client);
+
+			$message = new Google\Service\Gmail\Message();
+			$mime = rtrim(strtr(base64_encode($this->buildRawMessage($object)), '+/', '-_'), '=');
+			$message->setRaw($mime);
+
+			$mailsent = false;
+			$response = null;
+			try {
+				$response = $service->users_messages->send('me', $message);
+				$mailsent = true;
+			} catch (Exception $e) {
+				$this->errors[] = $e->getMessage();
+				setEventMessage($e->getMessage(), 'errors');
+				$error++;
+			}
+			if ($mailsent) {
+				$googleapiMessageId = $response->getId();
 			}
 		}
 

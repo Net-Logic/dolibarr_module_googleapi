@@ -39,6 +39,7 @@ GoogleApiOwnerEmail=Google-E-Mail des verbundenen Kontos
 GoogleApiCalendarTZ=Google Kalender-Zeitzone
 GoogleApiIdId=Google-Ressourcen-ID
 GoogleApiEnableMailReader=Aktivieren Sie den E-Mail-Reader (Symbol im oberen Menü und E-Mail-Listenseite).
+GoogleApiIncludeAutoEvents=Automatische Ereignisse synchronisieren, einschließlich der beim Versenden einer E-Mail erzeugten Agendaeinträge (mit Vorsicht verwenden)
 GoogleApiMailReaderDisabled=Der Google-E-Mail-Client wurde vom Administrator deaktiviert.
 GoogleApiSendContexts=Sendekontexte
 GoogleApiEnabledContext=%s Sendekontext

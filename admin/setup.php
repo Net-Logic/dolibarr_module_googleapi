@@ -95,6 +95,7 @@ $arrayofparameters = [
 // Paramètres ON/OFF GOOGLEAPI_ est rajouté au paramètre
 $modules = [
 	'GOOGLEAPI_ENABLE_MAIL_READER' => 'GoogleApiEnableMailReader',
+	'GOOGLEAPI_INCLUDE_AUTO_EVENT' => 'GoogleApiIncludeAutoEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
 	'GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',

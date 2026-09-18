@@ -39,6 +39,7 @@ GoogleApiOwnerEmail=Correo electrónico de Google de la cuenta conectada
 GoogleApiCalendarTZ=Zona horaria del calendario de Google
 GoogleApiIdId=ID de recurso de Google
 GoogleApiEnableMailReader=Activa el lector de correo electrónico (icono del menú superior y página de la lista de correo electrónico).
+GoogleApiIncludeAutoEvents=Sincronizar eventos automáticos, incluidas las entradas de agenda generadas al enviar un correo (usar con precaución)
 GoogleApiMailReaderDisabled=El administrador ha desactivado el cliente de correo electrónico de Google.
 GoogleApiSendContexts=Contextos de envío
 GoogleApiEnabledContext=Contexto de envío de %s

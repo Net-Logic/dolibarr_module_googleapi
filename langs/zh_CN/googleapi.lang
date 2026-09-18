@@ -38,6 +38,7 @@ GoogleApiRemindByNotification=Google 通知提醒
 GoogleApiCalendarTZ=Google 日历时区
 GoogleApiIdId=Google 资源 ID
 GoogleApiEnableMailReader=启用邮件阅读器（顶部菜单图标和邮件列表页面）
+GoogleApiIncludeAutoEvents=同步自动事件，包括发送邮件时自动生成的日程记录（请谨慎使用）
 GoogleApiMailReaderDisabled=管理员已禁用谷歌邮件客户端。
 GoogleApiSendContexts=发送上下文
 GoogleApiEnabledContext=发送上下文

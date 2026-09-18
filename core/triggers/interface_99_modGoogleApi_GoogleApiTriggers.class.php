@@ -113,8 +113,9 @@ class InterfaceGoogleApiTriggers extends DolibarrTriggers
 			return 0;
 		}
 
-		if (get_class($object) == 'ActionComm' && empty($conf->global->GOOGLEAPI_INCLUDE_AUTO_EVENT) && $object->type_code == 'AC_OTH_AUTO') {
-			// we don't want to pollute calendar with auto events
+		if (get_class($object) == 'ActionComm' && empty($conf->global->GOOGLEAPI_INCLUDE_AUTO_EVENT) && in_array($object->type_code, ['AC_OTH_AUTO', 'AC_EMAIL'])) {
+			// we don't want to pollute calendar with auto events or with the agenda entry
+			// automatically logged every time an email is sent from an object's card
 			return 0;
 		}
 		if (get_class($object) == 'ActionComm' && !empty($object->context['googleapi'])) {

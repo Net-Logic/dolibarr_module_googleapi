@@ -388,6 +388,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$item->keywords = '';
 		$item->date = date('Y-m-d H:i:s', (int) $row->date);
 		$item->cc = $row->email_cc ?? '';
+		$item->bcc = $row->email_bcc ?? '';
 		$item->from = $row->email_from;
 		$item->to = $row->email_to;
 		$item->subject = $row->subject ?: '(no subject)';
@@ -891,11 +892,10 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function supportsCompose()
 	{
-		// No Gmail-send implementation yet (would need MIME construction + a
-		// users.messages.send call) — report false rather than let the UI
-		// offer a reply/compose action that always fails. Real IMAP/SMTP and
-		// WhatsApp accounts are unaffected.
-		return false;
+		// Gmail sending is implemented via ActionsGoogleApi::sendMail() (buildRawMessage() +
+		// users.messages.send), which unifiedinbox/ajax/send_email.php already routes through
+		// for provider_type=googleapi accounts.
+		return true;
 	}
 
 	public function supportsThreads()

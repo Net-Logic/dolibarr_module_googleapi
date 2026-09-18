@@ -274,9 +274,18 @@ class ActionsGoogleApi
 	 * @param   HookManager     $hookmanager    Hook manager propagated to allow calling another hook
 	 * @return  int                             < 0 on error, 0 on success, 1 to replace standard code
 	 */
-	public function sendMail($parameters, $object, &$action, $hookmanager)
+	public function sendMail(&$parameters, $object, &$action, $hookmanager)
 	{
 		global $conf, $user, $langs, $googleapiMessageId;
+
+		if (!empty($parameters['mailalreadysentbyprovider'])) {
+			// Another provider hook (e.g. MicrosoftGraph) already sent this email for this
+			// sendfile() call. HookManager sums 'addreplace' hook results across all modules
+			// (executeHooks() does $resaction += $resactiontmp), so if both providers returned 1
+			// here, CMailFile::sendfile()'s `if ($reshook == 1)` check would fail and it would
+			// fall through to ALSO send via the standard configured mail method (double/triple send).
+			return 0;
+		}
 
 		$error = 0; // Error counter
 		$contexts = explode(':', $parameters['context']);
@@ -343,6 +352,7 @@ class ActionsGoogleApi
 			}
 			if ($mailsent) {
 				$googleapiMessageId = $response->getId();
+				$parameters['mailalreadysentbyprovider'] = 'googleapi';
 			}
 		}
 

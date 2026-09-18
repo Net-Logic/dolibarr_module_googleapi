@@ -114,7 +114,7 @@ $modules = [
 $googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
 if (empty($googleapicontexts)) {
 	// set default
-	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode(['standard' => true]), 'chaine', 0, '', $conf->entity);
+	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode(['standard' => true]), 'chaine', 0, '', 0);
 	$googleapicontexts = json_decode(getDolGlobalString('GOOGLEAPI_CONTEXTS_TO_SEND', '{}'), true);
 }
 
@@ -128,10 +128,10 @@ if (!is_array($googleapidrivesyncobjects)) {
  */
 foreach ($modules as $const => $desc) {
 	if ($action == 'activate_' . strtolower($const)) {
-		dolibarr_set_const($db, $const, "1", 'chaine', 0, '', $conf->entity);
+		dolibarr_set_const($db, $const, "1", 'chaine', 0, '', 0);
 	}
 	if ($action == 'disable_' . strtolower($const)) {
-		dolibarr_del_const($db, $const, $conf->entity);
+		dolibarr_del_const($db, $const, 0);
 		//header("Location: ".$_SERVER["PHP_SELF"]);
 		//exit;
 	}
@@ -143,7 +143,7 @@ foreach ($googleapicontexts as $constant => $value) {
 	if ($action == 'contextdisable_' . strtolower($constant)) {
 		$googleapicontexts[$constant] = false;
 	}
-	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode($googleapicontexts), 'chaine', 0, '', $conf->entity);
+	dolibarr_set_const($db, 'GOOGLEAPI_CONTEXTS_TO_SEND', json_encode($googleapicontexts), 'chaine', 0, '', 0);
 }
 $googleapidrivesyncobjectschanged = false;
 foreach ($googleapidrivesyncobjects as $constant => $value) {
@@ -157,13 +157,14 @@ foreach ($googleapidrivesyncobjects as $constant => $value) {
 	}
 }
 if ($googleapidrivesyncobjectschanged) {
-	dolibarr_set_const($db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($googleapidrivesyncobjects), 'chaine', 0, '', $conf->entity);
+	dolibarr_set_const($db, 'GOOGLEAPI_DRIVE_SYNC_OBJECTS', json_encode($googleapidrivesyncobjects), 'chaine', 0, '', 0);
 }
 if ($action == 'update') {
 	$error = 0;
 	$db->begin();
 	foreach ($arrayofparameters as $key => $val) {
-		$result = dolibarr_set_const($db, $key, GETPOST($key, 'alpha'), 'chaine', 0, '', $conf->entity);
+		dolibarr_del_const($db, $key, $conf->entity); // on supprime le paramètre par entité si toujours présent (migré vers global comme microsoftgraph)
+		$result = dolibarr_set_const($db, $key, GETPOST($key, 'alpha'), 'chaine', 0, '', 0);
 		if ($result < 0) {
 			$error++;
 			break;

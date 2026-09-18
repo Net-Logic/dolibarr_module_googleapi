@@ -20,6 +20,7 @@ GoogleApiSetCalendarId=Einstellen des zu synchronisierenden Kalenders
 GoogleApiConfirmSetCalendarId=Bestätigen Sie die Kalenderauswahl
 GoogleApiEnableExtrafieldsDebug=Aktivieren Sie Extrafield-Debugging
 GoogleApiEnableDevelopperMode=Entwicklermodus aktivieren
+GoogleApiDisableEmailsTab=Den Tab "E-Mails" bei Angeboten, Bestellungen, Rechnungen und anderen Dolibarr-Objekten ausblenden
 GoogleApiEnablePushMeEvents=Erhalten Sie API-Push-Benachrichtigungen, um erstellte oder geänderte Ereignisse zu aktualisieren
 GoogleApiEnablePushMeMessages=Erhalten Sie API-Push-Benachrichtigungen, um erstellte oder bearbeitete Beiträge zu aktualisieren
 GoogleApiEnablePushMeContacts=Erhalten Sie API-Push-Benachrichtigungen, um erstellte oder geänderte Kontakte zu aktualisieren

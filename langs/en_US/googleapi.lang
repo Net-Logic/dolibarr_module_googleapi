@@ -20,6 +20,7 @@ GoogleApiSetCalendarId=Setting the calendar to synchronize
 GoogleApiConfirmSetCalendarId=Confirm calendar choice
 GoogleApiEnableExtrafieldsDebug=Enable extrafield debugging
 GoogleApiEnableDevelopperMode=Enable developer mode
+GoogleApiDisableEmailsTab=Hide the "Emails" tab on quotes, orders, invoices and other Dolibarr objects
 GoogleApiEnableMailReader=Enable mail reader (top menu icon and emails list page)
 GoogleApiMailReaderDisabled=The Google mail reader has been disabled by the administrator.
 GoogleApiEnablePushMeEvents=Receive API push notifications to update created or modified events

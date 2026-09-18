@@ -101,6 +101,7 @@ $modules = [
 	'GOOGLEAPI_ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
 	'GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',
 	'GOOGLEAPI_ENABLE_DEVELOPPER_MODE' => 'GoogleApiEnableDevelopperMode',
+	'GOOGLEAPI_DISABLE_EMAILS_TAB' => 'GoogleApiDisableEmailsTab',
 	// tweak dolibarr
 	'CHECKLASTVERSION_EXTERNALMODULE' => 'CHECKLASTVERSION_EXTERNALMODULE',
 ];

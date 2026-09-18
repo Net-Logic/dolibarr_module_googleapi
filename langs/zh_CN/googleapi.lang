@@ -23,6 +23,7 @@ GoogleApiSetCalendarId=设置要同步的日历
 GoogleApiConfirmSetCalendarId=确认日历选择
 GoogleApiEnableExtrafieldsDebug=启用额外字段调试
 GoogleApiEnableDevelopperMode=启用开发者模式
+GoogleApiDisableEmailsTab=在报价单、订单、发票及其他 Dolibarr 对象上隐藏“邮件”标签页
 GoogleApiEnablePushMeEvents=从 API 接收推送通知以更新已创建或修改的事件
 GoogleApiEnablePushMeMessages=从 API 接收推送通知以更新已创建或修改的消息
 GoogleApiEnablePushMeContacts=接收来自 API 的推送通知以更新已创建或修改的联系人

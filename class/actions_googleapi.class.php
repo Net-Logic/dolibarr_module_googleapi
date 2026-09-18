@@ -288,6 +288,7 @@ class ActionsGoogleApi
 		}
 
 		$error = 0; // Error counter
+		$mailsent = false; // Only set to true once actually sent via Gmail below
 		$contexts = explode(':', $parameters['context']);
 
 		$context = $object->sendcontext ?? 'standard';
@@ -340,7 +341,6 @@ class ActionsGoogleApi
 			$mime = rtrim(strtr(base64_encode($this->buildRawMessage($object)), '+/', '-_'), '=');
 			$message->setRaw($mime);
 
-			$mailsent = false;
 			$response = null;
 			try {
 				$response = $service->users_messages->send('me', $message);
@@ -358,7 +358,8 @@ class ActionsGoogleApi
 
 		if (!$error) {
 			// 1 si on a envoyé avec googleapi sinon 0
-			return 1; // or return 1 to replace standard code
+			// on retourne déjà 0 si pas de token/contexte désactivé, mais si problème on le laisse tenter la config dolibarr
+			return ($mailsent ? 1 : 0); // or return 1 to replace standard code
 		} else {
 			$this->errors[] = 'Error in googleapi module';
 			return -1;

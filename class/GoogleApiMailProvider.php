@@ -902,4 +902,13 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	{
 		return true;
 	}
+
+	public function usesOwnMailTransport()
+	{
+		// ActionsGoogleApi::sendMail() (this module's own 'sendMail' hook, context 'mail')
+		// intercepts CMailFile::sendfile() and sends via the Gmail API — ajax/send_email.php
+		// must not populate MAIN_MAIL_SMTP_* for this account (it has none of its own) or
+		// append a raw copy to Sent afterward (Gmail's own send already files one natively).
+		return true;
+	}
 }

@@ -328,6 +328,27 @@ class ActionsGoogleApi
 			}
 
 			if (!is_object($client)) {
+				// Both branches above guess the token owner from context (the session user's
+				// own linked email, or a fk_user=0 "sender profile" token) rather than from the
+				// actual From address. This misses a per-user token (fk_user > 0) being used to
+				// send while a DIFFERENT Dolibarr user is logged in — e.g. unifiedinbox replying
+				// from a shared/delegated googleapi account (same gap found and fixed for
+				// microsoftgraph's sendMail(), see ActionsMicrosoftGraph::sendMail()). Fall back
+				// to the same ground truth GoogleApiMailProvider::connect() uses for reading:
+				// look up llx_prune_oauth_token directly by the From email, regardless of which
+				// fk_user it belongs to or who is logged in now.
+				$sql = 'SELECT fk_user FROM '.MAIN_DB_PREFIX.'prune_oauth_token'
+					." WHERE service = 'GoogleApi' AND email = '".$this->db->escape($fromsender[0]['address'])."'"
+					.' ORDER BY rowid DESC LIMIT 1';
+				$resql = $this->db->query($sql);
+				if ($resql && ($obj = $this->db->fetch_object($resql))) {
+					$fuserfallback = new User($this->db);
+					$fuserfallback->id = (int) $obj->fk_user;
+					$client = getGoogleApiClient($fuserfallback);
+				}
+			}
+
+			if (!is_object($client)) {
 				// Neither a personal nor a sender-profile Google token: fall back to standard
 				// mail sending instead of letting Google\Service's constructor throw a fatal
 				// TypeError on a plain bool (getGoogleApiClient() returns false by design here,

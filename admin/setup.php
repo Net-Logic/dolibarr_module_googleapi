@@ -98,6 +98,7 @@ $modules = [
 	'GOOGLEAPI_INCLUDE_AUTO_EVENT' => 'GoogleApiIncludeAutoEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_EVENTS' => 'GoogleApiEnablePushMeEvents',
 	'GOOGLEAPI_ENABLE_PUSH_ME_MESSAGES' => 'GoogleApiEnablePushMeMessages',
+	'GOOGLEAPI_DISABLE_TOPMENU_COUNTER' => 'GoogleApiDisableTopmenuCounter',
 	'GOOGLEAPI_ENABLE_PUSH_ME_CONTACTS' => 'GoogleApiEnablePushMeContacts',
 	'GOOGLEAPI_ENABLE_PUSH_ME_DOCS' => 'GoogleApiEnablePushMeDocs',
 	'GOOGLEAPI_ENABLE_EXTRAFIELDS_DEBUG' => 'GoogleApiEnableExtrafieldsDebug',

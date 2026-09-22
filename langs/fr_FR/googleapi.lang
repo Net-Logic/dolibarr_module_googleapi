@@ -40,6 +40,7 @@ GoogleApiIncludeAutoEvents=Synchroniser les évènements auto, y compris les ent
 GoogleApiMailReaderDisabled=Le lecteur de mails Google a été désactivé par l'administrateur.
 GoogleApiEnablePushMeEvents=Recevoir des notifications push de l'API pour mettre à jour les évènements créés ou modifiés
 GoogleApiEnablePushMeMessages=Recevoir des notifications push de l'API pour mettre à jour les messages créés ou modifiés
+GoogleApiDisableTopmenuCounter=Désactiver l'icône email non lus du menu du haut et son interrogation périodique (par ex. si unifiedinbox fournit déjà la sienne)
 GoogleApiEnablePushMeContacts=Recevoir des notifications push de l'API pour mettre à jour les contacts créés ou modifiés
 GoogleApiEnablePushMeDocs=Recevoir des notifications push de l'API pour mettre à jour les documents créés ou modifiés
 CHECKLASTVERSION_EXTERNALMODULE=Forcer la vérification des versions des modules externes (déconseillé, cette option peux avoir été actvée par un autre module)

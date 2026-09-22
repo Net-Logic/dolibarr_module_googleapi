@@ -65,7 +65,10 @@ print "var login = '" . $_SESSION['dol_login'] . "';\n";
 	/* Launch timer */
 	// We set a delay before launching first test so next check will arrive after the time_auto_update compared to previous one.
 	var time_first_execution = (time_auto_update - (nowtime - time_js_next_check)) * 1000; //need milliseconds
-	if (login != '') {
+	// #googleapicounter isn't rendered when this is set (see printTopRightMenu()), so nothing
+	// to poll for - e.g. when unifiedinbox already provides its own top-menu badge and polling.
+	var counterEnabled = <?php echo getDolGlobalInt('GOOGLEAPI_DISABLE_TOPMENU_COUNTER') ? 'false' : 'true'; ?>;
+	if (login != '' && counterEnabled) {
 		console.log("Launch GoogleApi Email check: ")
 		console.log("setTimeout is set to launch 'first_execution' function after a wait of time_first_execution=" + time_first_execution + ". nowtime (time php page generation) = " + nowtime + " auto_check_googleapiemail_not_before (val in session)= " + auto_check_googleapiemail_not_before + " time_js_next_check (max now,auto_check_googleapiemail_not_before) = " + time_js_next_check + " time_auto_update=" + time_auto_update);
 		setTimeout(first_execution, time_first_execution);

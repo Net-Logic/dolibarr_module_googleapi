@@ -590,6 +590,10 @@ class ActionsGoogleApi
 	{
 		global $langs, $conf, $form, $user;
 
+		if (getDolGlobalInt('GOOGLEAPI_DISABLE_TOPMENU_COUNTER')) {
+			return 0;
+		}
+
 		$langs->load('googleapi@googleapi');
 		// require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 		require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';

@@ -386,7 +386,12 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$item->answered = 0;
 		$item->deleted = 0;
 		$item->keywords = '';
-		$item->date = date('Y-m-d H:i:s', (int) $row->date);
+		// $row->date is an absolute timestamp (from the Date header). Formatted
+		// without an offset, js/app.js's new Date("Y-m-d H:i:s") read it as the
+		// browser's local time, while PHP rendered it in the server's timezone
+		// (UTC here) - 2h early in Paris. Emit UTC with an explicit offset and let
+		// the browser convert; same format as MicrosoftGraphMailProvider.
+		$item->date = gmdate('Y-m-d H:i:s', (int) $row->date).'+00:00';
 		$item->cc = $row->email_cc ?? '';
 		$item->bcc = $row->email_bcc ?? '';
 		$item->from = $row->email_from;

@@ -76,6 +76,13 @@ foreach ($headers as $header) {
 	}
 }
 
+// The body below is the sender's own HTML, printed as-is from Dolibarr's origin: without
+// this, a <script> or onerror= in an email would run with the viewer's Dolibarr session.
+// Sent as a response header rather than a sandbox attribute on the preview iframe, so it
+// also holds when this URL is opened directly. No allow-scripts / allow-same-origin: the
+// page needs neither. allow-popups(-to-escape-sandbox) keeps target="_blank" links usable.
+header("Content-Security-Policy: sandbox allow-popups allow-popups-to-escape-sandbox");
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

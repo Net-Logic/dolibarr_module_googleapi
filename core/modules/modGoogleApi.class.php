@@ -73,6 +73,10 @@ class modGoogleApi extends DolibarrModules
 		// 'dolibarr_deprecated' or a version string like 'x.y.z'
 		$this->version = '1.2.3';
 
+		// Can be enabled / disabled only in the main company with superadmin account: active in
+		// every entity, like microsoftgraph (its settings are global, entity 0, too)
+		$this->core_enabled = 1;
+
 		// Url to the file with your last numberversion of this module
 		$this->url_last_version = 'https://wiki.netlogic.fr/versionmodule.php?module=googleapi';
 		// Key used in llx_const table to save module status enabled/disabled
@@ -84,9 +88,13 @@ class modGoogleApi extends DolibarrModules
 		$this->picto = 'googleapi@googleapi';
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
+		// Every part in entity 0: the module is core_enabled (active in all entities).
 		$this->module_parts = [
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 1,
+			'triggers' => [
+				'data' => 1,
+				'entity' => '0',
+			],
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -107,11 +115,17 @@ class modGoogleApi extends DolibarrModules
 			'sms' => 0,
 			// Set this to relative path of css file if module has its own css file
 			'css' => [
-				'/googleapi/css/googleapi.css',
+				'data' => [
+					'/googleapi/css/googleapi.css',
+				],
+				'entity' => '0',
 			],
 			// Set this to relative path of js file if module must load a js on all pages
 			'js' => [
-				'/googleapi/js/googleapi.js.php',
+				'data' => [
+					'/googleapi/js/googleapi.js.php',
+				],
+				'entity' => '0',
 			],
 			// Set here all hooks context managed by module. To find available hook context,
 			// make a "grep -r '>initHooks(' *" on source code. You can also set hook context 'all'
@@ -129,7 +143,7 @@ class modGoogleApi extends DolibarrModules
 					'fileslib',
 					'unifiedinboxaccount',
 				],
-				'entity' => $conf->entity,
+				'entity' => '0',
 			],
 			// Set this to 1 if feature of module are opened to external users
 			'moduleforexternal' => 0,
@@ -177,7 +191,10 @@ class modGoogleApi extends DolibarrModules
 
 		// Array to add new pages in new tabs
 		$this->tabs = [
-			['data' => 'ecm:+googledrive:GoogleApiDriveTab:googleapi@googleapi:$user->rights->googleapi->read:/googleapi/ecmgoogledrive.php'],
+			[
+				'data' => 'ecm:+googledrive:GoogleApiDriveTab:googleapi@googleapi:$user->rights->googleapi->read:/googleapi/ecmgoogledrive.php',
+				'entity' => '0',
+			],
 		];
 
 		// Dictionaries
@@ -369,7 +386,36 @@ class modGoogleApi extends DolibarrModules
 
 		$sql = [];
 
-		return $this->_init($sql, $options);
+		$result = $this->_init($sql, $options);
+		if ($result > 0) {
+			$this->insertPermissionsInOtherEntities();
+		}
+		return $result;
+	}
+
+	/**
+	 * core_enabled makes this module active in every entity (its activation constant is stored
+	 * in entity 0), but _init() only defines its permissions in the entity it was enabled from:
+	 * everywhere else nobody - not even a superadmin - gets them, so its tabs, menus and pages
+	 * stay hidden. Define them in every other entity too. Only existing definitions are added;
+	 * rights already granted to users are left untouched.
+	 *
+	 * @return void
+	 */
+	private function insertPermissionsInOtherEntities()
+	{
+		global $conf;
+
+		// llx_entity only exists with multicompany; without it there is no other entity
+		if (!isModEnabled('multicompany')) {
+			return;
+		}
+		$resql = $this->db->query("SELECT rowid FROM " . MAIN_DB_PREFIX . "entity");
+		while ($resql && ($obj = $this->db->fetch_object($resql))) {
+			if ((int) $obj->rowid !== (int) $conf->entity) {
+				$this->insert_permissions(0, (int) $obj->rowid);
+			}
+		}
 	}
 
 	/**

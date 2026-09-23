@@ -696,9 +696,13 @@ function getGoogleMailMessageAndBody(string $messageId, ?User $user = null, ?str
 		$body['plain'] = ($payload->getMimeType() === 'text/html') ? '' : $decoded;
 	}
 
-	if (!dol_textishtml($body['plain'])) {
-		$body['plain'] = nl2br($body['plain']);
-	}
+	// The plain-text part is displayed inside an HTML page: escape it before nl2br(), or
+	// anything that looks like a tag (e.g. "Cron <admin@on2>", "a < b") is swallowed as
+	// markup - same conversion as unifiedinbox's IMAPClient::getMessageBody(). No
+	// dol_textishtml() exemption: a text/plain part is text, even when it looks like HTML.
+	// ENT_SUBSTITUTE because the part is not converted from its charset: on non-UTF-8
+	// bytes htmlspecialchars() would otherwise return '' and the whole body would vanish.
+	$body['plain'] = nl2br(htmlspecialchars($body['plain'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
 	return ['message' => $fullMessage, 'body' => $body];
 }
 

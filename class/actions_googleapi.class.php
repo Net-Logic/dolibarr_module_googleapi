@@ -168,7 +168,9 @@ class ActionsGoogleApi
 	public function updateSession(&$parameters, $object, &$action, $hookmanager)
 	{
 		// Redirecting some core pages
-		if (((int) DOL_VERSION <= 23) && strpos($_SERVER['PHP_SELF'], 'comm/action/card.php') !== false) {
+		// Only GET: a redirect drops the POST body, e.g. the form submitted when an event is dragged in the agenda
+		// (actionmove=mupdate + newdate + token), which core handles itself and which triggers the Google sync anyway.
+		if (((int) DOL_VERSION <= 23) && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && strpos($_SERVER['PHP_SELF'], 'comm/action/card.php') !== false) {
 			$redirUrl = dol_buildpath('/googleapi/tabs/action/card.php', 1);
 
 			if ($redirUrl !== $_SERVER["PHP_SELF"]) {
@@ -337,9 +339,9 @@ class ActionsGoogleApi
 				// to the same ground truth GoogleApiMailProvider::connect() uses for reading:
 				// look up llx_prune_oauth_token directly by the From email, regardless of which
 				// fk_user it belongs to or who is logged in now.
-				$sql = 'SELECT fk_user FROM '.MAIN_DB_PREFIX.'prune_oauth_token'
-					." WHERE service = 'GoogleApi' AND email = '".$this->db->escape($fromsender[0]['address'])."'"
-					.' ORDER BY rowid DESC LIMIT 1';
+				$sql = 'SELECT fk_user FROM ' . MAIN_DB_PREFIX . 'prune_oauth_token'
+					. " WHERE service = 'GoogleApi' AND email = '" . $this->db->escape($fromsender[0]['address']) . "'"
+					. ' ORDER BY rowid DESC LIMIT 1';
 				$resql = $this->db->query($sql);
 				if ($resql && ($obj = $this->db->fetch_object($resql))) {
 					$fuserfallback = new User($this->db);
@@ -699,30 +701,30 @@ class ActionsGoogleApi
 
 		if (($parameters['mode'] ?? '') === 'render') {
 			$sql = 'SELECT u.rowid, u.login, u.lastname, u.firstname'
-				.' FROM '.MAIN_DB_PREFIX.'user as u'
-				.' INNER JOIN '.MAIN_DB_PREFIX.'user_extrafields as ue ON ue.fk_object = u.rowid'
-				.' WHERE ue.googleapi_email IS NOT NULL AND ue.googleapi_email != \'\''
-				.' AND u.entity IN ('.getEntity('user').')'
-				.' AND u.statut = 1'
-				.' ORDER BY u.login';
+				. ' FROM ' . MAIN_DB_PREFIX . 'user as u'
+				. ' INNER JOIN ' . MAIN_DB_PREFIX . 'user_extrafields as ue ON ue.fk_object = u.rowid'
+				. ' WHERE ue.googleapi_email IS NOT NULL AND ue.googleapi_email != \'\''
+				. ' AND u.entity IN (' . getEntity('user') . ')'
+				. ' AND u.statut = 1'
+				. ' ORDER BY u.login';
 			$res = $db->query($sql);
 			$options = '';
 			$currentFkUser = is_object($account) && !empty($account->fk_user) ? (int) $account->fk_user : 0;
 			if ($res) {
 				while ($obj = $db->fetch_object($res)) {
-					$label = trim($obj->firstname.' '.$obj->lastname).' ('.$obj->login.')';
-					$options .= '<option value="'.(int) $obj->rowid.'"'.($currentFkUser == $obj->rowid ? ' selected' : '').'>'.dol_escape_htmltag($label).'</option>';
+					$label = trim($obj->firstname . ' ' . $obj->lastname) . ' (' . $obj->login . ')';
+					$options .= '<option value="' . (int) $obj->rowid . '"' . ($currentFkUser == $obj->rowid ? ' selected' : '') . '>' . dol_escape_htmltag($label) . '</option>';
 				}
 			}
 
 			$html  = '<tbody id="section_googleapi" data-provider-section="googleapi" style="display:none">';
 			$html .= '<tr><td colspan="2" class="liste_titre">Gmail (GoogleApi)</td></tr>';
-			$html .= '<tr><td>'.$langs->trans('GoogleApiUnifiedInboxSelectUser').'</td><td>';
-			$html .= '<select name="fk_user"><option value=""'.($currentFkUser == 0 ? ' selected' : '').'>'.$langs->trans('GoogleApiUnifiedInboxSharedOption').'</option>'.$options.'</select>';
+			$html .= '<tr><td>' . $langs->trans('GoogleApiUnifiedInboxSelectUser') . '</td><td>';
+			$html .= '<select name="fk_user"><option value=""' . ($currentFkUser == 0 ? ' selected' : '') . '>' . $langs->trans('GoogleApiUnifiedInboxSharedOption') . '</option>' . $options . '</select>';
 			if ($options === '') {
-				$html .= '<br><span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxNoConnectedUser').'</span>';
+				$html .= '<br><span class="opacitymedium">' . $langs->trans('GoogleApiUnifiedInboxNoConnectedUser') . '</span>';
 			}
-			$html .= ' <span class="opacitymedium">'.$langs->trans('GoogleApiUnifiedInboxSelectUserHelp').'</span>';
+			$html .= ' <span class="opacitymedium">' . $langs->trans('GoogleApiUnifiedInboxSelectUserHelp') . '</span>';
 			$html .= '</td></tr>';
 			$html .= '</tbody>';
 
@@ -749,7 +751,7 @@ class ActionsGoogleApi
 		if (($parameters['provider_type'] ?? '') !== 'googleapi') {
 			return 0;
 		}
-		require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/class/GoogleApiMailProvider.php';
+		require_once DOL_DOCUMENT_ROOT . '/custom/googleapi/class/GoogleApiMailProvider.php';
 		$this->results['unifiedinboxprovider'] = new GoogleApiMailProvider();
 		return 0;
 	}

@@ -98,15 +98,21 @@ if (!empty($_GET['error'])) {
 	$scopes[] = 'https://www.googleapis.com/auth/documents';
 	$scopes[] = 'https://www.googleapis.com/auth/drive';
 	// $scopes[] = 'https://www.googleapis.com/auth/spreadsheets';
-	$authUrl = $provider->getAuthorizationUrl([
+	$mode = GETPOST('mode', 'alpha');
+	$authOptions = [
 		'prompt' => 'consent',
 		'access_type' => 'offline',
 		'scope' => $scopes,
-	]);
+	];
+	if ($mode == 'emailsenderprofile' && !empty($emailprofile)) {
+		// Without a hint Google silently uses the account the browser is signed in with, not the profile's address
+		$authOptions['login_hint'] = $emailprofile;
+		$authOptions['prompt'] = 'select_account consent';
+	}
+	$authUrl = $provider->getAuthorizationUrl($authOptions);
 	$_SESSION['oauth2state'] = $provider->getState();
 	$_SESSION["backtourlsavedbeforeoauthjump"] = $backtourl;
 	unset($_SESSION["emailprofile"]);
-	$mode = GETPOST('mode', 'alpha');
 	if ($mode == 'emailcompany') {
 		$_SESSION["typetokenrequested"] = 'emailcompany';
 	} elseif ($mode == 'emailsenderprofile') {

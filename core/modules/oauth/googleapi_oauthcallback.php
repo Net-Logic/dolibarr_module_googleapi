@@ -152,17 +152,22 @@ if (!empty($_GET['error'])) {
 			}
 		}
 		$refreshtoken = $token->getRefreshToken();
-		$tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $user->id);
+		// Same target for the refresh token backup as for the stored token, never the signed-in user's by default
+		if ($_SESSION["typetokenrequested"] == 'emailcompany') {
+			$tokenuserid = 0;
+			$tokenemail = getDolGlobalString("MAIN_INFO_SOCIETE_MAIL");
+		} elseif ($_SESSION["typetokenrequested"] == 'emailsenderprofile' && !empty($_SESSION["emailprofile"])) {
+			$tokenuserid = 0;
+			$tokenemail = $_SESSION["emailprofile"];
+		} else {
+			$tokenuserid = $user->id;
+			$tokenemail = null;
+		}
+		$tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $tokenuserid, $tokenemail);
 		if (empty($refreshtoken) && !empty($tokenrefreshbackup)) {
 			$refreshtoken = $tokenrefreshbackup;
 		}
-		if ($_SESSION["typetokenrequested"] == 'emailcompany') {
-			storeAccessToken('GoogleApi', $token, $refreshtoken, 0, getDolGlobalString("MAIN_INFO_SOCIETE_MAIL"));
-		} elseif ($_SESSION["typetokenrequested"] == 'emailsenderprofile' && !empty($_SESSION["emailprofile"])) {
-			storeAccessToken('GoogleApi', $token, $refreshtoken, 0, $_SESSION["emailprofile"]);
-		} else {
-			storeAccessToken('GoogleApi', $token, $refreshtoken, $user->id);
-		}
+		storeAccessToken('GoogleApi', $token, $refreshtoken, $tokenuserid, $tokenemail);
 		setEventMessages($langs->trans('NewTokenStored'), null, 'mesgs'); // Stored into object managed by class DoliStorage so into table oauth_token
 	} catch (Exception $e) {
 		setEventMessage($e->getMessage(), 'errors');

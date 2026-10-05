@@ -81,3 +81,4 @@ GoogleApiUnifiedInboxSharedOption=— Shared (sender profile token) —
 GoogleApiRequestAccess=Connect with Google
 GoogleApiRenewAccess=Renew token
 GoogleApiDeleteAccess=Delete token
+GoogleApiWrongAccount=The Google account %s does not match the sender profile address %s. Token not saved, sign in with the right account and retry.

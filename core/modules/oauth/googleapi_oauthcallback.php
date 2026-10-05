@@ -45,7 +45,7 @@ $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT; // This is to use external dom
 $action = GETPOST('action', 'aZ09');
 $backtourl = GETPOST('backtourl', 'alpha');
 $emailprofile = GETPOST('emailprofile', 'email');
-$langs->load("oauth");
+$langs->loadLangs(array("oauth", "googleapi@googleapi"));
 
 /*
  * Actions
@@ -144,6 +144,13 @@ if (!empty($_GET['error'])) {
 		// 	// Failed to get user details
 		// 	exit('Something went wrong: ' . $e->getMessage());
 		// }
+		if ($_SESSION["typetokenrequested"] == 'emailsenderprofile' && !empty($_SESSION["emailprofile"])) {
+			// The token must belong to the sender profile's address, whatever account Google was signed in with
+			$authorizedemail = (string) $provider->getResourceOwner($token)->getEmail();
+			if (strcasecmp($authorizedemail, $_SESSION["emailprofile"]) !== 0) {
+				throw new Exception($langs->trans('GoogleApiWrongAccount', $authorizedemail, $_SESSION["emailprofile"]));
+			}
+		}
 		$refreshtoken = $token->getRefreshToken();
 		$tokenrefreshbackup = retrieveRefreshTokenBackup('GoogleApi', $user->id);
 		if (empty($refreshtoken) && !empty($tokenrefreshbackup)) {

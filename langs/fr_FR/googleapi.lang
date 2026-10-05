@@ -92,3 +92,4 @@ GoogleApiUnifiedInboxSharedOption=— Partagé (jeton du profil expéditeur) —
 GoogleApiRequestAccess=Se connecter avec Google
 GoogleApiRenewAccess=Renouveler le jeton
 GoogleApiDeleteAccess=Supprimer le jeton
+GoogleApiWrongAccount=Le compte Google %s ne correspond pas à l'adresse du profil expéditeur %s. Jeton non enregistré, connectez-vous avec le bon compte et réessayez.

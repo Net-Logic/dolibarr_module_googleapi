@@ -506,6 +506,7 @@ class ActionsGoogleApi
 
 		$contexts = explode(':', $parameters['context']);
 		if (in_array('emailsenderprofilelist', $contexts)) {
+			$langs->load('googleapi@googleapi');
 			$token = retrieveAccessToken('GoogleApi', 0, $parameters['object']->email);
 			$oauthcallbackurl = dol_buildpath('googleapi/core/modules/oauth/googleapi_oauthcallback.php', 1);
 			$urltorenew = $oauthcallbackurl . '?mode=emailsenderprofile&emailprofile=' . $parameters['object']->email . '&backtourl=' . rawurlencode(dol_buildpath('/admin/mails_senderprofile_list.php', 1));
@@ -513,7 +514,10 @@ class ActionsGoogleApi
 			if (empty($token)) {
 				$this->resprints = '<td class="center nowrap"><a class="button" href="' . $urltorenew . '">' . $langs->trans('GoogleApiRequestAccess') . '</a></td>';
 			} else {
-				$this->resprints = '<td class="center nowrap"><a class="button butAction butActionDelete" href="' . $urltodelete  . '">' . $langs->trans('GoogleApiDeleteAccess') . '</a></td>';
+				$this->resprints = '<td class="center nowrap">';
+				$this->resprints .= '<a class="button" href="' . $urltorenew . '">' . $langs->trans('GoogleApiRenewAccess') . '</a> ';
+				$this->resprints .= '<a class="button butAction butActionDelete" href="' . $urltodelete . '">' . $langs->trans('GoogleApiDeleteAccess') . '</a>';
+				$this->resprints .= '</td>';
 			}
 		}
 

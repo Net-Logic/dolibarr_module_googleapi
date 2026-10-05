@@ -78,3 +78,6 @@ GoogleApiUnifiedInboxSelectUser=Google-connected user
 GoogleApiUnifiedInboxSelectUserHelp=The Dolibarr user whose Google account (Setup > OAuth login tokens) will be used to read and send mail for this unifiedinbox account. Leave on "Shared" to use a sender profile's own token (Setup > Emails > Sender profiles) instead of a specific user's.
 GoogleApiUnifiedInboxNoConnectedUser=No user has a linked Google account yet
 GoogleApiUnifiedInboxSharedOption=— Shared (sender profile token) —
+GoogleApiRequestAccess=Connect with Google
+GoogleApiRenewAccess=Renew token
+GoogleApiDeleteAccess=Delete token

@@ -168,7 +168,9 @@ class ActionsGoogleApi
 	public function updateSession(&$parameters, $object, &$action, $hookmanager)
 	{
 		// Redirecting some core pages
-		if (((int) DOL_VERSION <= 23) && strpos($_SERVER['PHP_SELF'], 'comm/action/card.php') !== false) {
+		// Only GET: a redirect drops the POST body, e.g. the form submitted when an event is dragged in the agenda
+		// (actionmove=mupdate + newdate + token), which core handles itself and which triggers the Google sync anyway.
+		if (((int) DOL_VERSION <= 23) && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && strpos($_SERVER['PHP_SELF'], 'comm/action/card.php') !== false) {
 			$redirUrl = dol_buildpath('/googleapi/tabs/action/card.php', 1);
 
 			if ($redirUrl !== $_SERVER["PHP_SELF"]) {

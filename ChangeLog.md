@@ -1,5 +1,5 @@
 
-## Unreleased (2026-09-14)
+## Unreleased (2026-10-09)
 
 #### :memo: Documentation
 * [#22](https://github.com/Net-Logic/dolibarr_module_googleapi/pull/22) translations ([@frederic34](https://github.com/frederic34))

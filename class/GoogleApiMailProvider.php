@@ -24,10 +24,10 @@
  * unifiedinbox repo, section "Non-goals".
  */
 
-require_once DOL_DOCUMENT_ROOT.'/custom/unifiedinbox/class/UnifiedInboxProviderInterface.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/class/googleapi.class.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/googleapi/lib/googleapi.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/core/lib/geturl.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/custom/unifiedinbox/class/UnifiedInboxProviderInterface.php';
+require_once DOL_DOCUMENT_ROOT . '/custom/googleapi/class/googleapi.class.php';
+require_once DOL_DOCUMENT_ROOT . '/custom/googleapi/lib/googleapi.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/geturl.lib.php';
 
 class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 {
@@ -46,12 +46,12 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	{
 		global $db;
 
-		require_once DOL_DOCUMENT_ROOT.'/user/class/user.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
 
 		if (!empty($account->fk_user)) {
 			$fuser = new User($db);
 			if ($fuser->fetch((int) $account->fk_user) <= 0) {
-				$this->error = 'Dolibarr user #'.$account->fk_user.' not found';
+				$this->error = 'Dolibarr user #' . $account->fk_user . ' not found';
 				return false;
 			}
 			$fuser->loadDefaultValues();
@@ -63,11 +63,11 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			try {
 				$client = getGoogleApiClient($fuser);
 			} catch (\Exception $e) {
-				$this->error = 'Google API connection failed: '.$e->getMessage();
+				$this->error = 'Google API connection failed: ' . $e->getMessage();
 				return false;
 			}
 			if (empty($client)) {
-				$this->error = 'Google API connection failed for user '.$fuser->login;
+				$this->error = 'Google API connection failed for user ' . $fuser->login;
 				return false;
 			}
 
@@ -83,11 +83,11 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			try {
 				$client = getGoogleApiClient(new User($db), $account->email);
 			} catch (\Exception $e) {
-				$this->error = 'Google API connection failed: '.$e->getMessage();
+				$this->error = 'Google API connection failed: ' . $e->getMessage();
 				return false;
 			}
 			if (empty($client)) {
-				$this->error = 'No Google token found for sender profile '.$account->email.' (Setup > Emails > Sender profiles)';
+				$this->error = 'No Google token found for sender profile ' . $account->email . ' (Setup > Emails > Sender profiles)';
 				return false;
 			}
 
@@ -159,14 +159,16 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getFolders()
 	{
-		if (!$this->connected()) return [];
+		if (!$this->connected()) {
+			return [];
+		}
 
 		try {
 			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$response = $gMailService->users_labels->listUsersLabels('me');
 		} catch (\Exception $e) {
-			$this->error = 'Failed to list labels: '.$e->getMessage();
+			$this->error = 'Failed to list labels: ' . $e->getMessage();
 			return [];
 		}
 
@@ -177,12 +179,16 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 				// Only show the handful of system labels that are genuine "folders" —
 				// skip CATEGORY_*, STARRED, IMPORTANT, UNREAD, CHAT (Gmail flags/tabs,
 				// not folders; IMAPClient::getFolders() has no equivalent for these).
-				if (!isset(self::SYSTEM_LABELS[$id])) continue;
+				if (!isset(self::SYSTEM_LABELS[$id])) {
+					continue;
+				}
 				$name = self::SYSTEM_LABELS[$id]['name'];
 				$type = self::SYSTEM_LABELS[$id]['type'];
 			} else {
 				// Respect the user's own choice to hide a label from their Gmail sidebar.
-				if ($lbl->getLabelListVisibility() === 'labelHide') continue;
+				if ($lbl->getLabelListVisibility() === 'labelHide') {
+					continue;
+				}
 				$name = $lbl->getName();
 				$type = 'folder';
 			}
@@ -212,7 +218,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getUnseenCount($folder = 'INBOX')
 	{
-		if (!$this->connected()) return 0;
+		if (!$this->connected()) {
+			return 0;
+		}
 
 		try {
 			$client = $this->client();
@@ -220,7 +228,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			$label = $gMailService->users_labels->get('me', $folder);
 			return (int) $label->getMessagesUnread();
 		} catch (\Exception $e) {
-			$this->error = 'Failed to get unseen count: '.$e->getMessage();
+			$this->error = 'Failed to get unseen count: ' . $e->getMessage();
 			return 0;
 		}
 	}
@@ -229,7 +237,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessages($limitNb, $limitDays, $offset, $pageSize)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		// getGoogleMailMessages() paginates via an opaque Gmail pageToken, not a
 		// numeric offset, so pull sequential pages until $offset is reached, then
@@ -241,12 +251,14 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		$collected = [];
 		$collectedRows = [];
 		$totalSeen = 0;
-		$query = ['newer_than:'.(int) $limitDays.'d'];
+		$query = ['newer_than:' . (int) $limitDays . 'd'];
 
 		try {
 			do {
 				$batch = getGoogleMailMessages($query, min(50, $limitNb - $totalSeen), $pageToken, $this->identityUser(), null, null, [$this->folder], $this->senderEmail);
-				if (empty($batch)) break;
+				if (empty($batch)) {
+					break;
+				}
 				foreach ($batch as $row) {
 					$totalSeen++;
 					if ($skipped < $offset) {
@@ -260,7 +272,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 				}
 			} while ($pageToken && $totalSeen < $limitNb && count($collected) < $pageSize);
 		} catch (\Exception $e) {
-			$this->error = 'Failed to list messages: '.$e->getMessage();
+			$this->error = 'Failed to list messages: ' . $e->getMessage();
 			return false;
 		}
 
@@ -294,7 +306,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 */
 	private function refreshUnreadStatus(array $items, array $rows, $limitDays)
 	{
-		if (empty($items)) return;
+		if (empty($items)) {
+			return;
+		}
 
 		try {
 			$client = $this->client();
@@ -303,11 +317,13 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			$pageToken = null;
 			do {
 				$filters = [
-					'q'          => 'newer_than:'.(int) $limitDays.'d',
+					'q'          => 'newer_than:' . (int) $limitDays . 'd',
 					'labelIds'   => [$this->folder, 'UNREAD'],
 					'maxResults' => 500,
 				];
-				if ($pageToken) $filters['pageToken'] = $pageToken;
+				if ($pageToken) {
+					$filters['pageToken'] = $pageToken;
+				}
 				$response = $gMailService->users_messages->listUsersMessages('me', $filters);
 				foreach ($response->getMessages() as $m) {
 					$unreadIds[$m->getId()] = true;
@@ -323,18 +339,22 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		foreach ($items as $i => $item) {
 			$reallyUnread = isset($unreadIds[$item->message_id]);
 			$cachedUnread = ($item->seen == 0);
-			if ($reallyUnread === $cachedUnread) continue;
+			if ($reallyUnread === $cachedUnread) {
+				continue;
+			}
 
 			$item->seen = $reallyUnread ? 0 : 1;
 			if (isset($rows[$i]->rowid) && $rows[$i]->rowid) {
-				$db->query('UPDATE '.MAIN_DB_PREFIX.'googleapi_email SET unread='.($reallyUnread ? 1 : 0).' WHERE rowid='.(int) $rows[$i]->rowid);
+				$db->query('UPDATE ' . MAIN_DB_PREFIX . 'googleapi_email SET unread=' . ($reallyUnread ? 1 : 0) . ' WHERE rowid=' . (int) $rows[$i]->rowid);
 			}
 		}
 	}
 
 	public function getThreadedMessages($limitDays, $offset, $pageSize)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		// Gmail already groups by thread_id server-side; ask for one message per
 		// thread by paging through and de-duplicating on threadId client-side,
@@ -343,7 +363,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		// reliable, so group on subject instead (same heuristic already visible
 		// in emails_list.php's own thread grouping, not a new convention).
 		$flat = $this->getMessages(500, $limitDays, 0, 500);
-		if ($flat === false) return false;
+		if ($flat === false) {
+			return false;
+		}
 
 		$byThread = [];
 		foreach ($flat['messages'] as $msg) {
@@ -391,7 +413,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		// browser's local time, while PHP rendered it in the server's timezone
 		// (UTC here) - 2h early in Paris. Emit UTC with an explicit offset and let
 		// the browser convert; same format as MicrosoftGraphMailProvider.
-		$item->date = gmdate('Y-m-d H:i:s', (int) $row->date).'+00:00';
+		$item->date = gmdate('Y-m-d H:i:s', (int) $row->date) . '+00:00';
 		$item->cc = $row->email_cc ?? '';
 		$item->bcc = $row->email_bcc ?? '';
 		$item->from = $row->email_from;
@@ -405,16 +427,18 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessageBody($messageId)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		try {
 			$result = getGoogleMailMessageAndBody($messageId, $this->identityUser(), $this->senderEmail);
 		} catch (\Exception $e) {
-			$this->error = 'Failed to load message body: '.$e->getMessage();
+			$this->error = 'Failed to load message body: ' . $e->getMessage();
 			return false;
 		}
 		if (empty($result['body'])) {
-			$this->error = 'Message not found: '.$messageId;
+			$this->error = 'Message not found: ' . $messageId;
 			return false;
 		}
 
@@ -426,7 +450,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getMessageHeaders($messageId)
 	{
-		if (!$this->connected()) return [];
+		if (!$this->connected()) {
+			return [];
+		}
 
 		try {
 			$client = $this->client();
@@ -436,7 +462,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 				'metadataHeaders' => ['Message-Id', 'In-Reply-To', 'References', 'X-Dolibarr-TRACKID'],
 			]);
 		} catch (\Exception $e) {
-			$this->error = 'Failed to load message headers: '.$e->getMessage();
+			$this->error = 'Failed to load message headers: ' . $e->getMessage();
 			return [];
 		}
 
@@ -463,14 +489,16 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getAttachments($messageId)
 	{
-		if (!$this->connected()) return [];
+		if (!$this->connected()) {
+			return [];
+		}
 
 		try {
 			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$message = $gMailService->users_messages->get('me', $messageId, ['format' => 'full']);
 		} catch (\Exception $e) {
-			$this->error = 'Failed to load attachments: '.$e->getMessage();
+			$this->error = 'Failed to load attachments: ' . $e->getMessage();
 			return [];
 		}
 
@@ -481,7 +509,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function getAttachmentData($messageId, $partNo, $encoding)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
@@ -490,13 +520,13 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 			$attachmentId = $this->findAttachmentId($message->getPayload(), (string) $partNo);
 			if (!$attachmentId) {
-				$this->error = 'Attachment part not found: '.$partNo;
+				$this->error = 'Attachment part not found: ' . $partNo;
 				return false;
 			}
 
 			$body = $gMailService->users_messages_attachments->get('me', $messageId, $attachmentId);
 		} catch (\Exception $e) {
-			$this->error = 'Failed to load attachment data: '.$e->getMessage();
+			$this->error = 'Failed to load attachment data: ' . $e->getMessage();
 			return false;
 		}
 
@@ -571,7 +601,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 		}
 		foreach ((array) $part->getParts() as $childPart) {
 			$found = $this->findAttachmentId($childPart, $wantedPartId);
-			if ($found) return $found;
+			if ($found) {
+				return $found;
+			}
 		}
 		return null;
 	}
@@ -590,7 +622,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function moveMessage($messageId, $targetFolder)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		// Gmail's Trash is a first-class action (also excludes the message from
 		// IMAP/POP and schedules permanent deletion after 30 days) — reuse it
@@ -609,7 +643,7 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			}
 			$gMailService->users_messages->modify('me', $messageId, $modifyRequest);
 		} catch (\Exception $e) {
-			$this->error = 'Gmail move failed: '.$e->getMessage();
+			$this->error = 'Gmail move failed: ' . $e->getMessage();
 			return false;
 		}
 
@@ -618,19 +652,21 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function deleteMessage($messageId)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 			$gMailService->users_messages->trash('me', $messageId);
 		} catch (\Exception $e) {
-			$this->error = 'Gmail trash failed: '.$e->getMessage();
+			$this->error = 'Gmail trash failed: ' . $e->getMessage();
 			return false;
 		}
 
 		global $db;
-		$db->query('UPDATE '.MAIN_DB_PREFIX."googleapi_email SET unread=0 WHERE message_id='".$db->escape($messageId)."'");
+		$db->query('UPDATE ' . MAIN_DB_PREFIX . "googleapi_email SET unread=0 WHERE message_id='" . $db->escape($messageId) . "'");
 		return true;
 	}
 
@@ -643,7 +679,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 */
 	private function setUnreadLabel($messageId, $unread)
 	{
-		if (!$this->connected()) return false;
+		if (!$this->connected()) {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
@@ -656,12 +694,12 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			}
 			$gMailService->users_messages->modify('me', $messageId, $modifyRequest);
 		} catch (\Exception $e) {
-			$this->error = 'Gmail label update failed: '.$e->getMessage();
+			$this->error = 'Gmail label update failed: ' . $e->getMessage();
 			return false;
 		}
 
 		global $db;
-		$db->query('UPDATE '.MAIN_DB_PREFIX."googleapi_email SET unread=".($unread ? 1 : 0)." WHERE message_id='".$db->escape($messageId)."'");
+		$db->query('UPDATE ' . MAIN_DB_PREFIX . "googleapi_email SET unread=" . ($unread ? 1 : 0) . " WHERE message_id='" . $db->escape($messageId) . "'");
 		return true;
 	}
 
@@ -674,42 +712,50 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 
 	public function setKeyword($messageId, $keyword, $color = null)
 	{
-		if (!$this->connected() || $keyword === '') return false;
+		if (!$this->connected() || $keyword === '') {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 
 			$labelId = $this->findOrCreateLabelId($gMailService, $keyword, $color);
-			if (!$labelId) return false;
+			if (!$labelId) {
+				return false;
+			}
 
 			$modify = new \Google\Service\Gmail\ModifyMessageRequest();
 			$modify->setAddLabelIds([$labelId]);
 			$gMailService->users_messages->modify('me', $messageId, $modify);
 			return true;
 		} catch (\Exception $e) {
-			$this->error = 'Failed to set label: '.$e->getMessage();
+			$this->error = 'Failed to set label: ' . $e->getMessage();
 			return false;
 		}
 	}
 
 	public function clearKeyword($messageId, $keyword)
 	{
-		if (!$this->connected() || $keyword === '') return false;
+		if (!$this->connected() || $keyword === '') {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
 			$gMailService = new Google_Service_Gmail($client);
 
 			$labelId = $this->findLabelId($gMailService, $keyword);
-			if (!$labelId) return true; // nothing to remove, not an error
+			if (!$labelId) {
+				return true; // nothing to remove, not an error
+			}
 
 			$modify = new \Google\Service\Gmail\ModifyMessageRequest();
 			$modify->setRemoveLabelIds([$labelId]);
 			$gMailService->users_messages->modify('me', $messageId, $modify);
 			return true;
 		} catch (\Exception $e) {
-			$this->error = 'Failed to clear label: '.$e->getMessage();
+			$this->error = 'Failed to clear label: ' . $e->getMessage();
 			return false;
 		}
 	}
@@ -733,11 +779,15 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	 */
 	public function getSenderPhoto($email)
 	{
-		if (!$this->connected() || empty($email)) return false;
+		if (!$this->connected() || empty($email)) {
+			return false;
+		}
 
 		try {
 			$client = $this->client();
-			if (!$client) return false;
+			if (!$client) {
+				return false;
+			}
 
 			$people = new Google_Service_PeopleService($client);
 			$response = $people->people->searchContacts([
@@ -748,22 +798,32 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 			$photoUrl = null;
 			foreach ((array) $response->getResults() as $result) {
 				$person = $result->getPerson();
-				$emails = array_map(function ($e) { return strtolower((string) $e->getValue()); }, (array) $person->getEmailAddresses());
-				if (!in_array(strtolower($email), $emails, true)) continue;
+				$emails = array_map(function ($e) {
+					return strtolower((string) $e->getValue());
+				}, (array) $person->getEmailAddresses());
+				if (!in_array(strtolower($email), $emails, true)) {
+					continue;
+				}
 
 				foreach ((array) $person->getPhotos() as $photo) {
-					if ($photo->getDefault()) continue;
+					if ($photo->getDefault()) {
+						continue;
+					}
 					$photoUrl = $photo->getUrl();
 					break 2;
 				}
 			}
-			if (!$photoUrl) return false;
+			if (!$photoUrl) {
+				return false;
+			}
 
 			// The photo URL itself is a plain public CDN link (no OAuth needed
 			// to fetch the bytes, only to have looked it up) — a normal GET,
 			// per repo convention via getURLContent() rather than curl_*.
 			$res = getURLContent($photoUrl, 'GET', '', 1, [], ['https']);
-			if (empty($res['content']) || (int) ($res['http_code'] ?? 0) !== 200) return false;
+			if (empty($res['content']) || (int) ($res['http_code'] ?? 0) !== 200) {
+				return false;
+			}
 
 			return $res['content'];
 		} catch (\Exception $e) {
@@ -805,7 +865,9 @@ class GoogleApiMailProvider implements UnifiedInboxProviderInterface
 	private function findOrCreateLabelId($gMailService, $name, $color = null)
 	{
 		$existing = $this->findLabelId($gMailService, $name);
-		if ($existing) return $existing;
+		if ($existing) {
+			return $existing;
+		}
 
 		$label = new \Google\Service\Gmail\Label();
 		$label->setName($name);

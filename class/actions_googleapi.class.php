@@ -667,7 +667,9 @@ class ActionsGoogleApi
 	{
 		global $langs;
 
-		if (!isModEnabled('googleapi')) return 0;
+		if (!isModEnabled('googleapi')) {
+			return 0;
+		}
 
 		$langs->load('googleapi@googleapi');
 		$this->results['unifiedinboxprovidertypes'][] = [

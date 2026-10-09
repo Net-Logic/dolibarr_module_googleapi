@@ -45,7 +45,7 @@ $urlwithroot = $urlwithouturlroot . DOL_URL_ROOT; // This is to use external dom
 $action = GETPOST('action', 'aZ09');
 $backtourl = GETPOST('backtourl', 'alpha');
 $emailprofile = GETPOST('emailprofile', 'email');
-$langs->loadLangs(array("oauth", "googleapi@googleapi"));
+$langs->loadLangs(["oauth", "googleapi@googleapi"]);
 
 /*
  * Actions

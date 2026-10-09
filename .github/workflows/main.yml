@@ -13,10 +13,16 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  # Attach the package to a release when it is published
+  release:
+    types: [published]
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
+    # Not on a release: this job bumps the version, pushes a tag and commits
+    if: github.event_name != 'release'
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -47,3 +53,24 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Bump version #none
+
+  # Package the module in the Dolibarr distribution format (build/module_googleapi-<version>.zip)
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the module package
+        run: build/makepack.sh
+      - name: Upload the package
+        uses: actions/upload-artifact@v4
+        with:
+          name: module_googleapi
+          path: build/module_googleapi-*.zip
+          if-no-files-found: error
+      - name: Attach the package to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" build/module_googleapi-*.zip --clobber

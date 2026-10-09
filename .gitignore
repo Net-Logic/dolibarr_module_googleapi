@@ -12,3 +12,6 @@
 /.buildpath
 /.project
 .superpowers/
+
+# Packages built by build/makepack.sh
+/build/module_googleapi-*.zip
